@@ -1,0 +1,23 @@
+{
+  "id": null,
+  "title": "GFPS – Streamer Status",
+  "tags": ["gfps", "streamer"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Streamer Heartbeat",
+      "id": 1,
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gfps_streamer_ticks_total",
+          "legendFormat": "ticks"
+        }
+      ]
+    }
+  ]
+}
