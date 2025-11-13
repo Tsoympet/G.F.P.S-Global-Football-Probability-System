@@ -1,0 +1,24 @@
+{
+  "id": null,
+  "title": "GFPS – Prediction Engine",
+  "tags": ["gfps", "prediction"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Prediction Requests per Minute (sample)",
+      "id": 1,
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(gfps_prediction_requests_total[1m]))",
+          "legendFormat": "req/s"
+        }
+      ],
+      "lines": true
+    }
+  ]
+}
