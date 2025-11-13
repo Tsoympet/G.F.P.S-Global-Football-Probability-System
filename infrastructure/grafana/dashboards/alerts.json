@@ -1,0 +1,25 @@
+{
+  "id": null,
+  "title": "GFPS – Alerts Overview",
+  "tags": ["gfps", "alerts"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Alerts Triggered (sample metric)",
+      "id": 1,
+      "datasource": null,
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "gfps_alert_events_total",
+          "legendFormat": "alerts",
+          "interval": ""
+        }
+      ]
+    }
+  ]
+}
