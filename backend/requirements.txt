@@ -10,3 +10,5 @@ aiosmtplib
 google-auth
 google-auth-oauthlib
 pyotp
+psycopg2-binary
+
