@@ -9,3 +9,4 @@ httpx
 aiosmtplib
 google-auth
 google-auth-oauthlib
+pyotp
