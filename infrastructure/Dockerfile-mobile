@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install watchman deps if needed later – keeping it light for now
+RUN apk add --no-cache bash
+
+COPY mobile/package.json mobile/package-lock.json* ./ 
+RUN npm install
+
+COPY mobile/ /app/
+
+EXPOSE 19006
+
+CMD ["npx", "expo", "start", "--web", "--port", "19006", "--non-interactive"]
