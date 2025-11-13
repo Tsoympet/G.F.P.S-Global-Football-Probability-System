@@ -1,0 +1,24 @@
+{
+  "id": null,
+  "title": "GFPS – Coupons & EV",
+  "tags": ["gfps", "coupons"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Average Coupon EV (sample)",
+      "id": 1,
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time(gfps_coupon_ev[5m])",
+          "legendFormat": "EV"
+        }
+      ],
+      "lines": true
+    }
+  ]
+}
