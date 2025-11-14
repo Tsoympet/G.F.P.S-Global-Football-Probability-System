@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
+  ActivityIndicator,
   FlatList,
-  TouchableOpacity,
-  ActivityIndicator
+  Text
 } from "react-native";
 import { useRouter } from "expo-router";
 import { api } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+
+import { ScreenContainer } from "./components/ScreenContainer";
+import { MatchCard } from "./components/MatchCard";
+import { EmptyState } from "./components/EmptyState";
 
 type Fixture = {
   fixture_id: number | string;
@@ -27,6 +29,10 @@ export default function FixturesScreen() {
 
   useEffect(() => {
     const load = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       try {
         const res = await api.get("/fixtures");
@@ -40,50 +46,48 @@ export default function FixturesScreen() {
       }
     };
     load();
-  }, []);
+  }, [token]);
 
   if (!token) {
     return (
-      <View
+      <ScreenContainer
         style={{
-          flex: 1,
-          backgroundColor: "#000",
           alignItems: "center",
           justifyContent: "center"
         }}
       >
         <Text style={{ color: "#fff" }}>You need to login first.</Text>
-      </View>
+      </ScreenContainer>
     );
   }
 
   if (loading) {
     return (
-      <View
+      <ScreenContainer
         style={{
-          flex: 1,
-          backgroundColor: "#000",
           alignItems: "center",
           justifyContent: "center"
         }}
       >
         <ActivityIndicator size="large" />
-      </View>
+      </ScreenContainer>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#000", padding: 8 }}>
+    <ScreenContainer>
       <FlatList
         data={fixtures}
         keyExtractor={item => String(item.fixture_id)}
+        ListEmptyComponent={
+          <EmptyState message="No fixtures available at the moment." />
+        }
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={{
-              padding: 12,
-              borderBottomWidth: 1,
-              borderBottomColor: "#222"
-            }}
+          <MatchCard
+            home={item.home}
+            away={item.away}
+            league={item.league}
+            kickoff={item.kickoff}
             onPress={() =>
               router.push({
                 pathname: "/match",
@@ -96,15 +100,9 @@ export default function FixturesScreen() {
                 }
               })
             }
-          >
-            <Text style={{ color: "#0f0", fontWeight: "bold" }}>
-              {item.home} vs {item.away}
-            </Text>
-            <Text style={{ color: "#aaa" }}>{item.league}</Text>
-            <Text style={{ color: "#777" }}>{item.kickoff}</Text>
-          </TouchableOpacity>
+          />
         )}
       />
-    </View>
+    </ScreenContainer>
   );
 }
