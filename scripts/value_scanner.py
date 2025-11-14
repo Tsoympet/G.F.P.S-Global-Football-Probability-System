@@ -3,23 +3,18 @@ scripts/value_scanner.py
 
 GFPS Value Scanner
 
-Χρησιμοποιεί τα ML μοντέλα (1X2, Over/Under, GG) + live odds από DB
-για να βρει EV+ ευκαιρίες per league / bookmaker.
+Χρησιμοποιεί τα ML μοντέλα + live odds από DB για να βρει EV+ bets
+και τα γράφει στον πίνακα value_picks, ώστε να είναι ορατά στο API.
 
-EV υπολογισμός:
-  EV = odds * prob - 1
-
-π.χ. odds 2.10, prob 0.55 -> EV = 2.10 * 0.55 - 1 = 0.155 (δηλαδή +15.5%)
-
-Μπορείς να τρέξεις:
-  python scripts/value_scanner.py --min-ev 0.05 --limit 50
+EV = odds * prob - 1
 """
 
 import argparse
+from datetime import datetime, timedelta
 from typing import List, Dict, Any
 
 from backend.db import SessionLocal
-from backend.models import LiveOdds  # adjust if needed
+from backend.models import LiveOdds, ValuePick  # adjust import if needed
 from backend import ml_predict
 
 
@@ -38,7 +33,6 @@ def scan_value_bets(
     db = SessionLocal()
     try:
         q = db.query(LiveOdds)
-        # μόνο live ή upcoming
         q = q.filter(LiveOdds.is_live == True)
 
         if league_filter:
@@ -93,7 +87,6 @@ def scan_value_bets(
             print(f"[GFPS-VALUE] ML predict error on fixture {row.fixture_id}: {e}")
             continue
 
-        # Υπολογισμός EV για κάθε outcome
         candidates = []
 
         ev_1 = compute_ev(row.odds_1, p1)
@@ -120,9 +113,9 @@ def scan_value_bets(
             if ev >= min_ev:
                 results.append(
                     {
-                        "fixture_id": row.fixture_id,
+                        "fixture_id": str(row.fixture_id),
                         "league": row.league,
-                        "league_id": row.league_id,
+                        "league_id": str(row.league_id),
                         "home": row.home,
                         "away": row.away,
                         "bookmaker": row.bookmaker,
@@ -134,9 +127,48 @@ def scan_value_bets(
                     }
                 )
 
-    # sort by EV desc, limit
     results.sort(key=lambda x: x["ev"], reverse=True)
     return results[:limit]
+
+
+def store_value_bets(bets: List[Dict[str, Any]], ttl_hours: int = 24):
+    """
+    Σβήνει παλιά picks και σώζει τα current EV+.
+    """
+    db = SessionLocal()
+    try:
+        # καθάρισμα παλιών > ttl_hours
+        cutoff = datetime.utcnow() - timedelta(hours=ttl_hours)
+        deleted = (
+            db.query(ValuePick)
+            .filter(ValuePick.created_at < cutoff)
+            .delete(synchronize_session=False)
+        )
+        if deleted:
+            print(f"[GFPS-VALUE] Deleted {deleted} old value picks.")
+
+        for b in bets:
+            vp = ValuePick(
+                fixture_id=b["fixture_id"],
+                league=b["league"],
+                league_id=b["league_id"],
+                home=b["home"],
+                away=b["away"],
+                bookmaker=b["bookmaker"],
+                market=b["market"],
+                outcome=b["outcome"],
+                odds=b["odds"],
+                prob=b["prob"],
+                ev=b["ev"],
+                source="ml_scanner",
+                is_live=True,
+            )
+            db.add(vp)
+
+        db.commit()
+        print(f"[GFPS-VALUE] Stored {len(bets)} value picks.")
+    finally:
+        db.close()
 
 
 def print_value_bets(bets: List[Dict[str, Any]]):
@@ -178,7 +210,7 @@ def main():
         "--limit",
         type=int,
         default=50,
-        help="Maximum number of results to show",
+        help="Maximum number of results to keep/show",
     )
 
     args = parser.parse_args()
@@ -195,6 +227,7 @@ def main():
         limit=args.limit,
     )
     print_value_bets(bets)
+    store_value_bets(bets)
 
 
 if __name__ == "__main__":
