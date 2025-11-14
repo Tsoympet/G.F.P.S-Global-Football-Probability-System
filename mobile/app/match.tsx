@@ -2,19 +2,12 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  FlatList,
-  TouchableOpacity,
   ActivityIndicator
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { api } from "../lib/api";
 import { useCoupon } from "../context/CouponContext";
-
-type Market = {
-  bookmaker: string;
-  market: string;
-  selections: { outcome: string; odds: number }[];
-};
+import { MarketSelector, MarketItem } from "./components/MarketSelector";
 
 export default function MatchScreen() {
   const params = useLocalSearchParams<{
@@ -27,16 +20,28 @@ export default function MatchScreen() {
 
   const { addSelection } = useCoupon();
 
-  const [markets, setMarkets] = useState<Market[]>([]);
+  const [markets, setMarkets] = useState<MarketItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Helper: επειδή τα params μπορεί να είναι string ή string[]
+  const fixtureId =
+    Array.isArray(params.fixture_id) ? params.fixture_id[0] : params.fixture_id;
+  const leagueId =
+    Array.isArray(params.league_id) ? params.league_id[0] : params.league_id;
+  const league =
+    Array.isArray(params.league) ? params.league[0] : params.league;
+  const home =
+    Array.isArray(params.home) ? params.home[0] : params.home;
+  const away =
+    Array.isArray(params.away) ? params.away[0] : params.away;
 
   useEffect(() => {
     const load = async () => {
-      if (!params.fixture_id) return;
+      if (!fixtureId) return;
       setLoading(true);
       try {
         const res = await api.get("/fixtures/markets", {
-          params: { fixture_id: Number(params.fixture_id) }
+          params: { fixture_id: Number(fixtureId) }
         });
         setMarkets(res.data?.markets || []);
       } catch (err) {
@@ -46,7 +51,7 @@ export default function MatchScreen() {
       }
     };
     load();
-  }, [params.fixture_id]);
+  }, [fixtureId]);
 
   if (loading) {
     return (
@@ -64,60 +69,39 @@ export default function MatchScreen() {
   }
 
   const header = (
-    <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: "#222" }}>
-      <Text style={{ color: "#0f0", fontSize: 18, fontWeight: "bold" }}>
-        {params.home} vs {params.away}
+    <View
+      style={{
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: "#222"
+      }}
+    >
+      <Text
+        style={{ color: "#0f0", fontSize: 18, fontWeight: "bold" }}
+      >
+        {home} vs {away}
       </Text>
-      <Text style={{ color: "#aaa" }}>{params.league}</Text>
+      <Text style={{ color: "#aaa" }}>{league}</Text>
     </View>
   );
 
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
       {header}
-      <FlatList
-        data={markets}
-        keyExtractor={(_, index) => String(index)}
-        renderItem={({ item }) => (
-          <View
-            style={{
-              padding: 12,
-              borderBottomWidth: 1,
-              borderBottomColor: "#222"
-            }}
-          >
-            <Text style={{ color: "#fff", marginBottom: 4 }}>
-              {item.bookmaker} – {item.market}
-            </Text>
-            {item.selections.map((s, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={{
-                  padding: 8,
-                  marginVertical: 2,
-                  backgroundColor: "#111",
-                  borderRadius: 4
-                }}
-                onPress={() =>
-                  addSelection({
-                    fixture_id: String(params.fixture_id),
-                    league: params.league || "",
-                    league_id: String(params.league_id || ""),
-                    home: params.home || "",
-                    away: params.away || "",
-                    market: item.market,
-                    outcome: s.outcome,
-                    odds: s.odds
-                  })
-                }
-              >
-                <Text style={{ color: "#0f0" }}>
-                  {s.outcome} @ {s.odds.toFixed(2)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+      <MarketSelector
+        markets={markets}
+        onSelect={({ market, outcome, odds }) =>
+          addSelection({
+            fixture_id: String(fixtureId),
+            league: league || "",
+            league_id: String(leagueId || ""),
+            home: home || "",
+            away: away || "",
+            market,
+            outcome,
+            odds
+          })
+        }
       />
     </View>
   );
