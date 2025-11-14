@@ -41,6 +41,7 @@ const RootLayoutInner = () => {
       <Stack.Screen name="community" options={{ title: "Community" }} />
       <Stack.Screen name="live" options={{ title: "Live" }} />
       <Stack.Screen name="settings" options={{ title: "Settings" }} />
+      <Stack.Screen name="alerts" options={{ title: "Alert Rules" }} />
     </Stack>
   );
 };
