@@ -11,4 +11,9 @@ google-auth
 google-auth-oauthlib
 pyotp
 psycopg2-binary
+numpy
+pandas
+scikit-learn
+joblib
+
 
