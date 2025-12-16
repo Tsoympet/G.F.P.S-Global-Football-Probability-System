@@ -49,6 +49,17 @@ async def list_fixtures(league_id: Optional[int] = None, date_str: Optional[str]
 
     if not APIFOOTBALL_KEY:
         return live_state.snapshot()["fixtures"]
+        # simple demo fixture
+        return [
+            {
+                "id": "1",
+                "league": "Premier League",
+                "homeTeam": "Demo FC",
+                "awayTeam": "Sample United",
+                "startTime": f"{d}T15:00:00Z",
+                "status": "scheduled",
+            }
+        ]
 
     params = {"date": d}
     if league_id:
