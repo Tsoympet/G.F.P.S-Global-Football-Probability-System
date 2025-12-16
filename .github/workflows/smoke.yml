@@ -1,0 +1,52 @@
+name: Smoke Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install backend deps
+        run: pip install -r backend/requirements.txt
+
+      - name: Launch backend
+        run: |
+          uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
+          echo $! > backend.pid
+          sleep 5
+
+      - name: Seed auth user
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          SIGNUP=$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"ci@gfps.app","password":"password"}' http://127.0.0.1:8000/auth/signup)
+          TOKEN=$(echo "$SIGNUP" | jq -r '.token // empty')
+          if [ -z "$TOKEN" ]; then
+            LOGIN=$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"ci@gfps.app","password":"password"}' http://127.0.0.1:8000/auth/login)
+            TOKEN=$(echo "$LOGIN" | jq -r '.token // empty')
+          fi
+          if [ -z "$TOKEN" ]; then
+            echo "Failed to acquire token" && exit 1
+          fi
+          echo "TOKEN=$TOKEN" >> $GITHUB_ENV
+
+      - name: Hit smoke endpoints
+        env:
+          TOKEN: ${{ env.TOKEN }}
+        run: |
+          curl -sf http://127.0.0.1:8000/health
+          curl -sf -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8000/fixtures
+          curl -sf -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8000/live-odds
+          curl -sf -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8000/predictions
+          curl -sf -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8000/value-bets
+
+      - name: Shutdown backend
+        run: |
+          kill $(cat backend.pid)

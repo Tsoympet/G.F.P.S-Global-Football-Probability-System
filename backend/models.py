@@ -186,3 +186,62 @@ class TeamStats(Base):
     avg_goals_against: Mapped[float] = mapped_column(Float, default=1.2)
 
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class LiveSnapshotRecord(Base):
+    __tablename__ = "live_snapshots"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    reason: Mapped[str] = mapped_column(String(64), default="manual")
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    predictions: Mapped[list["PredictionSnapshotRecord"]] = relationship(back_populates="snapshot")
+    value_bets: Mapped[list["ValueBetSnapshotRecord"]] = relationship(back_populates="snapshot")
+
+
+class PredictionSnapshotRecord(Base):
+    __tablename__ = "prediction_snapshots"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    snapshot_id: Mapped[int] = mapped_column(ForeignKey("live_snapshots.id"))
+    model_version: Mapped[str] = mapped_column(String(64), default="demo")
+    payload: Mapped[list[dict]] = mapped_column(JSON)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    snapshot: Mapped[LiveSnapshotRecord] = relationship(back_populates="predictions")
+
+
+class ValueBetSnapshotRecord(Base):
+    __tablename__ = "value_bet_snapshots"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    snapshot_id: Mapped[int] = mapped_column(ForeignKey("live_snapshots.id"))
+    model_version: Mapped[str] = mapped_column(String(64), default="demo")
+    payload: Mapped[list[dict]] = mapped_column(JSON)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    snapshot: Mapped[LiveSnapshotRecord] = relationship(back_populates="value_bets")
+
+
+class ModelVersion(Base):
+    __tablename__ = "model_versions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    status: Mapped[str] = mapped_column(String(32), default="ready")
+    metrics: Mapped[Optional[dict]] = mapped_column(JSON, default=None)
+    notes: Mapped[Optional[str]] = mapped_column(String(512), default=None)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    activated_at: Mapped[Optional[DateTime]] = mapped_column(DateTime, default=None)
+
+
+class TrainingRun(Base):
+    __tablename__ = "training_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(32), default="queued")
+    metrics: Mapped[Optional[dict]] = mapped_column(JSON, default=None)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    completed_at: Mapped[Optional[DateTime]] = mapped_column(DateTime, default=None)
