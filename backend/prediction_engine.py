@@ -1,158 +1,114 @@
-import math
-from typing import Dict
+from __future__ import annotations
+
+from typing import Dict, List
 
 
-def poisson_p(k: int, lam: float) -> float:
-    return math.exp(-lam) * lam**k / math.factorial(k)
+def _market_label(home: str | None, away: str | None) -> str:
+    return f"{home or 'Home'} vs {away or 'Away'}"
 
 
-def goal_dist(lam: float, max_goals: int = 10) -> Dict[int, float]:
-    probs: Dict[int, float] = {}
-    total = 0.0
-    for k in range(0, max_goals + 1):
-        p = poisson_p(k, lam)
-        probs[k] = p
-        total += p
-    for k in probs:
-        probs[k] /= total
-    return probs
+def implied_probabilities(odds: Dict[str, float]) -> Dict[str, float]:
+    """Convert decimal odds into normalized implied probabilities.
+
+    This is a lightweight utility used to backfill predictions from odds when
+    no model output exists. We strip out the vig by normalizing the inverse
+    prices.
+    """
+
+    inverse_sum = 0.0
+    implied: Dict[str, float] = {}
+    for key in ("home", "draw", "away"):
+        price = odds.get(key)
+        if not price:
+            continue
+        implied[key] = 1 / price
+        inverse_sum += implied[key]
+
+    if inverse_sum == 0:
+        return {}
+
+    return {outcome: round(prob / inverse_sum, 4) for outcome, prob in implied.items()}
 
 
-def prob_1x2(lam_home: float, lam_away: float, max_goals: int = 10) -> Dict[str, float]:
-    dh = goal_dist(lam_home, max_goals)
-    da = goal_dist(lam_away, max_goals)
-    p1 = px = p2 = 0.0
-    for i, pi in dh.items():
-        for j, pj in da.items():
-            p = pi * pj
-            if i > j:
-                p1 += p
-            elif i == j:
-                px += p
-            else:
-                p2 += p
-    return {"1": p1, "X": px, "2": p2}
+def generate_predictions(snapshot: Dict[str, List[Dict]]) -> List[Dict]:
+    """Return desktop-shaped predictions derived from odds or demo defaults."""
 
+    odds_lookup: Dict[str, Dict[str, float]] = {}
+    for o in snapshot.get("odds", []) or []:
+        odds_lookup[o.get("market") or ""] = {
+            "home": o.get("home"),
+            "draw": o.get("draw"),
+            "away": o.get("away"),
+        }
 
-def prob_over_under(lam_home: float, lam_away: float, line: float = 2.5, max_goals: int = 10) -> Dict[str, float]:
-    total_lam = lam_home + lam_away
-    dt = goal_dist(total_lam, max_goals)
-    p_over = p_under = 0.0
-    for k, p in dt.items():
-        if k > line:
-            p_over += p
+    predictions: List[Dict] = []
+    for fx in snapshot.get("fixtures", []) or []:
+        label = _market_label(fx.get("homeTeam"), fx.get("awayTeam"))
+        implied = implied_probabilities(odds_lookup.get(label, {}))
+
+        home = implied.get("home", 0.45)
+        draw = implied.get("draw", 0.28)
+        away = implied.get("away", 0.27)
+
+        # Re-normalize in case demo defaults are mixed with partial odds
+        total = home + draw + away
+        if total == 0:
+            home, draw, away = 0.45, 0.28, 0.27
         else:
-            p_under += p
-    return {f"over {line}": p_over, f"under {line}": p_under}
+            home, draw, away = home / total, draw / total, away / total
+
+        predictions.append(
+            {
+                "fixtureId": fx.get("id"),
+                "homeWinProbability": round(home, 3),
+                "drawProbability": round(draw, 3),
+                "awayWinProbability": round(away, 3),
+            }
+        )
+
+    return predictions
 
 
-def prob_gg(lam_home: float, lam_away: float, max_goals: int = 10) -> Dict[str, float]:
-    dh = goal_dist(lam_home, max_goals)
-    da = goal_dist(lam_away, max_goals)
-    p_gg = p_ng = 0.0
-    for i, pi in dh.items():
-        for j, pj in da.items():
-            p = pi * pj
-            if i >= 1 and j >= 1:
-                p_gg += p
-            else:
-                p_ng += p
-    return {"GG": p_gg, "NG": p_ng}
+def compute_value_bets(snapshot: Dict[str, List[Dict]]) -> List[Dict]:
+    """Join model probabilities with latest odds to derive EV rows."""
 
+    odds_lookup: Dict[str, Dict[str, float]] = {}
+    for row in snapshot.get("odds", []) or []:
+        odds_lookup[row.get("market") or ""] = row
 
-def base_prob_from_odds(odds: float) -> float:
-    if odds <= 0:
-        return 0.5
-    return max(0.01, min(0.99, 1.0 / odds))
+    predictions = generate_predictions(snapshot)
+    value_bets: List[Dict] = []
 
+    for pred in predictions:
+        fx_id = pred.get("fixtureId")
+        fx = next((f for f in snapshot.get("fixtures", []) if f.get("id") == fx_id), None)
+        if not fx:
+            continue
 
-def ev(prob: float, odds: float) -> float:
-    return prob * odds - 1.0
+        label = _market_label(fx.get("homeTeam"), fx.get("awayTeam"))
+        odds = odds_lookup.get(label)
+        if not odds:
+            # Keep a demo-friendly row even when odds are missing
+            odds = {"home": 2.0, "draw": 3.2, "away": 3.8, "market": label}
 
+        for outcome, prob_key in (
+            ("home", "homeWinProbability"),
+            ("draw", "drawProbability"),
+            ("away", "awayWinProbability"),
+        ):
+            price = odds.get(outcome)
+            if not price:
+                continue
+            model_prob = pred.get(prob_key) or 0
+            ev = model_prob * price - 1
+            value_bets.append(
+                {
+                    "match": label,
+                    "market": f"Match Winner - {outcome.title()}",
+                    "odds": price,
+                    "modelProbability": round(model_prob, 3),
+                    "expectedValue": round(ev, 3),
+                }
+            )
 
-def predict_market(market: str, selections: Dict[str, float], context: Dict) -> Dict[str, Dict]:
-    """
-    selections: { outcome_label: odds }
-    context: may include
-      - lam_home, lam_away
-      - home_attack, away_attack
-      - home_defense, away_defense
-      - avg_goals_home_league, avg_goals_away_league
-    """
-    out: Dict[str, Dict] = {}
-
-    lam_home = context.get("lam_home")
-    lam_away = context.get("lam_away")
-
-    if lam_home is None or lam_away is None:
-        home_attack = context.get("home_attack", 1.0)
-        away_attack = context.get("away_attack", 1.0)
-        home_defense = context.get("home_defense", 1.0)
-        away_defense = context.get("away_defense", 1.0)
-        avg_home = context.get("avg_goals_home_league", 1.5)
-        avg_away = context.get("avg_goals_away_league", 1.2)
-
-        lam_home = avg_home * home_attack * (1.0 / (away_defense or 1.0))
-        lam_away = avg_away * away_attack * (1.0 / (home_defense or 1.0))
-
-    m_lower = (market or "").lower()
-
-    # 1X2
-    if m_lower in ["1x2", "match winner", "full time result"]:
-        probs_1x2 = prob_1x2(lam_home, lam_away)
-        for label, odds in selections.items():
-            base_label = label.strip().upper()
-            p = probs_1x2.get(base_label)
-            if p is None:
-                p = base_prob_from_odds(odds)
-            out[label] = {"prob": p, "ev": ev(p, odds)}
-        return out
-
-    # Over/Under
-    if m_lower.startswith("over/under") or "over" in m_lower or "under" in m_lower:
-        line = 2.5
-        for k in selections.keys():
-            txt = k.lower()
-            for candidate in [0.5, 1.5, 2.5, 3.5, 4.5]:
-                if str(candidate) in txt:
-                    line = candidate
-                    break
-        probs_ou = prob_over_under(lam_home, lam_away, line)
-        for label, odds in selections.items():
-            base_label = label.lower()
-            key = None
-            if "over" in base_label:
-                key = f"over {line}"
-            elif "under" in base_label:
-                key = f"under {line}"
-            if key is None:
-                p = base_prob_from_odds(odds)
-            else:
-                p = probs_ou.get(key, base_prob_from_odds(odds))
-            out[label] = {"prob": p, "ev": ev(p, odds)}
-        return out
-
-    # GG / NG
-    if "gg" in m_lower or "both teams to score" in m_lower:
-        probs_gg_ = prob_gg(lam_home, lam_away)
-        for label, odds in selections.items():
-            base_label = label.strip().upper()
-            if base_label in ["GG", "BTTS YES", "YES"]:
-                key = "GG"
-            elif base_label in ["NG", "BTTS NO", "NO"]:
-                key = "NG"
-            else:
-                key = None
-            if key:
-                p = probs_gg_.get(key, base_prob_from_odds(odds))
-            else:
-                p = base_prob_from_odds(odds)
-            out[label] = {"prob": p, "ev": ev(p, odds)}
-        return out
-
-    # Fallback
-    for label, odds in selections.items():
-        p = base_prob_from_odds(odds)
-        out[label] = {"prob": p, "ev": ev(p, odds)}
-
-    return out
+    return value_bets
