@@ -3,6 +3,7 @@ from typing import Dict, List
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
 
 APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
@@ -113,6 +114,9 @@ async def list_live_odds():
     """Return simplified live odds rows + alternative markets."""
 
     markets: Dict[str, List[Dict]] = {}
+@router.get("")
+async def list_live_odds():
+    """Return simplified live odds rows for the desktop LiveMatchCenter."""
 
     # Demo payload mirrors the desktop type definition
     if not APIFOOTBALL_KEY:
@@ -132,6 +136,12 @@ async def list_live_odds():
         await live_state.set_odds(demo_rows)
         await live_state.set_markets(markets)
         return {"outrights": demo_rows, "markets": markets}
+        await live_state.set_odds(demo_rows)
+        return demo_rows
+        return [
+            {"market": "Demo FC vs Sample United", "home": 1.95, "draw": 3.30, "away": 4.10, "source": "DemoBook"},
+            {"market": "Example Town vs Placeholder City", "home": 2.20, "draw": 3.10, "away": 3.60, "source": "DemoBook"},
+        ]
 
     try:
         data = await _fetch_api_football("odds/live", {})
@@ -169,3 +179,20 @@ async def list_live_odds():
         await live_state.set_markets(markets)
 
     return {"outrights": rows, "markets": markets}
+                if (bet.get("name") or "").lower() not in {"match winner", "1x2"}:
+                    continue
+                prices = _extract_match_winner_prices(bet.get("values", []))
+                if {"home", "draw", "away"} <= set(prices):
+                    rows.append(
+                        {
+                            "market": match_label,
+                            "home": prices["home"],
+                            "draw": prices["draw"],
+                            "away": prices["away"],
+                            "source": source,
+                        }
+                    )
+
+    await live_state.set_odds(rows)
+
+    return rows
