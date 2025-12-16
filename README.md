@@ -47,6 +47,7 @@ It doesn’t “tip” – it justifies every suggestion with numbers.
 ## 🧱 Repository Structure
 
 ```text
+GFPS/desktop/    # React + Tauri desktop client
 backend/          # FastAPI backend, models, alert engine, prediction engine
 infrastructure/   # Docker, nginx, monitoring configs
 docs/             # Architecture & API documentation
