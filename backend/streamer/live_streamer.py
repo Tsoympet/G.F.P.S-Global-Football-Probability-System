@@ -5,6 +5,7 @@ from typing import List
 import httpx
 
 from ..fixtures_api import _map_status
+
 from ..live_state import live_state
 
 
@@ -120,6 +121,7 @@ async def live_streamer_loop():
             if not updated:
                 # fall back to demo heartbeat so websocket clients still tick
                 await live_state.tick_demo_clock()
+            await live_state.tick_demo_clock()
         except Exception as e:
             print("[streamer] ERROR:", e)
         await asyncio.sleep(STREAMER_INTERVAL_SEC)
