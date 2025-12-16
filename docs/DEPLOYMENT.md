@@ -72,13 +72,12 @@ Use:
 
 ---
 
-## 6. Mobile Builds
+## 6. Desktop Builds
 
-- Android build via Expo EAS or classic `expo build:android`.
-- iOS build via EAS.
-- Configure app name, slug and icons in `mobile/app.json`.
+The desktop client lives in `GFPS/desktop` and is built with Vite + Tauri 2.0.
 
-Once production backend is up (with HTTPS), set:
+- Install dependencies: `cd GFPS/desktop && npm install`
+- Run locally: `npm run tauri:dev`
+- Build release binaries: `npm run tauri:build`
 
-```bash
-EXPO_PUBLIC_API_BASE=https://your-domain.com/api
+Ensure the backend URL is configured in the desktop app's environment before packaging so the client can talk to the API.
