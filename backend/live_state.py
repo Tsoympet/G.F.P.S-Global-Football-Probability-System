@@ -47,6 +47,7 @@ class LiveState:
             "events": deepcopy(self.events),
             "odds": deepcopy(self.odds),
         }
+        return {"fixtures": deepcopy(self.fixtures), "events": deepcopy(self.events)}
 
     async def subscribe(self) -> asyncio.Queue:
         q: asyncio.Queue = asyncio.Queue()

@@ -16,3 +16,14 @@ async def list_predictions() -> List[dict]:
     """
     snapshot = live_state.snapshot()
     return generate_predictions(snapshot)
+    predictions = []
+    for fx in snapshot["fixtures"]:
+        predictions.append(
+            {
+                "fixtureId": fx["id"],
+                "homeWinProbability": 0.45,
+                "drawProbability": 0.28,
+                "awayWinProbability": 0.27,
+            }
+        )
+    return predictions

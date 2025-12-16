@@ -61,6 +61,10 @@ async def list_live_odds():
         ]
         await live_state.set_odds(demo_rows)
         return demo_rows
+        return [
+            {"market": "Demo FC vs Sample United", "home": 1.95, "draw": 3.30, "away": 4.10, "source": "DemoBook"},
+            {"market": "Example Town vs Placeholder City", "home": 2.20, "draw": 3.10, "away": 3.60, "source": "DemoBook"},
+        ]
 
     try:
         data = await _fetch_api_football("odds/live", {})
