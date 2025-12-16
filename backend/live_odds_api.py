@@ -9,6 +9,9 @@ APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
 
 router = APIRouter(prefix="/live-odds", tags=["live-odds"])
 
+# Lazy import to avoid circular references when the live_state pulls odds snapshots
+from .live_state import live_state  # noqa: E402
+
 
 async def _fetch_api_football(endpoint: str, params: Dict) -> Dict:
     """Lightweight wrapper around the API Football client.
@@ -52,6 +55,12 @@ async def list_live_odds():
 
     # Demo payload mirrors the desktop type definition
     if not APIFOOTBALL_KEY:
+        demo_rows = [
+            {"market": "Demo FC vs Sample United", "home": 1.95, "draw": 3.30, "away": 4.10, "source": "DemoBook"},
+            {"market": "Example Town vs Placeholder City", "home": 2.20, "draw": 3.10, "away": 3.60, "source": "DemoBook"},
+        ]
+        await live_state.set_odds(demo_rows)
+        return demo_rows
         return [
             {"market": "Demo FC vs Sample United", "home": 1.95, "draw": 3.30, "away": 4.10, "source": "DemoBook"},
             {"market": "Example Town vs Placeholder City", "home": 2.20, "draw": 3.10, "away": 3.60, "source": "DemoBook"},
@@ -82,5 +91,7 @@ async def list_live_odds():
                             "source": source,
                         }
                     )
+
+    await live_state.set_odds(rows)
 
     return rows

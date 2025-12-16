@@ -37,10 +37,16 @@ class LiveState:
             },
         ]
         self.events: List[Dict[str, Any]] = []
+        self.odds: List[Dict[str, Any]] = []
         self._subscribers: List[asyncio.Queue] = []
         self._lock = asyncio.Lock()
 
     def snapshot(self) -> Dict[str, Any]:
+        return {
+            "fixtures": deepcopy(self.fixtures),
+            "events": deepcopy(self.events),
+            "odds": deepcopy(self.odds),
+        }
         return {"fixtures": deepcopy(self.fixtures), "events": deepcopy(self.events)}
 
     async def subscribe(self) -> asyncio.Queue:
@@ -68,6 +74,10 @@ class LiveState:
     async def set_fixtures(self, fixtures: List[Dict[str, Any]]) -> None:
         self.fixtures = deepcopy(fixtures)
         await self.broadcast({"type": "fixtures", **self.snapshot()})
+
+    async def set_odds(self, odds: List[Dict[str, Any]]) -> None:
+        self.odds = deepcopy(odds)
+        await self.broadcast({"type": "odds", **self.snapshot()})
 
     async def add_event(self, event: Dict[str, Any]) -> None:
         self.events.append(event)

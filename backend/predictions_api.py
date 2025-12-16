@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter
 
 from .live_state import live_state
+from .prediction_engine import generate_predictions
 
 router = APIRouter(prefix="/predictions", tags=["predictions"])
 
@@ -14,6 +15,7 @@ async def list_predictions() -> List[dict]:
     For now we generate simple probabilities from the current fixture snapshot.
     """
     snapshot = live_state.snapshot()
+    return generate_predictions(snapshot)
     predictions = []
     for fx in snapshot["fixtures"]:
         predictions.append(
