@@ -1,6 +1,6 @@
 import os
 from datetime import date
-from typing import Optional
+from typing import Optional, Tuple
 
 import httpx
 from fastapi import APIRouter, HTTPException
@@ -25,6 +25,19 @@ async def fetch_api_football(endpoint: str, params: dict) -> dict:
         return r.json()
 
 
+
+def _map_status(short_code: str, elapsed: Optional[int]) -> Tuple[str, Optional[str]]:
+    live_codes = {"1H", "2H", "ET", "HT"}
+    finished_codes = {"FT", "AET", "PEN"}
+
+    if short_code in live_codes:
+        timer = f"{elapsed}'" if elapsed is not None else None
+        return "live", timer
+    if short_code in finished_codes:
+        return "finished", None
+    return "scheduled", None
+
+
 @router.get("")
 async def list_fixtures(league_id: Optional[int] = None, date_str: Optional[str] = None):
     if not date_str:
@@ -34,19 +47,16 @@ async def list_fixtures(league_id: Optional[int] = None, date_str: Optional[str]
 
     if not APIFOOTBALL_KEY:
         # simple demo fixture
-        return {
-            "ok": True,
-            "fixtures": [
-                {
-                    "fixture_id": 1,
-                    "league_id": league_id or 39,
-                    "league": "Premier League",
-                    "home": "Demo FC",
-                    "away": "Sample United",
-                    "kickoff": f"{d}T15:00:00Z",
-                }
-            ],
-        }
+        return [
+            {
+                "id": "1",
+                "league": "Premier League",
+                "homeTeam": "Demo FC",
+                "awayTeam": "Sample United",
+                "startTime": f"{d}T15:00:00Z",
+                "status": "scheduled",
+            }
+        ]
 
     params = {"date": d}
     if league_id:
@@ -64,14 +74,22 @@ async def list_fixtures(league_id: Optional[int] = None, date_str: Optional[str]
         l = item["league"]
         h = item["teams"]["home"]
         a = item["teams"]["away"]
+        status, timer = _map_status(f.get("status", {}).get("short", ""), f.get("status", {}).get("elapsed"))
+        goals = item.get("goals", {})
+        score = None
+        if goals.get("home") is not None and goals.get("away") is not None:
+            score = {"home": goals["home"], "away": goals["away"]}
+
         fixtures.append(
             {
-                "fixture_id": f["id"],
-                "league_id": l["id"],
+                "id": str(f["id"]),
                 "league": l["name"],
-                "home": h["name"],
-                "away": a["name"],
-                "kickoff": f["date"],
+                "homeTeam": h["name"],
+                "awayTeam": a["name"],
+                "startTime": f["date"],
+                "status": status,
+                "timer": timer,
+                "score": score,
             }
         )
-    return {"ok": True, "fixtures": fixtures}
+    return fixtures
