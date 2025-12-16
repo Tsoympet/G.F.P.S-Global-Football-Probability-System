@@ -5,6 +5,8 @@ from typing import Optional, Tuple
 import httpx
 from fastapi import APIRouter, HTTPException
 
+from .live_state import live_state
+
 APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
 
 router = APIRouter(prefix="/fixtures", tags=["fixtures"])
@@ -46,6 +48,7 @@ async def list_fixtures(league_id: Optional[int] = None, date_str: Optional[str]
         d = date_str
 
     if not APIFOOTBALL_KEY:
+        return live_state.snapshot()["fixtures"]
         # simple demo fixture
         return [
             {
@@ -92,4 +95,6 @@ async def list_fixtures(league_id: Optional[int] = None, date_str: Optional[str]
                 "score": score,
             }
         )
+    # Update live snapshot for downstream consumers (WebSocket, predictions, EV)
+    await live_state.set_fixtures(fixtures)
     return fixtures
