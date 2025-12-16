@@ -23,12 +23,17 @@ from . import models  # noqa: F401  # ensure models are imported
 
 from .google_auth import router as auth_router
 from .fixtures_api import router as fixtures_router
+from .live_odds_api import router as live_odds_router
+from .live_ws import router as live_ws_router
 from .markets_api import router as markets_router
 from .coupon_api import router as coupon_router
 from .favorites_api import router as favorites_router
 from .device_api import router as device_router
 from .stats_api import router as stats_router
 from .alerts_api import router as alerts_router
+from .predictions_api import router as predictions_router
+from .value_bets_api import router as value_bets_router
+from .ml_api import router as ml_router
 from .alert_engine import start_alert_engine_background
 from .streamer import start_streamer_background
 
@@ -70,6 +75,11 @@ async def startup_event() -> None:
 # -------------------------------------------------------------------
 app.include_router(auth_router)
 app.include_router(fixtures_router)
+app.include_router(live_odds_router)
+app.include_router(live_ws_router)
+app.include_router(predictions_router)
+app.include_router(value_bets_router)
+app.include_router(ml_router)
 app.include_router(markets_router)
 app.include_router(coupon_router)
 app.include_router(favorites_router)
