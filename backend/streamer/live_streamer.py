@@ -1,9 +1,11 @@
 import asyncio
 import os
 
+from ..live_state import live_state
+
 
 STREAMER_ENABLED = os.getenv("STREAMER_ENABLED", "false").lower() in ("1", "true", "yes")
-STREAMER_INTERVAL_SEC = int(os.getenv("STREAMER_INTERVAL_SEC", "30"))
+STREAMER_INTERVAL_SEC = int(os.getenv("STREAMER_INTERVAL_SEC", "15"))
 
 
 async def live_streamer_loop():
@@ -14,8 +16,7 @@ async def live_streamer_loop():
     print("[streamer] Live streamer started")
     while True:
         try:
-            # TODO: implement real-time odds / scores ingestion
-            print("[streamer] tick")
+            await live_state.tick_demo_clock()
         except Exception as e:
             print("[streamer] ERROR:", e)
         await asyncio.sleep(STREAMER_INTERVAL_SEC)
