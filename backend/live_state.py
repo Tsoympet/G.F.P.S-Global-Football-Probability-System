@@ -1,9 +1,9 @@
 """
 In-memory live state store for fixtures, events, and odds snapshots.
 
-This module offers a tiny publisher/subscriber mechanism used by the
-HTTP endpoints and the `/ws/live-matches` WebSocket to share the same
-snapshot data without requiring a real cache or database.
+This module offers a tiny publisher/subscriber mechanism used by the HTTP
+endpoints and the `/ws/live-matches` WebSocket to share the same snapshot data
+without requiring a real cache or database.
 """
 from __future__ import annotations
 
@@ -39,8 +39,6 @@ class LiveState:
         self.events: Dict[str, List[Dict[str, Any]]] = {}
         self.odds: List[Dict[str, Any]] = []
         self.market_lines: Dict[str, List[Dict[str, Any]]] = {}
-        self.events: List[Dict[str, Any]] = []
-        self.odds: List[Dict[str, Any]] = []
         self._subscribers: List[asyncio.Queue] = []
         self._lock = asyncio.Lock()
 
@@ -51,8 +49,6 @@ class LiveState:
             "odds": deepcopy(self.odds),
             "markets": deepcopy(self.market_lines),
         }
-        }
-        return {"fixtures": deepcopy(self.fixtures), "events": deepcopy(self.events)}
 
     async def subscribe(self) -> asyncio.Queue:
         q: asyncio.Queue = asyncio.Queue()
@@ -104,10 +100,6 @@ class LiveState:
             {"type": "event", "fixtureId": fixture_id, "event": deepcopy(event), **self.snapshot()}
         )
         await self._persist_snapshot("event")
-
-    async def add_event(self, event: Dict[str, Any]) -> None:
-        self.events.append(event)
-        await self.broadcast({"type": "event", "event": deepcopy(event), **self.snapshot()})
 
     async def tick_demo_clock(self) -> None:
         """Simulate a minimal live update for demo fixtures."""

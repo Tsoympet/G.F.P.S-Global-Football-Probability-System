@@ -22,16 +22,12 @@ def _ensure_seed_model() -> None:
             )
             db.add(seed)
             db.commit()
-router = APIRouter(prefix="/ml", tags=["ml"])
-
-_models = [
-    {"version": "v1", "roi": 0.08, "logLoss": 0.55, "status": "active"},
-    {"version": "v2", "roi": 0.05, "logLoss": 0.52, "status": "ready"},
-]
 
 
 @router.post("/train")
 async def train_model():
+    """Kick off a background training job and return its run id."""
+
     _ensure_seed_model()
     with SessionLocal() as db:
         latest = db.query(ModelVersion).order_by(ModelVersion.created_at.desc()).first()
@@ -39,13 +35,12 @@ async def train_model():
 
     run_id = queue_training(asyncio.get_event_loop(), next_version)
     return {"message": f"Training started for {next_version}", "runId": run_id}
-    new_version = f"v{len(_models) + 1}"
-    _models.append({"version": new_version, "roi": 0.0, "logLoss": 1.0, "status": "training"})
-    return {"message": f"Training started for {new_version}"}
 
 
 @router.get("/models")
 async def list_models() -> List[dict]:
+    """Return persisted model metadata for desktop diagnostics."""
+
     _ensure_seed_model()
     with SessionLocal() as db:
         models = db.query(ModelVersion).order_by(ModelVersion.created_at.desc()).all()
@@ -58,11 +53,12 @@ async def list_models() -> List[dict]:
             }
             for m in models
         ]
-    return _models
 
 
 @router.post("/activate/{version}")
 async def activate_model(version: str):
+    """Activate a model version and demote any previously active entries."""
+
     _ensure_seed_model()
     with SessionLocal() as db:
         target = db.query(ModelVersion).filter(ModelVersion.version == version).first()
@@ -80,13 +76,4 @@ async def activate_model(version: str):
 
         db.commit()
 
-    found = False
-    for m in _models:
-        if m["version"] == version:
-            m["status"] = "active"
-            found = True
-        elif m.get("status") == "active":
-            m["status"] = "ready"
-    if not found:
-        raise HTTPException(404, f"Model {version} not found")
     return {"message": f"Activated model {version}"}
