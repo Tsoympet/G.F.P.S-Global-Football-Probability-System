@@ -2,7 +2,7 @@
 
 **G.F.P.S – Global Football Probability System** is an advanced AI-driven football probability and analytics platform.
 
-It combines statistical modelling, live odds data, EV (Expected Value) calculations, and a modern mobile app to help users understand the *true* probability behind football matches and markets.
+It combines statistical modelling, live odds data, EV (Expected Value) calculations, and a modern desktop app to help users understand the *true* probability behind football matches and markets.
 
 GFPS doesn’t guess – it calculates.
 It doesn’t “tip” – it justifies every suggestion with numbers.
@@ -39,18 +39,15 @@ It doesn’t “tip” – it justifies every suggestion with numbers.
   - Per-user rules and alerts
   - Saved coupons
 
-- **Community & Mobile**
-  - Real-time chat (rooms per league/match)
-  - React Native + Expo mobile app (Android / iOS-ready)
-
 ---
 
 ## 🧱 Repository Structure
 
 ```text
+GFPS/desktop/    # React + Tauri desktop client
 backend/          # FastAPI backend, models, alert engine, prediction engine
-mobile/           # React Native (Expo) mobile app
 infrastructure/   # Docker, nginx, monitoring configs
 docs/             # Architecture & API documentation
 scripts/          # Helper scripts (DB init, seeding, etc.)
 branding/         # Logo prompts, brand guidelines
+```

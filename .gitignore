@@ -1,1 +1,11 @@
 
+node_modules/
+dist/
+.DS_Store
+.env
+.env.*
+*.log
+
+# Tauri / Rust targets
+GFPS/desktop/src-tauri/target/
+GFPS/desktop/src-tauri/target-release/

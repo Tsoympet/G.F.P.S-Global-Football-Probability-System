@@ -78,20 +78,6 @@ services:
       - gfps_grafana_data:/var/lib/grafana
       # Dashboards can be imported manually from infrastructure/grafana/dashboards
 
-  # Optional dev-only: Expo web container
-  mobile-web:
-    build:
-      context: ..
-      dockerfile: infrastructure/Dockerfile-mobile
-    container_name: gfps-mobile-web
-    restart: unless-stopped
-    environment:
-      EXPO_PUBLIC_API_BASE: http://gfps-backend:8000
-    ports:
-      - "19006:19006"   # Expo web
-    networks:
-      - gfps-net
-
 networks:
   gfps-net:
     driver: bridge

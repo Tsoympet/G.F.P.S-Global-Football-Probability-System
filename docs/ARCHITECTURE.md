@@ -6,7 +6,7 @@
 GFPS is composed of three main layers:
 
 1. **Backend (FastAPI, Python)**
-2. **Mobile App (React Native / Expo)**
+2. **Desktop App (React, Vite, Tauri)**
 3. **Infrastructure (Docker, nginx, monitoring)**
 
 ---
@@ -29,7 +29,6 @@ GFPS is composed of three main layers:
   - `User`, `Device`, `AlertRule`, `AlertEvent`
   - `Coupon`, `CouponSelection`
   - `FavoriteLeague`, `FavoriteTeam`
-  - `ChatRoom`, `ChatMessage`
   - `TeamStats`
 - `auth_utils.py` – password hashing, token creation, token decoding
 - `fixtures_api.py` – fixtures listing (via API-Football)
@@ -42,39 +41,32 @@ GFPS is composed of three main layers:
   - triggers alerts and logs events
 - `prediction_engine.py` – Poisson-based probability engine:
   - 1X2, Over/Under, GG/NG, generic fallback from odds
-- `chat_api.py` & `chat_ws.py` – REST + WebSocket chat
 - `stats_api.py` & `stats_context.py` – team statistics and Poisson context
 
 ---
 
-## 2. Mobile App (Expo)
+## 2. Desktop App (Tauri)
 
 **Tech stack:**
 
-- React Native
-- Expo Router
-- TypeScript
-- AsyncStorage
+- React + TypeScript (Vite)
+- Tauri 2.0 for native packaging
+- Zustand for client state
+- Chart.js via `react-chartjs-2` for charts
 
-### Main Screens (under `mobile/app/`)
+### Main Screens (under `GFPS/desktop/src/screens/`)
 
-- `index.tsx` – dashboard
-- `login.tsx` – Google Sign-In and auth integration
-- `fixtures.tsx` – fixtures listing
-- `match.tsx` – markets + “add to coupon”
-- `coupon.tsx` – current coupon builder
-- `coupon-history.tsx` – saved coupons
-- `favorites.tsx` – favorite leagues
-- `profile.tsx` – account, logout and basic settings
-- `community.tsx` – chat overview / rooms (future expansion)
-- `live.tsx` – live section (streamer integration)
-- `settings.tsx` – placeholder for user preferences
+- `Dashboard.tsx` – KPIs, charts and quick insights
+- `LiveMatchCenter.tsx` – live fixtures and markets
+- `ValueBets.tsx` – EV+ opportunities surfaced from the model
+- `ModelsTraining.tsx` – model monitoring/training placeholder
+- `Settings.tsx` – app-level configuration
 
-### Shared Logic
+### Shared UI & State
 
-- `auth/AuthContext.tsx` – stores JWT and profile for the user
-- `coupon/CouponContext.tsx` (if separated) – in-memory coupon state
-- `notifications/registerPush.ts` – registration for push notifications
+- `components/Sidebar.tsx` & `components/TopBar.tsx` – navigation shell
+- `store/navigation.ts` – central navigation state (Zustand)
+- `components/DataTable.tsx` & `components/KpiCard.tsx` – reusable widgets
 
 ---
 
@@ -94,14 +86,13 @@ GFPS is composed of three main layers:
 
 ## Data Flow (High Level)
 
-1. **User → Mobile App**
-   - selects league, fixture, market
-   - adds outcomes to coupon
-   - authenticates via Google or email
+1. **User → Desktop App**
+   - navigates dashboard, live matches and value bets
+   - reviews model outputs and insights
 
-2. **Mobile App → Backend**
+2. **Desktop App → Backend**
    - requests fixtures & markets (`/fixtures`, `/fixtures/markets`)
-   - sends coupon data (`/coupon/create`)
+   - retrieves predictions/EV data for dashboards and match center
    - manages favorites, alerts, profile
 
 3. **Backend → External APIs**
@@ -119,6 +110,6 @@ GFPS is composed of three main layers:
 GFPS is designed to be:
 
 - **Pluggable** – swap external data providers (API-Football, others)
-- **Modular** – each domain (alerts, chat, coupons, stats) is separate
+- **Modular** – each domain (alerts, coupons, stats) is separate
 - **Scalable** – multiple backend instances behind nginx & load balancers
 - **Extendable** – add new markets, sports, prediction models

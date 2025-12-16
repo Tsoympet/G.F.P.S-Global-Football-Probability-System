@@ -4,7 +4,7 @@
 
 The backend is a FastAPI-based service that exposes:
 
-- API endpoints (auth, fixtures, coupons, favorites, alerts, chat, stats)
+- API endpoints (auth, fixtures, coupons, favorites, alerts, stats)
 - Background alert engine
 - Prediction engine
 

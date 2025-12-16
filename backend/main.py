@@ -10,13 +10,12 @@ Exposes:
 - Devices (push tokens)
 - Stats
 - Alerts (rules + events)
-- Chat (REST + WebSocket)
 - Background engines (alerts + streamer)
 """
 
 import asyncio
 
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .db import Base, engine
@@ -29,9 +28,7 @@ from .coupon_api import router as coupon_router
 from .favorites_api import router as favorites_router
 from .device_api import router as device_router
 from .stats_api import router as stats_router
-from .chat_api import router as chat_router
 from .alerts_api import router as alerts_router
-from .chat_ws import chat_ws_handler
 from .alert_engine import start_alert_engine_background
 from .streamer import start_streamer_background
 
@@ -78,16 +75,7 @@ app.include_router(coupon_router)
 app.include_router(favorites_router)
 app.include_router(device_router)
 app.include_router(stats_router)
-app.include_router(chat_router)
 app.include_router(alerts_router)
-
-
-# -------------------------------------------------------------------
-# WebSocket endpoints
-# -------------------------------------------------------------------
-@app.websocket("/ws/chat")
-async def chat_socket(ws: WebSocket):
-    await chat_ws_handler(ws)
 
 
 # -------------------------------------------------------------------
