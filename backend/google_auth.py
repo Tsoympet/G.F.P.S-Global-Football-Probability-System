@@ -185,7 +185,7 @@ def login(p: Login, db: Session = Depends(get_db)):
     if not u.is_active:
         raise HTTPException(403, "Account disabled")
 
-    # If 2FA enabled, require TOTp code
+    # If 2FA enabled, require TOTP code
     if u.totp_enabled:
         if not p.code or not verify_totp(u.totp_secret, p.code):
             raise HTTPException(401, "Invalid 2FA code")
