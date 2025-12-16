@@ -23,6 +23,7 @@ from . import models  # noqa: F401  # ensure models are imported
 
 from .google_auth import router as auth_router
 from .fixtures_api import router as fixtures_router
+from .live_odds_api import router as live_odds_router
 from .markets_api import router as markets_router
 from .coupon_api import router as coupon_router
 from .favorites_api import router as favorites_router
@@ -70,6 +71,7 @@ async def startup_event() -> None:
 # -------------------------------------------------------------------
 app.include_router(auth_router)
 app.include_router(fixtures_router)
+app.include_router(live_odds_router)
 app.include_router(markets_router)
 app.include_router(coupon_router)
 app.include_router(favorites_router)
