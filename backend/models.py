@@ -31,7 +31,7 @@ class User(Base):
     # token version – if incremented, old JWTs become invalid
     token_version: Mapped[int] = mapped_column(Integer, default=0)
 
-    created_at: Mapped = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     # password reset fields
     reset_token: Mapped[Optional[str]] = mapped_column(String(128), default=None)
@@ -55,7 +55,7 @@ class Device(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     platform: Mapped[str] = mapped_column(String(32))  # android / ios / web
     token: Mapped[str] = mapped_column(String(512))
-    created_at: Mapped = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     user: Mapped["User"] = relationship(back_populates="devices")
 
@@ -64,7 +64,7 @@ class AlertRule(Base):
     __tablename__ = "alert_rules"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeKey("users.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     name: Mapped[str] = mapped_column(String(255))
 
     league_filter: Mapped[Optional[str]] = mapped_column(String(128), default=None)
@@ -77,7 +77,7 @@ class AlertRule(Base):
     min_ev: Mapped[Optional[float]] = mapped_column(Float, default=None)
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     user: Mapped["User"] = relationship(back_populates="alert_rules")
     events: Mapped[list["AlertEvent"]] = relationship(back_populates="rule")
@@ -99,7 +99,7 @@ class AlertEvent(Base):
 
     meta: Mapped[Optional[dict]] = mapped_column(JSON, default=None)
 
-    created_at: Mapped = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     rule: Mapped["AlertRule"] = relationship(back_populates="events")
     user: Mapped["User"] = relationship(back_populates="alert_events")
@@ -118,7 +118,7 @@ class Coupon(Base):
     total_prob: Mapped[float] = mapped_column(Float, default=0.0)
     total_ev: Mapped[float] = mapped_column(Float, default=0.0)
 
-    created_at: Mapped = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     user: Mapped["User"] = relationship(back_populates="coupons")
     selections: Mapped[list["CouponSelection"]] = relationship(back_populates="coupon")
@@ -154,7 +154,7 @@ class FavoriteLeague(Base):
     league_id: Mapped[str] = mapped_column(String(64))
     league_name: Mapped[str] = mapped_column(String(128), default="")
 
-    created_at: Mapped = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
 
 class FavoriteTeam(Base):
@@ -168,7 +168,7 @@ class FavoriteTeam(Base):
     league_id: Mapped[str] = mapped_column(String(64), default="")
     league_name: Mapped[str] = mapped_column(String(128), default="")
 
-    created_at: Mapped = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
 
 class ChatRoom(Base):
@@ -178,7 +178,7 @@ class ChatRoom(Base):
     key: Mapped[str] = mapped_column(String(128), unique=True, index=True)
     title: Mapped[str] = mapped_column(String(255), default="")
 
-    created_at: Mapped = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     messages: Mapped[list["ChatMessage"]] = relationship(back_populates="room")
 
@@ -192,7 +192,7 @@ class ChatMessage(Base):
 
     content: Mapped[str] = mapped_column(Text)
 
-    created_at: Mapped = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     room: Mapped["ChatRoom"] = relationship(back_populates="messages")
     user: Mapped["User"] = relationship(back_populates="chat_messages")
@@ -214,4 +214,4 @@ class TeamStats(Base):
     avg_goals_for: Mapped[float] = mapped_column(Float, default=1.5)
     avg_goals_against: Mapped[float] = mapped_column(Float, default=1.2)
 
-    created_at: Mapped = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
