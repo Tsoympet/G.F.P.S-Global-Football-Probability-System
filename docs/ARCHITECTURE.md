@@ -29,7 +29,6 @@ GFPS is composed of three main layers:
   - `User`, `Device`, `AlertRule`, `AlertEvent`
   - `Coupon`, `CouponSelection`
   - `FavoriteLeague`, `FavoriteTeam`
-  - `ChatRoom`, `ChatMessage`
   - `TeamStats`
 - `auth_utils.py` – password hashing, token creation, token decoding
 - `fixtures_api.py` – fixtures listing (via API-Football)
@@ -42,7 +41,6 @@ GFPS is composed of three main layers:
   - triggers alerts and logs events
 - `prediction_engine.py` – Poisson-based probability engine:
   - 1X2, Over/Under, GG/NG, generic fallback from odds
-- `chat_api.py` & `chat_ws.py` – REST + WebSocket chat
 - `stats_api.py` & `stats_context.py` – team statistics and Poisson context
 
 ---
@@ -112,6 +110,6 @@ GFPS is composed of three main layers:
 GFPS is designed to be:
 
 - **Pluggable** – swap external data providers (API-Football, others)
-- **Modular** – each domain (alerts, chat, coupons, stats) is separate
+- **Modular** – each domain (alerts, coupons, stats) is separate
 - **Scalable** – multiple backend instances behind nginx & load balancers
 - **Extendable** – add new markets, sports, prediction models

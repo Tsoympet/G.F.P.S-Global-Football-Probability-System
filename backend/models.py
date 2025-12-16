@@ -7,7 +7,6 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
-    Text,
     JSON,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -45,7 +44,6 @@ class User(Base):
     coupons: Mapped[list["Coupon"]] = relationship(back_populates="user")
     alert_rules: Mapped[list["AlertRule"]] = relationship(back_populates="user")
     alert_events: Mapped[list["AlertEvent"]] = relationship(back_populates="user")
-    chat_messages: Mapped[list["ChatMessage"]] = relationship(back_populates="user")
 
 
 class Device(Base):
@@ -169,33 +167,6 @@ class FavoriteTeam(Base):
     league_name: Mapped[str] = mapped_column(String(128), default="")
 
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
-
-
-class ChatRoom(Base):
-    __tablename__ = "chat_rooms"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    key: Mapped[str] = mapped_column(String(128), unique=True, index=True)
-    title: Mapped[str] = mapped_column(String(255), default="")
-
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
-
-    messages: Mapped[list["ChatMessage"]] = relationship(back_populates="room")
-
-
-class ChatMessage(Base):
-    __tablename__ = "chat_messages"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    room_id: Mapped[int] = mapped_column(ForeignKey("chat_rooms.id"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-
-    content: Mapped[str] = mapped_column(Text)
-
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
-
-    room: Mapped["ChatRoom"] = relationship(back_populates="messages")
-    user: Mapped["User"] = relationship(back_populates="chat_messages")
 
 
 class TeamStats(Base):
