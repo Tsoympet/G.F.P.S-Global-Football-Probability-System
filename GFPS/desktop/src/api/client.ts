@@ -1,5 +1,6 @@
+import { useAuthStore } from '@store/auth';
 import { useSettingsStore } from '@store/settings';
-import { Fixture, LiveOddsRow, ModelInfo, Prediction, ValueBet } from './types';
+import { Fixture, LiveOddsPayload, ModelInfo, Prediction, ValueBet } from './types';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
@@ -8,8 +9,13 @@ const buildUrl = (path: string) => {
   return `${baseUrl}${path}`;
 };
 
+const authHeaders = () => {
+  const token = useAuthStore.getState().token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(buildUrl(path));
+  const res = await fetch(buildUrl(path), { headers: { ...authHeaders() } });
   if (!res.ok) throw new Error(`Request failed: ${res.status}`);
   return res.json();
 }
@@ -17,7 +23,7 @@ async function get<T>(path: string): Promise<T> {
 async function post<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(buildUrl(path), {
     method: 'POST',
-    headers: jsonHeaders,
+    headers: { ...jsonHeaders, ...authHeaders() },
     body: body ? JSON.stringify(body) : undefined
   });
   if (!res.ok) throw new Error(`Request failed: ${res.status}`);
@@ -26,7 +32,7 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
 
 export const api = {
   fixtures: () => get<Fixture[]>('/fixtures'),
-  liveOdds: () => get<LiveOddsRow[]>('/live-odds'),
+  liveOdds: () => get<LiveOddsPayload>('/live-odds'),
   predictions: () => get<Prediction[]>('/predictions'),
   valueBets: () => get<ValueBet[]>('/value-bets'),
   trainModel: () => post<{ message: string }>('/ml/train'),

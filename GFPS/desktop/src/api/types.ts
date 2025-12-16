@@ -20,6 +20,23 @@ export interface LiveOddsRow {
   source?: string;
 }
 
+export interface AdditionalMarketLine {
+  fixtureId: string;
+  label: string;
+  type: 'total' | 'handicap';
+  line: string;
+  over?: number;
+  under?: number;
+  home?: number;
+  away?: number;
+  source?: string;
+}
+
+export interface LiveOddsPayload {
+  outrights: LiveOddsRow[];
+  markets: Record<string, AdditionalMarketLine[]>;
+}
+
 export interface Prediction {
   fixtureId: string;
   homeWinProbability: number;
