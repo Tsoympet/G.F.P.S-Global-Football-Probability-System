@@ -36,6 +36,7 @@ from .value_bets_api import router as value_bets_router
 from .ml_api import router as ml_router
 from .alert_engine import start_alert_engine_background
 from .streamer import start_streamer_background
+from .health_api import router as health_router
 
 
 app = FastAPI(
@@ -80,6 +81,7 @@ app.include_router(live_ws_router)
 app.include_router(predictions_router)
 app.include_router(value_bets_router)
 app.include_router(ml_router)
+app.include_router(health_router)
 app.include_router(markets_router)
 app.include_router(coupon_router)
 app.include_router(favorites_router)

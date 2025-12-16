@@ -92,10 +92,31 @@ branding/         # Logo prompts, brand guidelines
    ```bash
    cd GFPS/desktop
    npm install
-   npm run dev
-   ```
+ npm run dev
+  ```
 
 The desktop client expects the backend at `http://localhost:8000` by default; adjust `FRONTEND_BASE_URL` if you proxy or deploy elsewhere.
+
+## 🐳 Run with Docker Compose
+
+If you prefer containers, the `infrastructure/docker-compose.yml` file will start Postgres, the FastAPI backend, and optional observability tools:
+
+```bash
+cp .env.example .env   # fill in what you have; defaults fall back to demo data
+docker compose -f infrastructure/docker-compose.yml up --build
+```
+
+The backend will listen on port `8000` (or via Nginx on `80` if you keep that service enabled). Update `DATABASE_URL` or streamer flags in `.env` as needed.
+
+## 🔎 Quick health check
+
+Use the helper script to verify critical endpoints are reachable:
+
+```bash
+./scripts/check_endpoints.sh http://localhost:8000
+```
+
+It probes `/health`, `/fixtures`, `/live-odds`, `/predictions`, and `/value-bets` and prints a simple OK/failed summary.
 
 ## 🌱 Key environment variables
 - `SECRET_KEY`: JWT signing key for auth helpers.
