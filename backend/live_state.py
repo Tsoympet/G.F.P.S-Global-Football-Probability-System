@@ -36,8 +36,9 @@ class LiveState:
                 "status": "scheduled",
             },
         ]
-        self.events: List[Dict[str, Any]] = []
+        self.events: Dict[str, List[Dict[str, Any]]] = {}
         self.odds: List[Dict[str, Any]] = []
+        self.market_lines: Dict[str, List[Dict[str, Any]]] = {}
         self._subscribers: List[asyncio.Queue] = []
         self._lock = asyncio.Lock()
 
@@ -46,6 +47,7 @@ class LiveState:
             "fixtures": deepcopy(self.fixtures),
             "events": deepcopy(self.events),
             "odds": deepcopy(self.odds),
+            "markets": deepcopy(self.market_lines),
         }
 
     async def subscribe(self) -> asyncio.Queue:
@@ -73,14 +75,31 @@ class LiveState:
     async def set_fixtures(self, fixtures: List[Dict[str, Any]]) -> None:
         self.fixtures = deepcopy(fixtures)
         await self.broadcast({"type": "fixtures", **self.snapshot()})
+        await self._persist_snapshot("fixtures_update")
 
     async def set_odds(self, odds: List[Dict[str, Any]]) -> None:
         self.odds = deepcopy(odds)
         await self.broadcast({"type": "odds", **self.snapshot()})
+        await self._persist_snapshot("odds_update")
 
-    async def add_event(self, event: Dict[str, Any]) -> None:
-        self.events.append(event)
-        await self.broadcast({"type": "event", "event": deepcopy(event), **self.snapshot()})
+    async def set_markets(self, markets: Dict[str, List[Dict[str, Any]]]) -> None:
+        self.market_lines = deepcopy(markets)
+        await self.broadcast({"type": "markets", **self.snapshot()})
+        await self._persist_snapshot("markets_update")
+
+    async def set_events(self, events: Dict[str, List[Dict[str, Any]]]) -> None:
+        self.events = deepcopy(events)
+        await self.broadcast({"type": "events", **self.snapshot()})
+        await self._persist_snapshot("events_update")
+
+    async def add_event(self, fixture_id: str, event: Dict[str, Any]) -> None:
+        if fixture_id not in self.events:
+            self.events[fixture_id] = []
+        self.events[fixture_id].append(event)
+        await self.broadcast(
+            {"type": "event", "fixtureId": fixture_id, "event": deepcopy(event), **self.snapshot()}
+        )
+        await self._persist_snapshot("event")
 
     async def tick_demo_clock(self) -> None:
         """Simulate a minimal live update for demo fixtures."""
@@ -91,6 +110,10 @@ class LiveState:
             f["status"] = "live"
             f["timer"] = "1'"
             f["score"] = {"home": 0, "away": 0}
+            await self.add_event(
+                f.get("id", "demo"),
+                {"minute": 1, "description": "Kick-off", "type": "info"},
+            )
             await self.broadcast({"type": "kickoff", **self.snapshot()})
             return
 
@@ -111,6 +134,14 @@ class LiveState:
             else:
                 f["timer"] = f"{new_minute}'"
                 await self.broadcast({"type": "heartbeat", **self.snapshot()})
+
+    async def _persist_snapshot(self, reason: str) -> None:
+        try:
+            from .snapshot_service import capture_snapshot
+
+            await capture_snapshot(reason=reason)
+        except Exception as exc:  # pragma: no cover - best effort
+            print(f"[live_state] persist failed: {exc}")
 
 
 live_state = LiveState()

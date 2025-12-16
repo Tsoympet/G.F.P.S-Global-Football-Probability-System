@@ -92,8 +92,12 @@ branding/         # Logo prompts, brand guidelines
    ```bash
    cd GFPS/desktop
    npm install
- npm run dev
-  ```
+   npm run dev
+   ```
+
+5. **Create a user and log in**
+   - The protected endpoints (fixtures, live odds, predictions, value bets) now require a Bearer token.
+   - Sign up via `POST /auth/signup` or log in from the desktop Settings screen to store the token for subsequent calls.
 
 The desktop client expects the backend at `http://localhost:8000` by default; adjust `FRONTEND_BASE_URL` if you proxy or deploy elsewhere.
 
@@ -113,16 +117,22 @@ The backend will listen on port `8000` (or via Nginx on `80` if you keep that se
 Use the helper script to verify critical endpoints are reachable:
 
 ```bash
-./scripts/check_endpoints.sh http://localhost:8000
+AUTH_TOKEN="$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"test@gfps.app","password":"password"}' http://localhost:8000/auth/signup | jq -r .token)"
+AUTH_TOKEN="$AUTH_TOKEN" ./scripts/check_endpoints.sh http://localhost:8000
 ```
 
 It probes `/health`, `/fixtures`, `/live-odds`, `/predictions`, and `/value-bets` and prints a simple OK/failed summary.
+
+## 🛠️ One-command dev stack
+
+Use `./scripts/dev_stack.sh` to boot the backend (uvicorn) and desktop (`npm run dev`) together on ports 8000 and 1420 respectively. Ctrl+C will shut down the backend when you exit the desktop dev server.
 
 ## 🌱 Key environment variables
 - `SECRET_KEY`: JWT signing key for auth helpers.
 - `DATABASE_URL`: Database connection string; defaults to SQLite for local use.
 - `APIFOOTBALL_KEY`: Optional API key for live scores/odds. Leave blank to use demo data.
 - `STREAMER_ENABLED` / `STREAMER_INTERVAL_SEC`: Enable and tune the live poller; keep disabled without an API key.
+- `SNAPSHOT_INTERVAL_SEC`: How often to persist live snapshots + predictions/EV when running the scheduler.
 - `ALERT_ENGINE` / `ALERT_ENGINE_INTERVAL_SEC`: Toggle the background alert worker.
 - `SMTP_*` / `FCM_SERVER_KEY`: Email/FCM notification credentials (optional).
 - `GOOGLE_CLIENT_ID`: Enable Google sign-in flows in the auth helpers.

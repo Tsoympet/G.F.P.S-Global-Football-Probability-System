@@ -6,20 +6,23 @@ import { useQuery } from '@hooks/useQuery';
 import { useLiveMatches } from '@hooks/useLiveMatches';
 import { palette } from '@theme/palette';
 import { ReactNode, useState } from 'react';
-import { Fixture, LiveOddsRow, Prediction } from '@api/types';
+import { AdditionalMarketLine, Fixture, LiveOddsPayload, LiveOddsRow, Prediction } from '@api/types';
 
 export const LiveMatchCenter = () => {
-  const { fixtures: liveFixtures, events } = useLiveMatches();
+  const { fixtures: liveFixtures, events, markets: liveMarkets } = useLiveMatches();
   const fixturesQuery = useQuery(api.fixtures, []);
-  const oddsQuery = useQuery(api.liveOdds, []);
+  const oddsQuery = useQuery(api.liveOdds, { outrights: [], markets: {} });
   const predictionsQuery = useQuery(api.predictions, []);
   const [selected, setSelected] = useState<Fixture | null>(null);
 
   const fixtures = liveFixtures.length ? liveFixtures : fixturesQuery.data ?? [];
-  const liveOdds = oddsQuery.data ?? [];
+  const oddsPayload: LiveOddsPayload = oddsQuery.data ?? { outrights: [], markets: {} };
+  const liveOdds = oddsPayload.outrights;
+  const marketsByFixture = Object.keys(liveMarkets || {}).length ? liveMarkets : oddsPayload.markets;
   const predictions = predictionsQuery.data ?? [];
 
   const selectedPrediction: Prediction | undefined = predictions.find((p) => p.fixtureId === selected?.id);
+  const selectedMarkets: AdditionalMarketLine[] = selected?.id ? marketsByFixture[selected.id] || [] : [];
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 16, height: '100%' }}>
@@ -148,6 +151,45 @@ export const LiveMatchCenter = () => {
                   <div style={{ color: palette.textSecondary }}>No prediction data available.</div>
                 )}
               </div>
+            </div>
+
+            <div
+              style={{
+                border: `1px solid ${palette.border}`,
+                borderRadius: 12,
+                padding: 12,
+                background: palette.card
+              }}
+            >
+              <div style={{ color: palette.textPrimary, fontWeight: 600, marginBottom: 8 }}>Totals & Handicaps</div>
+              <DataTable<AdditionalMarketLine>
+                columns={[
+                  { header: 'Label', key: 'label' },
+                  { header: 'Line', key: 'line' },
+                  {
+                    header: 'Over',
+                    key: 'over',
+                    render: (row) => (row.over ? row.over.toFixed(2) : '-')
+                  },
+                  {
+                    header: 'Under',
+                    key: 'under',
+                    render: (row) => (row.under ? row.under.toFixed(2) : '-')
+                  },
+                  {
+                    header: 'Home',
+                    key: 'home',
+                    render: (row) => (row.home ? row.home.toFixed(2) : '-')
+                  },
+                  {
+                    header: 'Away',
+                    key: 'away',
+                    render: (row) => (row.away ? row.away.toFixed(2) : '-')
+                  },
+                  { header: 'Source', key: 'source' }
+                ]}
+                data={selectedMarkets}
+              />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

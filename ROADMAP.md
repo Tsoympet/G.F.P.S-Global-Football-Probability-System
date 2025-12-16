@@ -3,11 +3,11 @@
 This roadmap focuses on getting the FastAPI backend and the React/Tauri desktop client to run end-to-end with live data, model outputs, and alerting. Items marked as **done** have shipped; remaining bullets describe the next slices of work.
 
 ## Current gaps
-- **Live data depth:** The streamer now pulls API Football live fixtures when configured and the `/ws/live-matches` WebSocket broadcasts snapshots, but there is no persistence of historical events, and the payloads are limited to a single market (1X2) with basic score/time fields. Odds for other markets and richer match events (cards, corners) are not streamed.
-- **Prediction/value robustness:** Predictions and expected value are derived from implied probabilities of the latest odds; there is no trained model, persistence layer, or scheduling to refresh outputs. Value bets are recomputed in memory and not stored.
-- **Model lifecycle:** Demo endpoints for `/ml/train`, `/ml/models`, and `/ml/activate/{version}` exist but do not run real training jobs or record metrics/versions. There is no registry or artifact storage.
-- **Authentication & desktop wiring:** Auth routes exist server-side, but the desktop client still bypasses login and assumes open endpoints. Token storage/refresh and protected routes remain to be wired on the frontend.
-- **Ops & observability:** A basic `/health` route and sample `check_endpoints.sh` script exist, but there are no automated smoke tests, alerts, or dashboards. Containerized workflows are documented, yet there is no CI pipeline or seeded demo DB for compose-based runs.
+- **Live data depth:** The streamer now pulls API Football live fixtures when configured and the `/ws/live-matches` WebSocket broadcasts snapshots. Snapshots, odds, and events are persisted for offline viewing, and totals/handicap lines are exposed, but historical retention/queries and richer event types (corners, substitutions) are still thin.
+- **Prediction/value robustness:** Predictions and expected value are derived from implied probabilities and are now persisted/scheduled alongside the live snapshot, but they remain heuristic rather than model-driven.
+- **Model lifecycle:** The ML routes now enqueue a training simulation, persist versions/metrics, and support activation, but they are still stubs without real datasets or artifact storage.
+- **Authentication & desktop wiring:** Login/token storage now exists on the desktop and sensitive endpoints require auth. Refresh flows, token invalidation UX, and role-based protection are still missing.
+- **Ops & observability:** A smoke-test GitHub Action probes health + core endpoints and a dev script runs backend+desktop locally. Alerts/dashboards and seeded demo data for compose remain open.
 
 ## Milestones & tasks
 1. **Stabilize API contracts** — **done**
@@ -40,7 +40,7 @@ This roadmap focuses on getting the FastAPI backend and the React/Tauri desktop 
 
 ## Next up (suggested order)
 1) Persist and schedule: store live snapshots, predictions, and value bets; run periodic refresh when odds/fixtures update; and backfill demo seeds for offline use.
-2) Broaden live payloads: add additional markets (totals, handicaps), key events (cards, corners, substitutions), and include them in WebSocket and HTTP responses.
-3) Model lifecycle: replace demo `/ml/train` with a real training job skeleton, emit metrics, and persist model versions/activation state.
-4) Desktop auth wiring: add login/token handling in the client and secure the backend endpoints that should require authentication.
-5) Automation & CI: create compose/dev scripts to run backend + desktop together, add CI smoke tests hitting `/health`, `/fixtures`, `/live-odds`, `/predictions`, and `/value-bets`.
+2) Broaden live payloads further: add cards/corners/substitutions from upstream, retain recent event history per fixture, and stream them over WebSocket + `/live-odds` payloads.
+3) Model lifecycle: swap the simulated trainer for a real dataset-driven job, log metrics to disk/DB, and keep artifacts/activation history.
+4) Desktop auth hardening: add refresh/logout UX, guard WebSocket connections, and thread roles/claims through UI navigation.
+5) Automation & CI: extend smoke tests to cover desktop API calls, seed demo data into compose images, and publish artifacts from the training job stub.

@@ -3,8 +3,9 @@ from datetime import date
 from typing import Optional, Tuple
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from .auth_dependency import require_user
 from .live_state import live_state
 
 APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
@@ -40,7 +41,7 @@ def _map_status(short_code: str, elapsed: Optional[int]) -> Tuple[str, Optional[
     return "scheduled", None
 
 
-@router.get("")
+@router.get("", dependencies=[Depends(require_user)])
 async def list_fixtures(league_id: Optional[int] = None, date_str: Optional[str] = None):
     if not date_str:
         d = date.today().isoformat()

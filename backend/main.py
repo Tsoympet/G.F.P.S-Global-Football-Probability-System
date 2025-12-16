@@ -37,6 +37,7 @@ from .ml_api import router as ml_router
 from .alert_engine import start_alert_engine_background
 from .streamer import start_streamer_background
 from .health_api import router as health_router
+from .snapshot_service import backfill_demo_if_empty, start_snapshot_scheduler
 
 
 app = FastAPI(
@@ -65,10 +66,14 @@ async def startup_event() -> None:
     # Create all DB tables if they don't exist
     Base.metadata.create_all(bind=engine)
 
+    # Ensure demo seeds are persisted for offline use
+    backfill_demo_if_empty()
+
     # Start background workers (alerts + live streamer)
     loop = asyncio.get_event_loop()
     start_alert_engine_background(loop)
     start_streamer_background(loop)
+    start_snapshot_scheduler(loop)
 
 
 # -------------------------------------------------------------------

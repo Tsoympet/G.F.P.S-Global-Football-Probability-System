@@ -59,6 +59,30 @@ async def _fetch_live_fixtures() -> List[dict]:
     return fixtures
 
 
+async def _fetch_fixture_events(fixture_id: str) -> List[dict]:
+    if not APIFOOTBALL_KEY:
+        return []
+
+    headers = {"x-apisports-key": APIFOOTBALL_KEY}
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.get(
+            "https://v3.football.api-sports.io/fixtures/events",
+            headers=headers,
+            params={"fixture": fixture_id},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+    events = []
+    for ev in data.get("response", []):
+        minute = ev.get("time", {}).get("elapsed") or 0
+        etype = (ev.get("type") or "info").lower()
+        detail = ev.get("detail") or ""
+        description = f"{ev.get('team', {}).get('name', '')}: {detail}".strip()
+        events.append({"minute": minute, "description": description, "type": etype})
+    return events
+
+
 async def _refresh_live_snapshot() -> bool:
     """Update the shared live snapshot with upstream data.
 
@@ -74,6 +98,11 @@ async def _refresh_live_snapshot() -> bool:
 
     if fixtures:
         await live_state.set_fixtures(fixtures)
+        events_by_fixture = {}
+        for f in fixtures:
+            events_by_fixture[f.get("id", "")] = await _fetch_fixture_events(f.get("id"))
+        if any(events_by_fixture.values()):
+            await live_state.set_events(events_by_fixture)
         return True
 
     return False
