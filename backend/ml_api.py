@@ -84,7 +84,12 @@ def _activate_version(
             ModelVersion.version != version, ModelVersion.status == "active"
         ).update({"status": "ready", "activated_at": None})
         if deactivated > 1:
-            logger.warning("Multiple active models demoted during activation", extra={"count": deactivated})
+            db.rollback()
+            logger.error(
+                "Multiple active models detected during activation",
+                extra={"count": deactivated, "target": version},
+            )
+            raise HTTPException(409, "Multiple active models detected; activation aborted")
 
         activation = ModelActivation(
             version=version,

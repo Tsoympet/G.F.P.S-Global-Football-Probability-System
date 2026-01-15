@@ -25,11 +25,14 @@ def _event_count(payload: Dict) -> int:
 async def list_snapshots(limit: int = 20) -> Dict[str, object]:
     """List persisted snapshots for historical replay."""
 
+    if limit < 1:
+        raise HTTPException(400, "limit must be positive")
+    limit = min(limit, 500)
     with SessionLocal() as db:
         rows: List[LiveSnapshotRecord] = (
             db.query(LiveSnapshotRecord)
             .order_by(desc(LiveSnapshotRecord.created_at))
-            .limit(max(limit, 1))
+            .limit(limit)
             .all()
         )
     return {

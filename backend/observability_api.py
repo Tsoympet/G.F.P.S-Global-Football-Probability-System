@@ -10,6 +10,7 @@ from .snapshot_service import latest_snapshot_summary
 
 router = APIRouter(prefix="/observability", tags=["observability"])
 
+# Threshold defaults are environment-tunable to align with deployment SLAs.
 STALE_DATA_THRESHOLD_SEC = int(os.getenv("STALE_DATA_THRESHOLD_SEC", "300"))
 PERFORMANCE_LOGLOSS_THRESHOLD = float(os.getenv("PERFORMANCE_LOGLOSS_THRESHOLD", "0.9"))
 
