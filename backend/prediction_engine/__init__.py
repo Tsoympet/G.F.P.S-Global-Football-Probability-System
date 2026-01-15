@@ -215,16 +215,17 @@ def _extract_handicap_probabilities(matrix: np.ndarray, line: float) -> Dict[str
     home_range = np.arange(matrix.shape[0], dtype=float).reshape(-1, 1)
     away_range = np.arange(matrix.shape[1], dtype=float).reshape(1, -1)
     diff = home_range - away_range
-    home_cover = float(matrix[diff > line].sum())
-    push = float(matrix[np.isclose(diff, line)].sum())
-    away_cover = float(matrix[diff < line].sum())
+    push_mask = np.isclose(diff, line)
+    home_cover = float(matrix[(diff > line) & (~push_mask)].sum())
+    push = float(matrix[push_mask].sum())
+    away_cover = float(matrix[(diff < line) & (~push_mask)].sum())
     return _normalize_probabilities({"home": home_cover, "away": away_cover, "push": push})
 
 
 def _player_prop_probabilities(cleaned: Dict[str, float], ctx: dict) -> Dict[str, float]:
     """Lightweight player prop calculator using implied probabilities with team strength nudges."""
 
-    implied = normalize_probabilities(decimal_to_implied(cleaned))
+    implied = decimal_to_implied(cleaned)
     attack = float(ctx.get("home_attack") or ctx.get("attack") or 1.0)
     defense = float(ctx.get("away_defense") or ctx.get("away_defence") or ctx.get("defense") or 1.0)
     strength_adjustment = max(min((attack - defense) * 0.1, 0.15), -0.15)

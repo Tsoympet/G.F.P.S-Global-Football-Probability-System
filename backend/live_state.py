@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 _SEED_START = datetime.utcnow().replace(microsecond=0)
 
@@ -149,7 +149,9 @@ class LiveState:
         except Exception as exc:  # pragma: no cover - best effort
             print(f"[live_state] persist failed: {exc}")
 
-    def _build_event_feed(self, events: Dict[str, List[Dict[str, Any]]]) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
+    def _build_event_feed(
+        self, events: Dict[str, List[Dict[str, Any]]]
+    ) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
         feed: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
         for fixture_id, rows in (events or {}).items():
             for ev in rows or []:
@@ -160,7 +162,7 @@ class LiveState:
         self,
         fixture_id: str,
         event: Dict[str, Any],
-        feed: Dict[str, Dict[str, List[Dict[str, Any]]]] | None = None,
+        feed: Optional[Dict[str, Dict[str, List[Dict[str, Any]]]]] = None,
     ) -> None:
         target = feed if feed is not None else self.event_feed
         bucket = target.setdefault(

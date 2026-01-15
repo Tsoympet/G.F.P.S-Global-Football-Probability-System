@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -44,13 +44,13 @@ class RollbackRequest(BaseModel):
     reason: Optional[str] = None
 
 
-def _latest_artifact_map(db) -> dict:
+def _latest_artifact_map(db) -> Dict[str, ModelArtifact]:
     artifacts = (
         db.query(ModelArtifact)
         .order_by(ModelArtifact.version, ModelArtifact.created_at.desc())
         .all()
     )
-    mapping: dict[str, ModelArtifact] = {}
+    mapping: Dict[str, ModelArtifact] = {}
     for art in artifacts:
         mapping.setdefault(art.version, art)
     return mapping
@@ -153,7 +153,7 @@ async def activation_history() -> List[dict]:
 
 
 @router.post("/activate/{version}", dependencies=[Depends(require_user)])
-async def activate_model(version: str, req: ActivationRequest | None = None):
+async def activate_model(version: str, req: Optional[ActivationRequest] = None):
     """Activate a model version and demote any previously active entries."""
 
     payload = req or ActivationRequest()
