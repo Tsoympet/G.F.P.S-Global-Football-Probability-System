@@ -224,8 +224,20 @@ def _extract_handicap_probabilities(matrix: np.ndarray, line: float) -> Dict[str
 
 
 def _strength_from_ctx(ctx: dict) -> tuple[float, float]:
-    attack = float(ctx.get("home_attack") or ctx.get("attack") or 1.0)
-    defense = float(ctx.get("away_defense") or ctx.get("away_defence") or ctx.get("defense") or 1.0)
+    attack = float(
+        ctx.get("home_attack")
+        or ctx.get("away_attack")
+        or ctx.get("attack")
+        or 1.0
+    )
+    defense = float(
+        ctx.get("home_defense")
+        or ctx.get("home_defence")
+        or ctx.get("away_defense")
+        or ctx.get("away_defence")
+        or ctx.get("defense")
+        or 1.0
+    )
     return attack, defense
 
 

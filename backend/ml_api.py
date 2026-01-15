@@ -74,6 +74,17 @@ def _activate_version(
             .first()
         )
         previous_version = prev_active.version if prev_active else None
+        active_others = (
+            db.query(ModelVersion)
+            .filter(ModelVersion.status == "active", ModelVersion.version != version)
+            .count()
+        )
+        if active_others > 1:
+            logger.error(
+                "Multiple active models detected during activation",
+                extra={"count": active_others, "target": version},
+            )
+            raise HTTPException(409, "Multiple active models detected; activation aborted")
 
         now = datetime.utcnow()
         target.status = "active"
@@ -83,13 +94,6 @@ def _activate_version(
         deactivated = db.query(ModelVersion).filter(
             ModelVersion.version != version, ModelVersion.status == "active"
         ).update({"status": "ready", "activated_at": None})
-        if deactivated > 1:
-            db.rollback()
-            logger.error(
-                "Multiple active models detected during activation",
-                extra={"count": deactivated, "target": version},
-            )
-            raise HTTPException(409, "Multiple active models detected; activation aborted")
 
         activation = ModelActivation(
             version=version,

@@ -88,11 +88,14 @@ async def get_snapshot(snapshot_id: int) -> Dict[str, object]:
 async def fixture_timeline(fixture_id: str, limit: int = 50) -> Dict[str, object]:
     """Replay a fixture's event feed across historical snapshots."""
 
+    if limit < 1:
+        raise HTTPException(400, "limit must be positive")
+    limit = min(limit, 500)
     with SessionLocal() as db:
         snaps: List[LiveSnapshotRecord] = (
             db.query(LiveSnapshotRecord)
             .order_by(LiveSnapshotRecord.created_at.asc())
-            .limit(max(limit, 1))
+            .limit(limit)
             .all()
         )
 
