@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from .db import SessionLocal
 from .models import ValuePick
-from .auth_utils import get_current_user  # αν έχεις JWT auth
+from .auth_dependency import require_user
 
 router = APIRouter(prefix="/value-picks", tags=["value-picks"])
 
@@ -40,7 +40,7 @@ def list_value_picks(
     league: Optional[str] = Query(None, description="League filter (contains)"),
     bookmaker: Optional[str] = Query(None, description="Bookmaker filter (contains)"),
     limit: int = Query(50, ge=1, le=200),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_user),
 ):
     db = SessionLocal()
     try:
