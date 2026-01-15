@@ -148,8 +148,11 @@ class PredictionEngine:
         if not exposure:
             return priced_probabilities
         total_liability = sum(abs(v) for v in exposure.values()) or 1.0
-        adjustments = {k: 1.0 + RISK_SHADING_STRENGTH * (exposure.get(k, 0.0) / total_liability) for k in priced_probabilities}
-        shaded = {k: priced_probabilities[k] * adjustments[k] for k in priced_probabilities}
+        adjustments = {
+            k: max(0.05, 1.0 + RISK_SHADING_STRENGTH * (exposure.get(k, 0.0) / total_liability))
+            for k in priced_probabilities
+        }
+        shaded = {k: max(priced_probabilities[k] * adjustments[k], 1e-6) for k in priced_probabilities}
         scale = target_overround / (sum(shaded.values()) or target_overround)
         return {k: v * scale for k, v in shaded.items()}
 
