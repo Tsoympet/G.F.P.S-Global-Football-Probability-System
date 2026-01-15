@@ -4,7 +4,19 @@ import { palette } from '@theme/palette';
 import { useState } from 'react';
 
 export const Settings = () => {
-  const { apiUrl, refreshIntervalMs, setApiUrl, setRefreshInterval } = useSettingsStore();
+  const {
+    apiUrl,
+    refreshIntervalMs,
+    evThreshold,
+    theme,
+    lastSaved,
+    storageStatus,
+    storageMessage,
+    setApiUrl,
+    setRefreshInterval,
+    setEvThreshold,
+    setTheme
+  } = useSettingsStore();
   const [urlInput, setUrlInput] = useState(apiUrl);
   const [refreshInput, setRefreshInput] = useState(refreshIntervalMs);
   const { token, profile, status, error, login, logout } = useAuthStore();
@@ -25,6 +37,11 @@ export const Settings = () => {
       }}
     >
       <div style={{ color: palette.textPrimary, fontSize: 20, fontWeight: 700 }}>Settings</div>
+      <div style={{ color: palette.textSecondary, fontSize: 12 }}>
+        Secure settings are encrypted at rest and stored locally only. Last saved: {lastSaved || 'pending'} • Status:{' '}
+        {storageStatus}
+      </div>
+      {storageMessage && <div style={{ color: palette.danger }}>{storageMessage}</div>}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <label style={{ color: palette.textSecondary, fontSize: 14 }}>Backend API URL</label>
@@ -85,6 +102,39 @@ export const Settings = () => {
         >
           Update Interval
         </button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <label style={{ color: palette.textSecondary, fontSize: 14 }}>EV Threshold (%)</label>
+          <input
+            type="range"
+            min={1}
+            max={20}
+            value={Math.round(evThreshold * 100)}
+            onChange={(e) => setEvThreshold(Number(e.target.value) / 100)}
+          />
+          <div style={{ color: palette.textSecondary, fontSize: 13 }}>
+            Current EV floor: {(evThreshold * 100).toFixed(1)}%
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <label style={{ color: palette.textSecondary, fontSize: 14 }}>Theme</label>
+          <select
+            value={theme}
+            onChange={(e) => setTheme(e.target.value as 'dark' | 'contrast')}
+            style={{
+              background: palette.card,
+              border: `1px solid ${palette.border}`,
+              color: palette.textPrimary,
+              padding: '12px 14px',
+              borderRadius: 10
+            }}
+          >
+            <option value="dark">Dark analytics</option>
+            <option value="contrast">High contrast</option>
+          </select>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

@@ -19,6 +19,11 @@ body {
   overflow: hidden;
 }
 
+body[data-theme='contrast'] {
+  background: #0a0c16;
+  color: #f8fafc;
+}
+
 a {
   color: inherit;
   text-decoration: none;

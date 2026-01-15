@@ -34,11 +34,12 @@ export const api = {
   fixtures: () => get<Fixture[]>('/fixtures'),
   liveOdds: () => get<LiveOddsPayload>('/live-odds'),
   predictions: () => get<Prediction[]>('/predictions'),
-  valueBets: () => get<ValueBet[]>('/value-bets'),
+  valueBets: (minEv?: number) => get<ValueBet[]>(`/value-bets${minEv ? `?min_ev=${minEv}` : ''}`),
   trainModel: () => post<{ message: string }>('/ml/train'),
   models: () => get<ModelInfo[]>('/ml/models'),
   activateModel: (version: string) => post<{ message: string }>(`/ml/activate/${version}`),
-  pipelineStatus: () => get<PipelineStatus>('/pipeline/status')
+  pipelineStatus: () => get<PipelineStatus>('/pipeline/status'),
+  health: () => get<{ ok: boolean; uptime_sec: number; services: Record<string, { status: string }> }>('/health')
 };
 
 export const websocketUrl = () => {

@@ -11,32 +11,41 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
-export const ProbabilityEvolutionChart = () => {
-  const labels = Array.from({ length: 10 }).map((_, idx) => `${idx * 10}'`);
-  const random = () => labels.map(() => Math.max(5, Math.min(90, 40 + Math.random() * 20)));
+interface ProbabilityEvolutionChartProps {
+  labels: string[];
+  home: number[];
+  draw: number[];
+  away: number[];
+}
+
+export const ProbabilityEvolutionChart = ({ labels, home, draw, away }: ProbabilityEvolutionChartProps) => {
+  const safeLabels = labels.length ? labels : ['0'];
+  const safeHome = home.length ? home : [0];
+  const safeDraw = draw.length ? draw : [0];
+  const safeAway = away.length ? away : [0];
 
   return (
     <Line
       data={{
-        labels,
+        labels: safeLabels,
         datasets: [
           {
             label: 'Home',
-            data: random(),
+            data: safeHome,
             borderColor: '#0fd7a1',
             backgroundColor: 'rgba(15,215,161,0.18)',
             tension: 0.3
           },
           {
             label: 'Draw',
-            data: random(),
+            data: safeDraw,
             borderColor: '#f59e0b',
             backgroundColor: 'rgba(245,158,11,0.14)',
             tension: 0.3
           },
           {
             label: 'Away',
-            data: random(),
+            data: safeAway,
             borderColor: '#1f9ae5',
             backgroundColor: 'rgba(31,154,229,0.18)',
             tension: 0.3

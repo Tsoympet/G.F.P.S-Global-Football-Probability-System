@@ -1,17 +1,68 @@
+import { loadSecure, saveSecure } from '@app/secureStorage';
 import { create } from 'zustand';
 
-export interface SettingsState {
+type Theme = 'dark' | 'contrast';
+
+type StorageStatus = 'idle' | 'loading' | 'persisted' | 'error';
+
+const SETTINGS_KEY = 'gfps_settings';
+
+type PersistedSettings = {
   apiUrl: string;
   refreshIntervalMs: number;
-  theme: 'dark';
-  setApiUrl: (apiUrl: string) => void;
-  setRefreshInterval: (ms: number) => void;
+  evThreshold: number;
+  theme: Theme;
+  lastSaved?: string;
+};
+
+export interface SettingsState extends PersistedSettings {
+  storageStatus: StorageStatus;
+  initialized: boolean;
+  storageMessage?: string;
+  setApiUrl: (apiUrl: string) => Promise<void>;
+  setRefreshInterval: (ms: number) => Promise<void>;
+  setEvThreshold: (ev: number) => Promise<void>;
+  setTheme: (theme: Theme) => Promise<void>;
+  hydrate: () => Promise<void>;
 }
 
-export const useSettingsStore = create<SettingsState>((set) => ({
-  apiUrl: 'http://localhost:8000',
-  refreshIntervalMs: 5000,
-  theme: 'dark',
-  setApiUrl: (apiUrl) => set({ apiUrl }),
-  setRefreshInterval: (refreshIntervalMs) => set({ refreshIntervalMs })
-}));
+export const useSettingsStore = create<SettingsState>((set, get) => {
+  const baseSettings = (): PersistedSettings => {
+    const { apiUrl, refreshIntervalMs, evThreshold, theme, lastSaved } = get();
+    return { apiUrl, refreshIntervalMs, evThreshold, theme, lastSaved };
+  };
+
+  const persist = async (next: Partial<PersistedSettings>) => {
+    const payload = { ...baseSettings(), ...next };
+    try {
+      const savedAt = await saveSecure(SETTINGS_KEY, payload);
+      set({ ...payload, lastSaved: savedAt, storageStatus: 'persisted', storageMessage: undefined, initialized: true });
+    } catch (error: any) {
+      set({ storageStatus: 'error', storageMessage: error?.message });
+    }
+  };
+
+  return {
+    apiUrl: 'http://localhost:8000',
+    refreshIntervalMs: 5000,
+    evThreshold: 0.05,
+    theme: 'dark',
+    storageStatus: 'loading',
+    initialized: false,
+    lastSaved: undefined,
+    storageMessage: undefined,
+    hydrate: async () => {
+      set({ storageStatus: 'loading' });
+      const stored = await loadSecure<PersistedSettings>(SETTINGS_KEY);
+      if (stored) {
+        set({ ...get(), ...stored, storageStatus: 'persisted', initialized: true });
+        return;
+      }
+      set({ initialized: true, storageStatus: 'idle' });
+    },
+    setApiUrl: async (apiUrl: string) => persist({ apiUrl }),
+    setRefreshInterval: async (refreshIntervalMs: number) => persist({ refreshIntervalMs }),
+    setEvThreshold: async (evThreshold: number) => persist({ evThreshold }),
+    setTheme: async (theme: Theme) => persist({ theme })
+  };
+});

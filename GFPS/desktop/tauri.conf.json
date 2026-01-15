@@ -8,6 +8,14 @@
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
+  "bundle": {
+    "targets": ["msi", "dmg", "appimage"],
+    "windows": {
+      "wix": {
+        "language": "en-US"
+      }
+    }
+  },
   "app": {
     "windows": [
       {

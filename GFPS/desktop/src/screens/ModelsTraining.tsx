@@ -3,13 +3,16 @@ import { DataTable } from '@components/DataTable';
 import { useQuery } from '@hooks/useQuery';
 import { palette } from '@theme/palette';
 import { ModelInfo } from '@api/types';
+import { useSettingsStore } from '@store/settings';
 
 export const ModelsTraining = () => {
-  const models = useQuery(api.models, []);
+  const { refreshIntervalMs } = useSettingsStore();
+  const models = useQuery(api.models, { pollMs: refreshIntervalMs * 2 });
 
   const handleTrain = async () => {
     try {
       await api.trainModel();
+      models.refetch();
     } catch (error) {
       console.error(error);
     }
@@ -18,6 +21,7 @@ export const ModelsTraining = () => {
   const handleActivate = async (version: string) => {
     try {
       await api.activateModel(version);
+      models.refetch();
     } catch (error) {
       console.error(error);
     }
@@ -34,11 +38,11 @@ export const ModelsTraining = () => {
         flexDirection: 'column',
         gap: 12
       }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ color: palette.textPrimary, fontSize: 20, fontWeight: 700 }}>Models & Training</div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ color: palette.textPrimary, fontSize: 20, fontWeight: 700 }}>Models & Training</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
             onClick={handleTrain}
             style={{
               background: 'linear-gradient(90deg, #1f9ae5, #0fd7a1)',
@@ -54,6 +58,8 @@ export const ModelsTraining = () => {
           </button>
         </div>
       </div>
+      {models.loading && <div style={{ color: palette.textSecondary }}>Syncing models…</div>}
+      {models.error && <div style={{ color: palette.danger }}>{models.error}</div>}
       <DataTable<ModelInfo>
         columns={[
           { header: 'Version', key: 'version' },
