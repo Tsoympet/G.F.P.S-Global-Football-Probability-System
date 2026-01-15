@@ -1,13 +1,15 @@
 import unittest
 from dataclasses import replace
 
-from backend.prediction_engine.engine import PredictionEngine, PredictionInput
+from backend.prediction_engine.engine import PredictionEngine, PredictionInput, TARGET_OVERROUND
 from backend.prediction_engine.strength.team_strength import MatchResult
-from backend.prediction_engine import predict_market
+from backend.prediction_engine import predict_market, generate_predictions
+from backend.db import Base, engine
 
 
 class PredictionEngineTests(unittest.TestCase):
     def setUp(self):
+        Base.metadata.create_all(bind=engine)
         self.results = [
             MatchResult(home_team="Alpha FC", away_team="Beta FC", home_goals=2, away_goals=1, league="Test"),
             MatchResult(home_team="Beta FC", away_team="Alpha FC", home_goals=0, away_goals=0, league="Test"),
@@ -66,6 +68,47 @@ class PredictionEngineTests(unittest.TestCase):
         self.assertEqual(set(response.keys()), set(odds.keys()))
         total_prob = sum(item["prob"] for item in response.values())
         self.assertAlmostEqual(total_prob, 1.0, places=3)
+
+    def test_risk_shading_never_negative(self):
+        engine = PredictionEngine()
+        priced = {"home": 0.6, "draw": 0.3, "away": 0.2}
+        exposure = {"home": -120.0, "draw": 50.0, "away": 10.0}
+        shaded = engine._apply_risk_shading(priced, exposure, target_overround=1.06)
+        self.assertAlmostEqual(sum(shaded.values()), 1.06, places=6)
+        for value in shaded.values():
+            self.assertGreater(value, 0.0)
+
+    def test_generate_predictions_include_pricing_fields(self):
+        snapshot = {
+            "fixtures": [
+                {
+                    "id": 1,
+                    "homeTeam": "Alpha FC",
+                    "awayTeam": "Beta FC",
+                    "league": "Test",
+                    "status": "scheduled",
+                    "startTime": "2024-05-01T12:00:00Z",
+                }
+            ],
+            "odds": [
+                {
+                    "fixtureId": "1",
+                    "home": 2.0,
+                    "draw": 3.3,
+                    "away": 3.6,
+                    "market": "Alpha FC vs Beta FC",
+                }
+            ],
+        }
+        preds = generate_predictions(snapshot)
+        self.assertEqual(len(preds), 1)
+        priced = preds[0].get("pricedProbabilities")
+        final_odds = preds[0].get("finalOdds")
+        self.assertIsNotNone(priced)
+        self.assertIsNotNone(final_odds)
+        self.assertAlmostEqual(sum(priced.values()), TARGET_OVERROUND, places=3)
+        for value in priced.values():
+            self.assertGreater(value, 0.0)
 
 
 if __name__ == "__main__":

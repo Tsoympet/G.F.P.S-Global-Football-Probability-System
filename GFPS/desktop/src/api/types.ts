@@ -40,11 +40,21 @@ export interface LiveOddsPayload {
   markets: Record<string, AdditionalMarketLine[]>;
 }
 
+export interface ProbabilitySet {
+  home: number;
+  draw: number;
+  away: number;
+}
+
 export interface Prediction {
   fixtureId: string;
   homeWinProbability: number;
   drawProbability: number;
   awayWinProbability: number;
+  pricedProbabilities?: ProbabilitySet;
+  finalOdds?: ProbabilitySet;
+  modelVersion?: string;
+  confidence?: number;
 }
 
 export interface ValueBet {

@@ -8,7 +8,7 @@ import numpy as np
 
 from backend.db import SessionLocal
 from backend.market.implied_probability import decimal_to_implied, normalize_probabilities
-from backend.prediction_engine.engine import PredictionEngine, PredictionInput
+from backend.prediction_engine.engine import PredictionEngine, PredictionInput, TARGET_OVERROUND
 from backend.prediction_engine.strength.team_strength import MatchResult
 from backend.stats_context import build_poisson_context
 from backend.validation import parse_iso_datetime, parse_market_line, require_decimal_odds
@@ -172,12 +172,20 @@ def generate_predictions(snapshot: dict) -> List[Dict]:
                 continue
             result = engine.predict(inp)
             probs = _normalize_probabilities(result["probabilities"])
+            priced_raw = {k: float(v) for k, v in (result.get("priced_probabilities") or {}).items()}
+            priced_sum = sum(priced_raw.values()) or TARGET_OVERROUND
+            priced = {k: v * (TARGET_OVERROUND / priced_sum) for k, v in priced_raw.items()}
+            final_odds = {k: float(v) for k, v in (result.get("final_odds") or {}).items()}
             predictions.append(
                 {
                     "fixtureId": fixture_id,
                     "homeWinProbability": round(probs["home"], 4),
                     "drawProbability": round(probs["draw"], 4),
                     "awayWinProbability": round(probs["away"], 4),
+                    "pricedProbabilities": {k: round(v, 4) for k, v in priced.items()},
+                    "finalOdds": {k: round(v, 4) for k, v in final_odds.items()},
+                    "modelVersion": result.get("model_version", MODEL_VERSION),
+                    "confidence": round(float(result.get("confidence", 0.0)), 4),
                 }
             )
 
