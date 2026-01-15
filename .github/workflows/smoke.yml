@@ -17,21 +17,52 @@ jobs:
       - name: Install backend deps
         run: pip install -r backend/requirements.txt
 
+      - name: Initialize database
+        run: python -m scripts.init_db
+
       - name: Launch backend
         run: |
-          uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
+          uvicorn backend.main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
           echo $! > backend.pid
-          sleep 5
+
+      - name: Wait for backend health
+        run: |
+          # Wait up to 30 seconds for backend to become healthy
+          for i in {1..30}; do
+            if curl -sf http://127.0.0.1:8000/health > /dev/null 2>&1; then
+              echo "Backend is healthy"
+              exit 0
+            fi
+            echo "Waiting for backend... (attempt $i/30)"
+            sleep 1
+          done
+          echo "Backend failed to become healthy"
+          exit 1
+
+      - name: Check backend is running
+        run: |
+          if ! kill -0 $(cat backend.pid) 2>/dev/null; then
+            echo "Backend process has died!"
+            echo "=== Backend logs ==="
+            cat backend.log 2>/dev/null || echo "No logs found"
+            exit 1
+          fi
+          echo "Backend process is still running (PID: $(cat backend.pid))"
 
       - name: Seed auth user
         run: |
           sudo apt-get update && sudo apt-get install -y jq
+          echo "=== Attempting signup ==="
           SIGNUP=$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"ci@gfps.app","password":"password"}' http://127.0.0.1:8000/auth/signup)
+          echo "Signup response: $SIGNUP"
           TOKEN=$(echo "$SIGNUP" | jq -r '.token // empty')
           if [ -z "$TOKEN" ]; then
+            echo "=== Attempting login ==="
             LOGIN=$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"ci@gfps.app","password":"password"}' http://127.0.0.1:8000/auth/login)
+            echo "Login response: $LOGIN"
             TOKEN=$(echo "$LOGIN" | jq -r '.token // empty')
           fi
+          echo "Extracted token: $TOKEN"
           if [ -z "$TOKEN" ]; then
             echo "Failed to acquire token" && exit 1
           fi
