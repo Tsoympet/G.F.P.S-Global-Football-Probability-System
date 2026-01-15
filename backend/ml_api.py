@@ -2,11 +2,12 @@ import asyncio
 from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from .db import SessionLocal
 from .models import ModelVersion
 from .ml_trainer import queue_training
+from .auth_dependency import require_user
 
 router = APIRouter(prefix="/ml", tags=["ml"])
 
@@ -24,7 +25,7 @@ def _ensure_seed_model() -> None:
             db.commit()
 
 
-@router.post("/train")
+@router.post("/train", dependencies=[Depends(require_user)])
 async def train_model():
     """Kick off a background training job and return its run id."""
 
@@ -33,11 +34,11 @@ async def train_model():
         latest = db.query(ModelVersion).order_by(ModelVersion.created_at.desc()).first()
         next_version = f"v{latest.id + 1}" if latest else "v1"
 
-    run_id = queue_training(asyncio.get_event_loop(), next_version)
+    run_id = queue_training(asyncio.get_running_loop(), next_version)
     return {"message": f"Training started for {next_version}", "runId": run_id}
 
 
-@router.get("/models")
+@router.get("/models", dependencies=[Depends(require_user)])
 async def list_models() -> List[dict]:
     """Return persisted model metadata for desktop diagnostics."""
 
@@ -55,7 +56,7 @@ async def list_models() -> List[dict]:
         ]
 
 
-@router.post("/activate/{version}")
+@router.post("/activate/{version}", dependencies=[Depends(require_user)])
 async def activate_model(version: str):
     """Activate a model version and demote any previously active entries."""
 

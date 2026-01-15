@@ -39,9 +39,11 @@ GFPS is composed of three main layers:
   - polls live fixtures and odds
   - calls prediction engine
   - triggers alerts and logs events
-- `prediction_engine.py` – Poisson-based probability engine:
-  - 1X2, Over/Under, GG/NG, generic fallback from odds
-- `stats_api.py` & `stats_context.py` – team statistics and Poisson context
+- `prediction_engine/` – probability engine:
+  - Poisson + Dixon-Coles goal modelling
+  - Market normalization (overround + shin) and ensemble pooling
+  - EV computation for 1X2, totals, and BTTS
+- `stats_api.py` & `stats_context.py` – team strength storage and Poisson context
 
 ---
 
@@ -59,7 +61,7 @@ GFPS is composed of three main layers:
 - `Dashboard.tsx` – KPIs, charts and quick insights
 - `LiveMatchCenter.tsx` – live fixtures and markets
 - `ValueBets.tsx` – EV+ opportunities surfaced from the model
-- `ModelsTraining.tsx` – model monitoring/training placeholder
+- `ModelsTraining.tsx` – model monitoring/training orchestration
 - `Settings.tsx` – app-level configuration
 
 ### Shared UI & State

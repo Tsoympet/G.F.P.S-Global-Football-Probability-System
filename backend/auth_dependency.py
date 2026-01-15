@@ -32,6 +32,9 @@ def require_user(
     if not user:
         raise HTTPException(404, "User not found")
 
+    if not user.is_active:
+        raise HTTPException(403, "Account disabled")
+
     if user.token_version != payload.get("tv"):
         raise HTTPException(401, "Token expired")
 

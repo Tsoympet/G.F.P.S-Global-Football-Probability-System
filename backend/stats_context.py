@@ -12,6 +12,9 @@ def build_poisson_context(
     season: str = "2024",
 ) -> dict:
     ctx: dict = {}
+    ctx["league_id"] = league_id
+    ctx["home_team"] = home_team
+    ctx["away_team"] = away_team
 
     home = db.scalar(
         select(TeamStats).where(

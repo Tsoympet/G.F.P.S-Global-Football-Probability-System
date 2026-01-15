@@ -11,8 +11,8 @@ router = APIRouter(prefix="/value-bets", tags=["value-bets"])
 
 
 @router.get("", dependencies=[Depends(require_user)])
-async def list_value_bets() -> List[dict]:
+async def list_value_bets(min_ev: float | None = None) -> List[dict]:
     """Return simplified value bet rows expected by the desktop client."""
 
     snapshot = latest_snapshot_payload() or live_state.snapshot()
-    return compute_value_bets(snapshot)
+    return compute_value_bets(snapshot, min_ev=min_ev)

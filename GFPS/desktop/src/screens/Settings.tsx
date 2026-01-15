@@ -8,8 +8,8 @@ export const Settings = () => {
   const [urlInput, setUrlInput] = useState(apiUrl);
   const [refreshInput, setRefreshInput] = useState(refreshIntervalMs);
   const { token, profile, status, error, login, logout } = useAuthStore();
-  const [email, setEmail] = useState('demo@gfps.app');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   return (
     <section
@@ -92,7 +92,7 @@ export const Settings = () => {
         <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="email"
+          placeholder="you@example.com"
           style={{
             background: palette.card,
             border: `1px solid ${palette.border}`,
@@ -105,7 +105,7 @@ export const Settings = () => {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="password"
+          placeholder="••••••••"
           style={{
             background: palette.card,
             border: `1px solid ${palette.border}`,

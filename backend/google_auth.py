@@ -4,7 +4,7 @@ import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, constr
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
@@ -109,7 +109,7 @@ def get_user_from_token(token: str, db: Session) -> User:
 
 class Signup(BaseModel):
     email: EmailStr
-    password: str
+    password: constr(min_length=8)
     display_name: Optional[str] = None
 
 
@@ -129,7 +129,7 @@ class ResetRequest(BaseModel):
 
 class ResetConfirm(BaseModel):
     token: str
-    new_password: str
+    new_password: constr(min_length=8)
 
 
 class TwoFASetupRequest(BaseModel):
