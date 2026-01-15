@@ -74,15 +74,11 @@ def _activate_version(
             .first()
         )
         previous_version = prev_active.version if prev_active else None
-        active_others = (
-            db.query(ModelVersion)
-            .filter(ModelVersion.status == "active", ModelVersion.version != version)
-            .count()
-        )
-        if active_others > 1:
+        active_total = db.query(ModelVersion).filter(ModelVersion.status == "active").count()
+        if active_total > 1:
             logger.error(
                 "Multiple active models detected during activation",
-                extra={"count": active_others, "target": version},
+                extra={"count": active_total, "target": version},
             )
             raise HTTPException(409, "Multiple active models detected; activation aborted")
 

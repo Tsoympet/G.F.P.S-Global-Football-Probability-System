@@ -286,6 +286,8 @@ def _map_outcome_handicap(outcome: str) -> Optional[str]:
         return "home"
     if "away" in lower or lower.startswith("+") or lower.startswith("2"):
         return "away"
+    if "push" in lower or "draw" in lower:
+        return "push"
     return None
 
 
@@ -315,6 +317,7 @@ def predict_market(market: str, odds: Dict[str, float], ctx: dict) -> Dict[str, 
     if not cleaned:
         return {}
 
+    implied_probs = normalize_probabilities(decimal_to_implied(cleaned))
     market_type = _market_kind(market or "")
     engine = PredictionEngine()
     inp = PredictionInput(
@@ -350,8 +353,7 @@ def predict_market(market: str, odds: Dict[str, float], ctx: dict) -> Dict[str, 
                     except ValueError:
                         continue
         if line is None:
-            implied = normalize_probabilities(decimal_to_implied(cleaned))
-            probabilities = implied
+            probabilities = implied_probs
             mapper = _map_outcome_over_under
         else:
             probabilities = _extract_totals_probabilities(poisson.score_matrix, line)
@@ -378,7 +380,7 @@ def predict_market(market: str, odds: Dict[str, float], ctx: dict) -> Dict[str, 
         probabilities = _extract_btts_probabilities(poisson.score_matrix)
         mapper = _map_outcome_btts
     else:
-        probabilities = normalize_probabilities(decimal_to_implied(cleaned))
+        probabilities = implied_probs
         mapper = _identity
 
     response: Dict[str, Dict[str, float]] = {}

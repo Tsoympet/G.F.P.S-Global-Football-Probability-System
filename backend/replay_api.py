@@ -16,7 +16,7 @@ from .validation import format_iso_datetime
 router = APIRouter(prefix="/replay", tags=["replay"])
 
 
-def _event_count(payload: Dict) -> int:
+def _total_event_count(payload: Dict) -> int:
     events = payload.get("events") or {}
     return sum(len(rows or []) for rows in events.values())
 
@@ -43,7 +43,7 @@ async def list_snapshots(limit: int = 20) -> Dict[str, object]:
                 "reason": row.reason,
                 "capturedAt": format_iso_datetime(row.created_at),
                 "fixtureCount": len((row.payload or {}).get("fixtures") or []),
-                "eventCount": _event_count(row.payload or {}),
+                "eventCount": _total_event_count(row.payload or {}),
             }
             for row in rows
         ],
