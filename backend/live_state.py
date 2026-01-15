@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 _SEED_START = datetime.utcnow().replace(microsecond=0)
 
@@ -41,6 +41,7 @@ class LiveState:
         self.events: Dict[str, List[Dict[str, Any]]] = {}
         self.odds: List[Dict[str, Any]] = []
         self.market_lines: Dict[str, List[Dict[str, Any]]] = {}
+        self.event_feed: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
         self._subscribers: List[asyncio.Queue] = []
         self._lock = asyncio.Lock()
 
@@ -48,6 +49,7 @@ class LiveState:
         return {
             "fixtures": deepcopy(self.fixtures),
             "events": deepcopy(self.events),
+            "eventFeed": deepcopy(self.event_feed),
             "odds": deepcopy(self.odds),
             "markets": deepcopy(self.market_lines),
         }
@@ -91,6 +93,7 @@ class LiveState:
 
     async def set_events(self, events: Dict[str, List[Dict[str, Any]]]) -> None:
         self.events = deepcopy(events)
+        self.event_feed = self._build_event_feed(events)
         await self.broadcast({"type": "events", **self.snapshot()})
         await self._persist_snapshot("events_update")
 
@@ -98,6 +101,7 @@ class LiveState:
         if fixture_id not in self.events:
             self.events[fixture_id] = []
         self.events[fixture_id].append(event)
+        self._insert_event_into_feed(fixture_id, event)
         await self.broadcast(
             {"type": "event", "fixtureId": fixture_id, "event": deepcopy(event), **self.snapshot()}
         )
@@ -144,6 +148,37 @@ class LiveState:
             await capture_snapshot(reason=reason)
         except Exception as exc:  # pragma: no cover - best effort
             print(f"[live_state] persist failed: {exc}")
+
+    def _build_event_feed(
+        self, events: Dict[str, List[Dict[str, Any]]]
+    ) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
+        feed: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
+        for fixture_id, rows in (events or {}).items():
+            for ev in rows or []:
+                self._insert_event_into_feed(fixture_id, ev, feed)
+        return feed
+
+    def _insert_event_into_feed(
+        self,
+        fixture_id: str,
+        event: Dict[str, Any],
+        feed: Optional[Dict[str, Dict[str, List[Dict[str, Any]]]]] = None,
+    ) -> None:
+        target = feed if feed is not None else self.event_feed
+        bucket = target.setdefault(
+            fixture_id,
+            {"cards": [], "corners": [], "substitutions": [], "other": []},
+        )
+        category = (event.get("type") or "").lower()
+        normalized = dict(event)
+        if category in {"red card", "yellow card", "card"} or "card" in category:
+            bucket["cards"].append(normalized)
+        elif "corner" in category:
+            bucket["corners"].append(normalized)
+        elif "substitution" in category or category in {"sub", "subs"}:
+            bucket["substitutions"].append(normalized)
+        else:
+            bucket["other"].append(normalized)
 
 
 live_state = LiveState()

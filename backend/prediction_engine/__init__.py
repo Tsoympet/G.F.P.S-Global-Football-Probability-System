@@ -21,6 +21,7 @@ BASE_HOME_GOALS = float(os.getenv("BASE_HOME_GOALS", "1.45"))
 BASE_AWAY_GOALS = float(os.getenv("BASE_AWAY_GOALS", "1.15"))
 DIXON_COLES_RHO = float(os.getenv("DIXON_COLES_RHO", "-0.08"))
 EV_MIN_THRESHOLD = float(os.getenv("EV_MIN_THRESHOLD", "0.02"))
+HANDICAP_TOLERANCE = 1e-6
 
 
 def _market_label(home: str | None, away: str | None) -> str:
@@ -211,6 +212,45 @@ def _extract_btts_probabilities(matrix: np.ndarray) -> Dict[str, float]:
     return _normalize_probabilities({"yes": yes_prob, "no": no_prob})
 
 
+def _extract_handicap_probabilities(matrix: np.ndarray, line: float) -> Dict[str, float]:
+    home_range = np.arange(matrix.shape[0], dtype=float).reshape(-1, 1)
+    away_range = np.arange(matrix.shape[1], dtype=float).reshape(1, -1)
+    diff = home_range - away_range
+    push_mask = np.isclose(diff, line, atol=HANDICAP_TOLERANCE)
+    home_cover = float(matrix[(diff > line) & (~push_mask)].sum())
+    push = float(matrix[push_mask].sum())
+    away_cover = float(matrix[(diff < line) & (~push_mask)].sum())
+    return _normalize_probabilities({"home": home_cover, "away": away_cover, "push": push})
+
+
+def _strength_from_ctx(ctx: dict) -> tuple[float, float]:
+    attack = float(
+        ctx.get("home_attack")
+        or ctx.get("away_attack")
+        or ctx.get("attack")
+        or 1.0
+    )
+    defense = float(
+        ctx.get("home_defense")
+        or ctx.get("home_defence")
+        or ctx.get("away_defense")
+        or ctx.get("away_defence")
+        or ctx.get("defense")
+        or 1.0
+    )
+    return attack, defense
+
+
+def _player_prop_probabilities(cleaned: Dict[str, float], ctx: dict) -> Dict[str, float]:
+    """Lightweight player prop calculator using implied probabilities with team strength nudges."""
+
+    implied = decimal_to_implied(cleaned)
+    attack, defense = _strength_from_ctx(ctx)
+    strength_adjustment = max(min((attack - defense) * 0.1, 0.15), -0.15)
+    adjusted = {k: max(v * (1 + strength_adjustment), 0.0) for k, v in implied.items()}
+    return _normalize_probabilities(adjusted)
+
+
 def _map_outcome_1x2(outcome: str) -> Optional[str]:
     lower = outcome.lower()
     if lower in {"home", "1", "h"}:
@@ -240,6 +280,32 @@ def _map_outcome_btts(outcome: str) -> Optional[str]:
     return None
 
 
+def _map_outcome_handicap(outcome: str) -> Optional[str]:
+    lower = outcome.lower()
+    if "home" in lower or lower.startswith("-") or lower.startswith("1"):
+        return "home"
+    if "away" in lower or lower.startswith("+") or lower.startswith("2"):
+        return "away"
+    if "push" in lower or "draw" in lower:
+        return "push"
+    return None
+
+
+def _market_kind(label: str) -> str:
+    lower = (label or "").lower()
+    if lower in {"1x2", "match winner", "match winner 1x2"}:
+        return "1x2"
+    if "over/under" in lower or "total" in lower:
+        return "totals"
+    if "asian" in lower or "handicap" in lower:
+        return "handicap"
+    if "both teams" in lower or "btts" in lower:
+        return "btts"
+    if "player" in lower or "goalscorer" in lower or "shots" in lower:
+        return "player"
+    return "generic"
+
+
 def _identity(outcome: str) -> str:
     return outcome
 
@@ -251,7 +317,8 @@ def predict_market(market: str, odds: Dict[str, float], ctx: dict) -> Dict[str, 
     if not cleaned:
         return {}
 
-    market_lower = (market or "").lower()
+    implied_probs = normalize_probabilities(decimal_to_implied(cleaned))
+    market_type = _market_kind(market or "")
     engine = PredictionEngine()
     inp = PredictionInput(
         fixture_id=str(ctx.get("fixture_id") or "alert"),
@@ -271,10 +338,10 @@ def predict_market(market: str, odds: Dict[str, float], ctx: dict) -> Dict[str, 
     poisson = engine.poisson_prediction(inp)
 
     probabilities: Dict[str, float]
-    if market_lower in {"1x2", "match winner", "match winner 1x2"}:
+    if market_type == "1x2":
         probabilities = _normalize_probabilities(poisson.one_x_two)
         mapper = _map_outcome_1x2
-    elif "over/under" in market_lower or "total" in market_lower:
+    elif market_type == "totals":
         line = None
         for outcome in cleaned:
             mapped = _map_outcome_over_under(outcome)
@@ -286,17 +353,34 @@ def predict_market(market: str, odds: Dict[str, float], ctx: dict) -> Dict[str, 
                     except ValueError:
                         continue
         if line is None:
-            implied = normalize_probabilities(decimal_to_implied(cleaned))
-            probabilities = implied
+            probabilities = implied_probs
             mapper = _map_outcome_over_under
         else:
             probabilities = _extract_totals_probabilities(poisson.score_matrix, line)
             mapper = _map_outcome_over_under
-    elif "both teams" in market_lower or "btts" in market_lower:
+    elif market_type == "handicap":
+        line = None
+        for outcome in cleaned:
+            tokens = outcome.replace("+", " +").replace("-", " -").split()
+            for token in tokens:
+                try:
+                    line = float(token)
+                    break
+                except ValueError:
+                    continue
+            if line is not None:
+                break
+        line = 0.0 if line is None else line
+        probabilities = _extract_handicap_probabilities(poisson.score_matrix, line)
+        mapper = _map_outcome_handicap
+    elif market_type == "player":
+        probabilities = _player_prop_probabilities(cleaned, ctx)
+        mapper = _identity
+    elif market_type == "btts":
         probabilities = _extract_btts_probabilities(poisson.score_matrix)
         mapper = _map_outcome_btts
     else:
-        probabilities = normalize_probabilities(decimal_to_implied(cleaned))
+        probabilities = implied_probs
         mapper = _identity
 
     response: Dict[str, Dict[str, float]] = {}

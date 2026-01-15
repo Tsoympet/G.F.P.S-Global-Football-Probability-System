@@ -245,3 +245,26 @@ class TrainingRun(Base):
     metrics: Mapped[Optional[dict]] = mapped_column(JSON, default=None)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
     completed_at: Mapped[Optional[DateTime]] = mapped_column(DateTime, default=None)
+
+
+class ModelArtifact(Base):
+    __tablename__ = "model_artifacts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version: Mapped[str] = mapped_column(String(64), index=True)
+    uri: Mapped[str] = mapped_column(String(512))
+    checksum: Mapped[Optional[str]] = mapped_column(String(128), default=None)
+    meta: Mapped[Optional[dict]] = mapped_column(JSON, default=None)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class ModelActivation(Base):
+    __tablename__ = "model_activations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    version: Mapped[str] = mapped_column(String(64), index=True)
+    previous_version: Mapped[Optional[str]] = mapped_column(String(64), default=None)
+    activated_by: Mapped[Optional[str]] = mapped_column(String(128), default=None)
+    reason: Mapped[Optional[str]] = mapped_column(String(256), default=None)
+    rollback_of: Mapped[Optional[str]] = mapped_column(String(64), default=None)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
