@@ -80,13 +80,27 @@ async def _fetch_fixture_events(fixture_id: str) -> List[dict]:
         resp.raise_for_status()
         data = resp.json()
 
-    events = []
+    events: List[dict] = []
     for ev in data.get("response", []):
         minute = ev.get("time", {}).get("elapsed") or 0
         etype = (ev.get("type") or "info").lower()
         detail = ev.get("detail") or ""
-        description = f"{ev.get('team', {}).get('name', '')}: {detail}".strip()
-        events.append({"minute": minute, "description": description, "type": etype})
+        team = ev.get("team", {}).get("name", "")
+        player = ev.get("player", {}).get("name")
+        assist = ev.get("assist", {}).get("name")
+        comments = ev.get("comments")
+        description = f"{team}: {detail}".strip()
+        payload = {
+            "minute": minute,
+            "description": description,
+            "type": etype,
+            "detail": detail,
+            "team": team,
+            "player": player,
+            "assist": assist,
+            "comments": comments,
+        }
+        events.append(payload)
     return events
 
 

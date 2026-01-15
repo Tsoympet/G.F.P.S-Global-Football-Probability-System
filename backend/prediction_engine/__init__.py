@@ -211,6 +211,27 @@ def _extract_btts_probabilities(matrix: np.ndarray) -> Dict[str, float]:
     return _normalize_probabilities({"yes": yes_prob, "no": no_prob})
 
 
+def _extract_handicap_probabilities(matrix: np.ndarray, line: float) -> Dict[str, float]:
+    home_range = np.arange(matrix.shape[0], dtype=float).reshape(-1, 1)
+    away_range = np.arange(matrix.shape[1], dtype=float).reshape(1, -1)
+    diff = home_range - away_range
+    home_cover = float(matrix[diff > line].sum())
+    push = float(matrix[np.isclose(diff, line)].sum())
+    away_cover = float(matrix[diff < line].sum())
+    return _normalize_probabilities({"home": home_cover, "away": away_cover, "push": push})
+
+
+def _player_prop_probabilities(cleaned: Dict[str, float], ctx: dict) -> Dict[str, float]:
+    """Lightweight player prop calculator using implied probabilities with team strength nudges."""
+
+    implied = normalize_probabilities(decimal_to_implied(cleaned))
+    attack = float(ctx.get("home_attack") or ctx.get("attack") or 1.0)
+    defense = float(ctx.get("away_defense") or ctx.get("away_defence") or ctx.get("defense") or 1.0)
+    strength_adjustment = max(min((attack - defense) * 0.1, 0.15), -0.15)
+    adjusted = {k: max(v * (1 + strength_adjustment), 0.0) for k, v in implied.items()}
+    return _normalize_probabilities(adjusted)
+
+
 def _map_outcome_1x2(outcome: str) -> Optional[str]:
     lower = outcome.lower()
     if lower in {"home", "1", "h"}:
@@ -237,6 +258,15 @@ def _map_outcome_btts(outcome: str) -> Optional[str]:
         return "yes"
     if lower in {"ng", "no"} or "no" in lower:
         return "no"
+    return None
+
+
+def _map_outcome_handicap(outcome: str) -> Optional[str]:
+    lower = outcome.lower()
+    if "home" in lower or lower.startswith("-") or lower.startswith("1"):
+        return "home"
+    if "away" in lower or lower.startswith("+") or lower.startswith("2"):
+        return "away"
     return None
 
 
@@ -292,6 +322,24 @@ def predict_market(market: str, odds: Dict[str, float], ctx: dict) -> Dict[str, 
         else:
             probabilities = _extract_totals_probabilities(poisson.score_matrix, line)
             mapper = _map_outcome_over_under
+    elif "asian" in market_lower or "handicap" in market_lower:
+        line = None
+        for outcome in cleaned:
+            tokens = outcome.replace("+", " +").replace("-", " -").split()
+            for token in tokens:
+                try:
+                    line = float(token)
+                    break
+                except ValueError:
+                    continue
+            if line is not None:
+                break
+        line = 0.0 if line is None else line
+        probabilities = _extract_handicap_probabilities(poisson.score_matrix, line)
+        mapper = _map_outcome_handicap
+    elif "player" in market_lower or "goalscorer" in market_lower or "shots" in market_lower:
+        probabilities = _player_prop_probabilities(cleaned, ctx)
+        mapper = _identity
     elif "both teams" in market_lower or "btts" in market_lower:
         probabilities = _extract_btts_probabilities(poisson.score_matrix)
         mapper = _map_outcome_btts

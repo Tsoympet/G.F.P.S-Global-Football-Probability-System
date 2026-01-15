@@ -110,6 +110,36 @@ class PredictionEngineTests(unittest.TestCase):
         for value in priced.values():
             self.assertGreater(value, 0.0)
 
+    def test_predict_market_asian_handicap(self):
+        ctx = {
+            "league_id": "test",
+            "home_team": "Alpha FC",
+            "away_team": "Beta FC",
+            "home_attack": 1.05,
+            "away_attack": 0.95,
+            "home_defense": 0.98,
+            "away_defense": 1.02,
+        }
+        odds = {"Home -0.5": 1.9, "Away +0.5": 1.95}
+        response = predict_market("Asian Handicap", odds, ctx)
+        self.assertEqual(set(response.keys()), set(odds.keys()))
+        total_prob = sum(item["prob"] for item in response.values())
+        self.assertAlmostEqual(total_prob, 1.0, places=2)
+
+    def test_predict_market_player_props(self):
+        ctx = {
+            "league_id": "test",
+            "home_team": "Alpha FC",
+            "away_team": "Beta FC",
+            "home_attack": 1.2,
+            "away_defense": 0.9,
+        }
+        odds = {"Player Over 1.5 Shots": 1.8, "Player Under 1.5 Shots": 2.0}
+        response = predict_market("Player Shots", odds, ctx)
+        self.assertEqual(set(response.keys()), set(odds.keys()))
+        total_prob = sum(item["prob"] for item in response.values())
+        self.assertAlmostEqual(total_prob, 1.0, places=2)
+
 
 if __name__ == "__main__":
     unittest.main()
