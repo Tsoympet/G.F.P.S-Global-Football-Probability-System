@@ -11,6 +11,7 @@ from .snapshot_service import latest_snapshot_summary
 router = APIRouter(prefix="/observability", tags=["observability"])
 
 STALE_DATA_THRESHOLD_SEC = int(os.getenv("STALE_DATA_THRESHOLD_SEC", "300"))
+PERFORMANCE_LOGLOSS_THRESHOLD = float(os.getenv("PERFORMANCE_LOGLOSS_THRESHOLD", "0.9"))
 
 
 @router.get("/metrics", dependencies=[Depends(require_user)])
@@ -62,7 +63,7 @@ async def observability_alerts() -> Dict[str, object]:
             .first()
         )
         metrics = (active_model.metrics or {}) if active_model else {}
-        performance_warning = metrics.get("logLoss", 0.0) > 0.9
+        performance_warning = metrics.get("logLoss", 0.0) > PERFORMANCE_LOGLOSS_THRESHOLD
 
     return {
         "ok": True,

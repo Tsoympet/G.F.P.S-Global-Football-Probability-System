@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -11,6 +12,7 @@ from .ml_trainer import queue_training
 from .auth_dependency import require_user
 
 router = APIRouter(prefix="/ml", tags=["ml"])
+logger = logging.getLogger("gfps.ml")
 
 
 def _ensure_seed_model() -> None:
@@ -78,9 +80,11 @@ def _activate_version(
         target.activated_at = now
         db.add(target)
 
-        db.query(ModelVersion).filter(
+        deactivated = db.query(ModelVersion).filter(
             ModelVersion.version != version, ModelVersion.status == "active"
         ).update({"status": "ready", "activated_at": None})
+        if deactivated > 1:
+            logger.warning("Multiple active models demoted during activation", extra={"count": deactivated})
 
         activation = ModelActivation(
             version=version,
