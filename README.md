@@ -101,6 +101,15 @@ GFPS provides probabilistic analytics, not guarantees. Football outcomes remain 
 
 The desktop client expects the backend at `http://localhost:8000` by default; adjust `FRONTEND_BASE_URL` if you proxy or deploy elsewhere.
 
+### Desktop client hardening
+
+- Live-connected screens for Dashboard, Match Center, Value Scanner, Models, and Settings
+- WebSocket streaming with HTTP polling fallback, stale-data indicators, and API health surfacing
+- Encrypted local storage for API endpoint, EV threshold, refresh interval, theme, and auth token
+- Value Scanner with EV slider, league/market filters, EV/kickoff sorting, and threshold-aware API calls
+- Tests: `npm test` (Vitest) and production build: `npm run build`
+- Installers: `npm run tauri:build` emits `.msi`, `.dmg`, and `.AppImage` artifacts
+
 ---
 
 ## 🐳 Run with Docker Compose

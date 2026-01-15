@@ -11,9 +11,18 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
 
-export const MomentumChart = () => {
-  const labels = Array.from({ length: 15 }).map((_, idx) => `${idx * 6}'`);
-  const data = labels.map((_, idx) => Math.sin(idx / 3) * 30 + 50);
+interface MomentumChartProps {
+  points: { label: string; value: number }[];
+}
+
+export const MomentumChart = ({ points }: MomentumChartProps) => {
+  const labels = points.map((p) => p.label);
+  const data = points.map((p) => p.value);
+
+  if (!labels.length) {
+    labels.push('0');
+    data.push(0);
+  }
 
   return (
     <Line
@@ -34,7 +43,7 @@ export const MomentumChart = () => {
         plugins: { legend: { display: false } },
         scales: {
           x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-          y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' }, min: -50, max: 100 }
         }
       }}
     />

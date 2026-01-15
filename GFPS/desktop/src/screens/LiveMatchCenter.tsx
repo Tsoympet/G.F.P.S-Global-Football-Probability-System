@@ -5,15 +5,26 @@ import { DataTable } from '@components/DataTable';
 import { useQuery } from '@hooks/useQuery';
 import { useLiveMatches } from '@hooks/useLiveMatches';
 import { palette } from '@theme/palette';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { AdditionalMarketLine, Fixture, LiveOddsPayload, LiveOddsRow, Prediction } from '@api/types';
+import { useSettingsStore } from '@store/settings';
+
+interface ProbabilityPoint {
+  label: string;
+  home: number;
+  draw: number;
+  away: number;
+  value?: number;
+}
 
 export const LiveMatchCenter = () => {
-  const { fixtures: liveFixtures, events, markets: liveMarkets } = useLiveMatches();
-  const fixturesQuery = useQuery(api.fixtures, []);
-  const oddsQuery = useQuery(api.liveOdds, { outrights: [], markets: {} });
-  const predictionsQuery = useQuery(api.predictions, []);
+  const { refreshIntervalMs } = useSettingsStore();
+  const { fixtures: liveFixtures, events, markets: liveMarkets, connection, lastMessage } = useLiveMatches();
+  const fixturesQuery = useQuery(api.fixtures, { pollMs: refreshIntervalMs });
+  const oddsQuery = useQuery(api.liveOdds, { pollMs: refreshIntervalMs });
+  const predictionsQuery = useQuery(api.predictions, { pollMs: refreshIntervalMs });
   const [selected, setSelected] = useState<Fixture | null>(null);
+  const [history, setHistory] = useState<Record<string, ProbabilityPoint[]>>({});
 
   const fixtures = liveFixtures.length ? liveFixtures : fixturesQuery.data ?? [];
   const oddsPayload: LiveOddsPayload = oddsQuery.data ?? { outrights: [], markets: {} };
@@ -23,13 +34,85 @@ export const LiveMatchCenter = () => {
 
   const selectedPrediction: Prediction | undefined = predictions.find((p) => p.fixtureId === selected?.id);
   const selectedMarkets: AdditionalMarketLine[] = selected?.id ? marketsByFixture[selected.id] || [] : [];
+  const oddsForSelection = selected?.id ? liveOdds.filter((row) => row.fixtureId === selected.id || !row.fixtureId) : liveOdds;
+  const streamStale = lastMessage ? Date.now() - lastMessage > refreshIntervalMs * 3 : !lastMessage;
+
+  useEffect(() => {
+    if (!predictionsQuery.data || !predictionsQuery.lastUpdated) return;
+    setHistory((prev) => {
+      const next = { ...prev };
+      const timestamp = new Date(predictionsQuery.lastUpdated).toLocaleTimeString();
+      predictionsQuery.data.forEach((p) => {
+        if (!p.fixtureId) return;
+        const series = next[p.fixtureId] || [];
+        if (!series.length || series[series.length - 1].label !== timestamp) {
+          series.push({
+            label: timestamp,
+            home: +(p.homeWinProbability * 100).toFixed(2),
+            draw: +(p.drawProbability * 100).toFixed(2),
+            away: +(p.awayWinProbability * 100).toFixed(2)
+          });
+        } else {
+          series[series.length - 1] = {
+            label: timestamp,
+            home: +(p.homeWinProbability * 100).toFixed(2),
+            draw: +(p.drawProbability * 100).toFixed(2),
+            away: +(p.awayWinProbability * 100).toFixed(2)
+          };
+        }
+        next[p.fixtureId] = series.slice(-30);
+      });
+      return next;
+    });
+  }, [predictionsQuery.data, predictionsQuery.lastUpdated]);
+
+  const probabilitySeries = useMemo(() => {
+    if (!selected?.id) return { labels: [], home: [], draw: [], away: [] };
+    const series = history[selected.id] || [];
+    if (!series.length && selectedPrediction) {
+      return {
+        labels: ['now'],
+        home: [selectedPrediction.homeWinProbability * 100],
+        draw: [selectedPrediction.drawProbability * 100],
+        away: [selectedPrediction.awayWinProbability * 100]
+      };
+    }
+    return {
+      labels: series.map((s) => s.label),
+      home: series.map((s) => s.home),
+      draw: series.map((s) => s.draw),
+      away: series.map((s) => s.away)
+    };
+  }, [history, selected, selectedPrediction]);
+
+  const momentumSeries = useMemo(() => {
+    if (!selected?.id) return [];
+    const series: ProbabilityPoint[] = [];
+    const feed = events[selected.id] || [];
+    let cursor = 0;
+    feed.forEach((evt) => {
+      let delta = 0;
+      if (evt.type === 'goal') {
+        delta = evt.description?.toLowerCase().includes(selected.homeTeam.toLowerCase()) ? 15 : -15;
+      } else if (evt.type === 'card') {
+        delta = evt.description?.toLowerCase().includes(selected.homeTeam.toLowerCase()) ? -8 : 8;
+      } else {
+        delta = 0;
+      }
+      cursor = Math.max(-30, Math.min(100, cursor + delta));
+      series.push({ label: `${evt.minute}'`, home: cursor, draw: cursor, away: cursor, value: cursor });
+    });
+    return series.map(({ label, value }) => ({ label, value }));
+  }, [events, selected]);
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 16, height: '100%' }}>
       <section style={{ border: `1px solid ${palette.border}`, borderRadius: 14, overflow: 'hidden' }}>
         <div style={{ padding: 14, borderBottom: `1px solid ${palette.border}`, background: 'rgba(17,24,39,0.7)' }}>
           <div style={{ color: palette.textPrimary, fontWeight: 700 }}>Live Matches</div>
-          <div style={{ color: palette.textSecondary, fontSize: 13 }}>Click a row to open detail</div>
+          <div style={{ color: palette.textSecondary, fontSize: 13 }}>
+            Click a row to open detail • Feed: {connection} {lastMessage ? `• updated ${new Date(lastMessage).toLocaleTimeString()}` : ''}
+          </div>
         </div>
         <div style={{ maxHeight: 'calc(100vh - 220px)', overflow: 'auto' }}>
           <DataTable<Fixture>
@@ -61,7 +144,9 @@ export const LiveMatchCenter = () => {
               {
                 header: 'Status',
                 key: 'status',
-                render: (row) => <span style={{ color: '#22c55e' }}>{row.status}</span>
+                render: (row) => (
+                  <span style={{ color: row.status === 'live' ? '#22c55e' : palette.textSecondary }}>{row.status}</span>
+                )
               },
               {
                 header: 'Score',
@@ -109,6 +194,11 @@ export const LiveMatchCenter = () => {
                 Live Score: {selected.score ? `${selected.score.home} - ${selected.score.away}` : 'N/A'}
               </div>
             </header>
+            {streamStale && (
+              <div style={{ color: palette.warning, fontSize: 12 }}>
+                Live stream paused — retrying WebSocket and falling back to HTTP polling.
+              </div>
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 12 }}>
               <div
@@ -128,7 +218,7 @@ export const LiveMatchCenter = () => {
                     { header: 'Away', key: 'away', render: (row) => row.away.toFixed(2) },
                     { header: 'Source', key: 'source' }
                   ]}
-                  data={liveOdds}
+                  data={oddsForSelection}
                 />
               </div>
 
@@ -162,42 +252,51 @@ export const LiveMatchCenter = () => {
               }}
             >
               <div style={{ color: palette.textPrimary, fontWeight: 600, marginBottom: 8 }}>Totals & Handicaps</div>
-              <DataTable<AdditionalMarketLine>
-                columns={[
-                  { header: 'Label', key: 'label' },
-                  { header: 'Line', key: 'line' },
-                  {
-                    header: 'Over',
-                    key: 'over',
-                    render: (row) => (row.over ? row.over.toFixed(2) : '-')
-                  },
-                  {
-                    header: 'Under',
-                    key: 'under',
-                    render: (row) => (row.under ? row.under.toFixed(2) : '-')
-                  },
-                  {
-                    header: 'Home',
-                    key: 'home',
-                    render: (row) => (row.home ? row.home.toFixed(2) : '-')
-                  },
-                  {
-                    header: 'Away',
-                    key: 'away',
-                    render: (row) => (row.away ? row.away.toFixed(2) : '-')
-                  },
-                  { header: 'Source', key: 'source' }
-                ]}
-                data={selectedMarkets}
-              />
+              {selectedMarkets.length ? (
+                <DataTable<AdditionalMarketLine>
+                  columns={[
+                    { header: 'Label', key: 'label' },
+                    { header: 'Line', key: 'line' },
+                    {
+                      header: 'Over',
+                      key: 'over',
+                      render: (row) => (row.over ? row.over.toFixed(2) : '-')
+                    },
+                    {
+                      header: 'Under',
+                      key: 'under',
+                      render: (row) => (row.under ? row.under.toFixed(2) : '-')
+                    },
+                    {
+                      header: 'Home',
+                      key: 'home',
+                      render: (row) => (row.home ? row.home.toFixed(2) : '-')
+                    },
+                    {
+                      header: 'Away',
+                      key: 'away',
+                      render: (row) => (row.away ? row.away.toFixed(2) : '-')
+                    },
+                    { header: 'Source', key: 'source' }
+                  ]}
+                  data={selectedMarkets}
+                />
+              ) : (
+                <div style={{ color: palette.textSecondary }}>Waiting for live market lines.</div>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <ChartCard title="Momentum" subtitle="Live dominance trajectory">
-                <MomentumChart />
+                <MomentumChart points={momentumSeries} />
               </ChartCard>
               <ChartCard title="Probability Evolution" subtitle="Win/Draw/Away over time">
-                <ProbabilityEvolutionChart />
+                <ProbabilityEvolutionChart
+                  labels={probabilitySeries.labels}
+                  home={probabilitySeries.home}
+                  draw={probabilitySeries.draw}
+                  away={probabilitySeries.away}
+                />
               </ChartCard>
             </div>
 

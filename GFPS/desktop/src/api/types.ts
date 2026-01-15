@@ -63,6 +63,9 @@ export interface ValueBet {
   odds: number;
   modelProbability: number;
   expectedValue: number;
+  fixtureId?: string;
+  league?: string;
+  startTime?: string;
 }
 
 export interface ModelInfo {

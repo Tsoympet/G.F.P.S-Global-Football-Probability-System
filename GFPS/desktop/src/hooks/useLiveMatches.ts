@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { websocketUrl } from '@api/client';
 import { AdditionalMarketLine, Fixture, MatchEvent } from '@api/types';
 
@@ -6,44 +6,69 @@ interface LiveMatchState {
   fixtures: Fixture[];
   events: Record<string, MatchEvent[]>;
   markets: Record<string, AdditionalMarketLine[]>;
+  connection: 'connecting' | 'open' | 'closed' | 'error';
+  lastMessage?: number;
 }
 
 export const useLiveMatches = () => {
-  const [state, setState] = useState<LiveMatchState>({ fixtures: [], events: {}, markets: {} });
+  const [state, setState] = useState<LiveMatchState>({
+    fixtures: [],
+    events: {},
+    markets: {},
+    connection: 'connecting'
+  });
+  const retryRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const socket = new WebSocket(websocketUrl());
+    let socket: WebSocket | null = null;
+    const connect = () => {
+      socket = new WebSocket(websocketUrl());
+      setState((prev) => ({ ...prev, connection: 'connecting' }));
 
-    socket.onmessage = (event) => {
-      const payload = JSON.parse(event.data);
-      if (payload.type === 'snapshot') {
-        setState({
-          fixtures: (payload.fixtures as Fixture[]) || [],
-          events: (payload.events as Record<string, MatchEvent[]>) || {},
-          markets: (payload.markets as Record<string, AdditionalMarketLine[]>) || {}
-        });
-      }
-      if (payload.type === 'fixtures') {
-        setState((prev) => ({ ...prev, fixtures: (payload.fixtures as Fixture[]) || [] }));
-      }
-      if (payload.type === 'event') {
-        const fixtureId = payload.fixtureId as string;
-        const matchEvent = payload.event as MatchEvent;
-        setState((prev) => ({
-          fixtures: prev.fixtures,
-          events: {
-            ...prev.events,
-            [fixtureId]: [...(prev.events[fixtureId] || []), matchEvent]
-          },
-          markets: prev.markets
-        }));
-      }
-      if (payload.type === 'markets') {
-        setState((prev) => ({ ...prev, markets: (payload.markets as Record<string, AdditionalMarketLine[]>) || {} }));
-      }
+      socket.onopen = () => setState((prev) => ({ ...prev, connection: 'open' }));
+      socket.onerror = () => setState((prev) => ({ ...prev, connection: 'error' }));
+      socket.onclose = () => {
+        setState((prev) => ({ ...prev, connection: 'closed' }));
+        retryRef.current = setTimeout(connect, 1500);
+      };
+      socket.onmessage = (event) => {
+        const payload = JSON.parse(event.data);
+        setState((prev) => ({ ...prev, lastMessage: Date.now() }));
+
+        if (payload.type === 'snapshot') {
+          setState({
+            fixtures: (payload.fixtures as Fixture[]) || [],
+            events: (payload.events as Record<string, MatchEvent[]>) || {},
+            markets: (payload.markets as Record<string, AdditionalMarketLine[]>) || {},
+            connection: 'open',
+            lastMessage: Date.now()
+          });
+        }
+        if (payload.type === 'fixtures') {
+          setState((prev) => ({ ...prev, fixtures: (payload.fixtures as Fixture[]) || [] }));
+        }
+        if (payload.type === 'event') {
+          const fixtureId = payload.fixtureId as string;
+          const matchEvent = payload.event as MatchEvent;
+          setState((prev) => ({
+            ...prev,
+            events: {
+              ...prev.events,
+              [fixtureId]: [...(prev.events[fixtureId] || []), matchEvent]
+            }
+          }));
+        }
+        if (payload.type === 'markets') {
+          setState((prev) => ({ ...prev, markets: (payload.markets as Record<string, AdditionalMarketLine[]>) || {} }));
+        }
+      };
     };
 
-    return () => socket.close();
+    connect();
+    return () => {
+      socket?.close();
+      if (retryRef.current) clearTimeout(retryRef.current);
+    };
   }, []);
 
   return state;
