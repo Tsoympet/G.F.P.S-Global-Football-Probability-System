@@ -24,6 +24,8 @@ FORM_WEIGHT = float(os.getenv("FORM_ADJUSTMENT_WEIGHT", "0.15"))
 MIN_GOAL_RATE = float(os.getenv("MIN_GOAL_RATE", "0.05"))
 MARKET_WEIGHT_MIN = float(os.getenv("MARKET_WEIGHT_MIN", "0.35"))
 MARKET_WEIGHT_MAX = float(os.getenv("MARKET_WEIGHT_MAX", "0.7"))
+TARGET_OVERROUND = float(os.getenv("TARGET_OVERROUND", "1.06"))
+RISK_SHADING_STRENGTH = float(os.getenv("RISK_SHADING_STRENGTH", "0.15"))
 
 
 @dataclass(frozen=True)
@@ -44,6 +46,7 @@ class PredictionInput:
     form_away: float = 0.5
     dixon_coles_rho: float = -0.08
     bookmaker_lines: Optional[Iterable[BookmakerLine]] = None
+    exposure: Optional[Dict[str, float]] = None
 
 
 class PredictionEngine:
@@ -125,6 +128,31 @@ class PredictionEngine:
         calibrated = self.calibrator.transform(logits)
         return calibrated / calibrated.sum(axis=1, keepdims=True)
 
+    @staticmethod
+    def _insert_margin(probabilities: Dict[str, float], target_overround: float = TARGET_OVERROUND) -> Dict[str, float]:
+        """Apply bookmaker-style margin after calibration without changing beliefs."""
+        fair = normalize_probabilities(probabilities)
+        margin = max(target_overround - 1.0, 0.0)
+        weights = {k: v ** 1.2 for k, v in fair.items()}
+        weight_sum = sum(weights.values()) or 1.0
+        priced = {k: fair[k] + margin * (weights[k] / weight_sum) for k in fair}
+        return priced
+
+    @staticmethod
+    def _apply_risk_shading(
+        priced_probabilities: Dict[str, float],
+        exposure: Optional[Dict[str, float]],
+        target_overround: float = TARGET_OVERROUND,
+    ) -> Dict[str, float]:
+        """Shift prices to manage liability while keeping beliefs unchanged."""
+        if not exposure:
+            return priced_probabilities
+        total_liability = sum(abs(v) for v in exposure.values()) or 1.0
+        adjustments = {k: 1.0 + RISK_SHADING_STRENGTH * (exposure.get(k, 0.0) / total_liability) for k in priced_probabilities}
+        shaded = {k: priced_probabilities[k] * adjustments[k] for k in priced_probabilities}
+        scale = target_overround / (sum(shaded.values()) or target_overround)
+        return {k: v * scale for k, v in shaded.items()}
+
     def predict(self, inp: PredictionInput) -> Dict[str, object]:
         poisson_pred = self.poisson_prediction(inp)
         poisson_probs = poisson_pred.one_x_two
@@ -158,10 +186,16 @@ class PredictionEngine:
         else:
             pooled = linear_pool(components, weights)
         calibrated = self._calibrate(pooled.reshape(1, -1))[0]
+        fair_probabilities = {"home": calibrated[0], "draw": calibrated[1], "away": calibrated[2]}
+        priced_probabilities = self._insert_margin(fair_probabilities, target_overround=TARGET_OVERROUND)
+        shaded_probabilities = self._apply_risk_shading(priced_probabilities, inp.exposure, target_overround=TARGET_OVERROUND)
+        final_odds = {k: 1.0 / v for k, v in shaded_probabilities.items()}
         confidence = 1.0 - market_entropy({"home": calibrated[0], "draw": calibrated[1], "away": calibrated[2]}) / np.log(3)
         result = {
             "fixture_id": inp.fixture_id,
-            "probabilities": {"home": calibrated[0], "draw": calibrated[1], "away": calibrated[2]},
+            "probabilities": fair_probabilities,
+            "priced_probabilities": priced_probabilities,
+            "final_odds": final_odds,
             "model_version": MODEL_VERSION,
             "confidence": confidence,
             "calibrated": True,
