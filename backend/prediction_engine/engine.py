@@ -9,11 +9,13 @@ import numpy as np
 from backend.market.devig_shin import shin_probabilities
 from backend.market.overround import fair_probs_from_overround
 from backend.market.implied_probability import market_entropy, normalize_probabilities
+from backend.market.bookmaker_consensus import BookmakerLine, weighted_by_sharpness
 from backend.prediction_engine.goals.poisson import PoissonParams
 from backend.prediction_engine.goals.dixon_coles import score_probabilities_dc
 from backend.prediction_engine.strength.team_strength import MatchResult, StrengthModel
-from backend.prediction_engine.calibration.temperature_scaling import TemperatureScaler
+from backend.prediction_engine.calibration.temperature_scaling import TemperatureScaler, logits_from_probabilities
 from backend.prediction_engine.ensemble.linear_pooling import linear_pool
+from backend.prediction_engine.ensemble.stacking import StackingEnsemble
 from backend.ml.feature_schema import MatchFeatures
 from backend.ml.multiclass_model import ModelBundle
 
@@ -41,13 +43,21 @@ class PredictionInput:
     form_home: float = 0.5
     form_away: float = 0.5
     dixon_coles_rho: float = -0.08
+    bookmaker_lines: Optional[Iterable[BookmakerLine]] = None
 
 
 class PredictionEngine:
     """End-to-end orchestrator for football probability estimation."""
 
-    def __init__(self, ml_model: Optional[ModelBundle] = None) -> None:
+    def __init__(
+        self,
+        ml_model: Optional[ModelBundle] = None,
+        calibrator: Optional[TemperatureScaler] = None,
+        stacking_model: Optional[StackingEnsemble] = None,
+    ) -> None:
         self.ml_model = ml_model
+        self.calibrator = calibrator or TemperatureScaler(temperature=1.0)
+        self.stacking_model = stacking_model
 
     def market_probabilities(self, odds: Dict[str, float]) -> Dict[str, float]:
         if not odds:
@@ -56,6 +66,17 @@ class PredictionEngine:
         shin = shin_probabilities(odds)
         pooled = {k: 0.5 * fair.get(k, 0.0) + 0.5 * shin.get(k, 0.0) for k in odds}
         return normalize_probabilities(pooled)
+
+    def consensus_probabilities(self, lines: Optional[Iterable[BookmakerLine]]) -> Dict[str, float]:
+        if not lines:
+            return {}
+        consensus = weighted_by_sharpness(lines)
+        return normalize_probabilities(consensus) if consensus else {}
+
+    @staticmethod
+    def _market_weight(probs: Dict[str, float]) -> float:
+        confidence = 1.0 - market_entropy(probs) / np.log(3)
+        return max(min(confidence, MARKET_WEIGHT_MAX), MARKET_WEIGHT_MIN)
 
     def poisson_prediction(self, inp: PredictionInput):
         strength_model = StrengthModel()
@@ -100,11 +121,9 @@ class PredictionEngine:
         return {mapping[i]: float(probs[i]) for i in range(len(probs))}
 
     def _calibrate(self, probs: np.ndarray) -> np.ndarray:
-        if probs.shape[0] < 2:
-            return probs / probs.sum(axis=1, keepdims=True)
-        labels = np.argmax(probs, axis=1)
-        scaler = TemperatureScaler.fit(probs, labels)
-        return scaler.transform(probs)
+        logits = logits_from_probabilities(probs)
+        calibrated = self.calibrator.transform(logits)
+        return calibrated / calibrated.sum(axis=1, keepdims=True)
 
     def predict(self, inp: PredictionInput) -> Dict[str, object]:
         poisson_pred = self.poisson_prediction(inp)
@@ -115,10 +134,15 @@ class PredictionEngine:
 
         market_probs = self.market_probabilities(inp.odds)
         if market_probs:
-            market_confidence = 1.0 - market_entropy(market_probs) / np.log(3)
-            market_weight = max(min(market_confidence, MARKET_WEIGHT_MAX), MARKET_WEIGHT_MIN)
+            market_weight = self._market_weight(market_probs)
             components.append(np.array([market_probs["home"], market_probs["draw"], market_probs["away"]]))
             weights = [1.0 - market_weight, market_weight]
+
+        consensus_probs = self.consensus_probabilities(inp.bookmaker_lines)
+        if consensus_probs:
+            consensus_weight = self._market_weight(consensus_probs)
+            components.append(np.array([consensus_probs["home"], consensus_probs["draw"], consensus_probs["away"]]))
+            weights.append(consensus_weight)
 
         if self.ml_model:
             ml_probs = self._ml_view(inp, market_probs or poisson_probs)
@@ -126,7 +150,13 @@ class PredictionEngine:
                 components.append(np.array([ml_probs["home"], ml_probs["draw"], ml_probs["away"]]))
                 weights.append(0.2)
 
-        pooled = linear_pool(components, weights)
+        components = [component.ravel() for component in components]
+        if self.stacking_model:
+            stacked_inputs = [np.atleast_2d(component) for component in components]
+            stacked = self.stacking_model.predict(stacked_inputs)[0]
+            pooled = stacked
+        else:
+            pooled = linear_pool(components, weights)
         calibrated = self._calibrate(pooled.reshape(1, -1))[0]
         confidence = 1.0 - market_entropy({"home": calibrated[0], "draw": calibrated[1], "away": calibrated[2]}) / np.log(3)
         result = {
