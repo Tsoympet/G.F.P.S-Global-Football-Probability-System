@@ -17,6 +17,7 @@ import aiosmtplib
 from .db import SessionLocal
 from .models import User
 from .auth_utils import hash_password, verify_password, create_token
+from .auth_dependency import require_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -90,19 +91,6 @@ async def send_email(to_email: str, subject: str, body: str):
     )
 
 
-def get_user_from_token(token: str, db: Session) -> User:
-    from .auth_utils import decode_token
-
-    payload = decode_token(token)
-    if not payload:
-        raise HTTPException(401, "Invalid token")
-    email = payload.get("sub")
-    u = get_user_by_email(email, db)
-    if not u:
-        raise HTTPException(404, "User not found")
-    return u
-
-
 # -------------------------------------------------------------------
 # Models
 # -------------------------------------------------------------------
@@ -132,12 +120,7 @@ class ResetConfirm(BaseModel):
     new_password: constr(min_length=8)
 
 
-class TwoFASetupRequest(BaseModel):
-    token: str
-
-
 class TwoFAEnable(BaseModel):
-    token: str
     code: str
 
 
@@ -323,8 +306,7 @@ def confirm_reset(p: ResetConfirm, db: Session = Depends(get_db)):
 # -------------------------------------------------------------------
 
 @router.post("/2fa/setup")
-def twofa_setup(p: TwoFASetupRequest, db: Session = Depends(get_db)):
-    user = get_user_from_token(p.token, db)
+def twofa_setup(user: User = Depends(require_user), db: Session = Depends(get_db)):
 
     if not user.totp_secret:
         user.totp_secret = create_totp_secret()
@@ -337,8 +319,7 @@ def twofa_setup(p: TwoFASetupRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/2fa/enable")
-def twofa_enable(p: TwoFAEnable, db: Session = Depends(get_db)):
-    user = get_user_from_token(p.token, db)
+def twofa_enable(p: TwoFAEnable, user: User = Depends(require_user), db: Session = Depends(get_db)):
 
     if not user.totp_secret:
         raise HTTPException(400, "2FA not set up")
@@ -354,8 +335,7 @@ def twofa_enable(p: TwoFAEnable, db: Session = Depends(get_db)):
 
 
 @router.post("/2fa/disable")
-def twofa_disable(p: TwoFAEnable, db: Session = Depends(get_db)):
-    user = get_user_from_token(p.token, db)
+def twofa_disable(p: TwoFAEnable, user: User = Depends(require_user), db: Session = Depends(get_db)):
 
     if user.totp_enabled and not verify_totp(user.totp_secret, p.code):
         raise HTTPException(400, "Invalid 2FA code")

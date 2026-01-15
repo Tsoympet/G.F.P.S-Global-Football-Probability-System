@@ -62,6 +62,25 @@ export interface ModelInfo {
   status: 'active' | 'ready' | 'training';
 }
 
+export interface PipelineSnapshot {
+  snapshotId?: number | null;
+  reason?: string | null;
+  capturedAt?: string | null;
+  ageSec?: number | null;
+  fixtureCount: number;
+  oddsCount: number;
+  marketLineCount: number;
+  predictionCount: number;
+  valueBetCount: number;
+  modelVersion: string;
+}
+
+export interface PipelineStatus {
+  snapshot: PipelineSnapshot;
+  model: { version: string; evThreshold: number };
+  pipeline: { streamerEnabled: boolean; alertEngineEnabled: boolean; snapshotIntervalSec: number };
+}
+
 export interface MatchEvent {
   minute: number;
   description: string;

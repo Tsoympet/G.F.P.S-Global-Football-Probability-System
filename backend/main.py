@@ -31,6 +31,7 @@ from .live_ws import router as live_ws_router
 from .markets_api import router as markets_router
 from .ml_api import router as ml_router
 from .predictions_api import router as predictions_router
+from .pipeline_api import router as pipeline_router
 from .snapshot_service import backfill_seed_if_empty, start_snapshot_scheduler
 from .stats_api import router as stats_router
 from .streamer import start_streamer_background
@@ -160,6 +161,7 @@ app.include_router(favorites_router)
 app.include_router(device_router)
 app.include_router(stats_router)
 app.include_router(alerts_router)
+app.include_router(pipeline_router)
 
 
 # -------------------------------------------------------------------
