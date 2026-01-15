@@ -27,6 +27,19 @@ def parse_iso_datetime(value: str) -> str:
     return parsed.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def format_iso_datetime(value: Optional[datetime]) -> Optional[str]:
+    if not value:
+        return None
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def validate_odds_bounds(min_odds: Optional[float], max_odds: Optional[float]) -> None:
+    if min_odds is not None and max_odds is not None and min_odds > max_odds:
+        raise ValueError("min_odds cannot exceed max_odds")
+
+
 def require_decimal_odds(value: float, label: str) -> float:
     if value is None or not math.isfinite(value) or value <= 1.0:
         raise ValueError(f"Invalid decimal odds for {label}: {value}")

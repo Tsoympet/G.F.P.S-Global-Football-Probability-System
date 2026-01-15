@@ -21,7 +21,7 @@ def get_db():
 
 class DeviceIn(BaseModel):
     platform: Literal["android", "ios", "web"]
-    push_token: constr(min_length=8)
+    push_token: constr(min_length=8, pattern=r"^[A-Za-z0-9:_\\-.]+$")
 
 
 @router.post("/register")

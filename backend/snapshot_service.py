@@ -15,6 +15,7 @@ from .models import (
 )
 from .prediction_engine import MODEL_VERSION, compute_value_bets, generate_predictions
 from .live_state import live_state
+from .validation import format_iso_datetime
 
 
 SNAPSHOT_INTERVAL_SEC = int(os.getenv("SNAPSHOT_INTERVAL_SEC", "60"))
@@ -116,14 +117,6 @@ def _market_line_count(markets: Dict[str, List[Dict]]) -> int:
     return sum(len(lines) for lines in (markets or {}).values())
 
 
-def _format_timestamp(value: Optional[datetime]) -> Optional[str]:
-    if not value:
-        return None
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-
-
 def latest_snapshot_summary() -> Optional[Dict]:
     with SessionLocal() as db:
         snapshot = (
@@ -148,7 +141,7 @@ def latest_snapshot_summary() -> Optional[Dict]:
 
     payload = snapshot.payload or {}
     markets = payload.get("markets") or {}
-    captured_at = _format_timestamp(snapshot.created_at)
+    captured_at = format_iso_datetime(snapshot.created_at)
     age_sec = None
     if snapshot.created_at:
         created_at = snapshot.created_at
