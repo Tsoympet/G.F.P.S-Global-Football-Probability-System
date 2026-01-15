@@ -33,11 +33,10 @@ def bivariate_score_matrix(params: BivariatePoissonParams, max_goals: int = 10) 
             total = 0.0
             max_k = min(i, j)
             for k in range(max_k + 1):
-                log_term = (
-                    log_power(params.lambda_home, i - k) - math.lgamma(i - k + 1)
-                    + log_power(params.lambda_away, j - k) - math.lgamma(j - k + 1)
-                    + log_power(params.lambda_shared, k) - math.lgamma(k + 1)
-                )
+                log_home = log_power(params.lambda_home, i - k) - math.lgamma(i - k + 1)
+                log_away = log_power(params.lambda_away, j - k) - math.lgamma(j - k + 1)
+                log_shared = log_power(params.lambda_shared, k) - math.lgamma(k + 1)
+                log_term = log_home + log_away + log_shared
                 total += math.exp(log_term)
             matrix[i, j] = exp_term * total
     matrix = matrix / matrix.sum()

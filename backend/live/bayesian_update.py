@@ -6,7 +6,7 @@ from typing import Dict, Iterable, Optional
 import numpy as np
 
 from .time_decay import exponential_decay, linear_decay
-from .momentum_index import adjust_lambda, momentum_index
+from backend.live.momentum_index import adjust_lambda, momentum_index
 from backend.prediction_engine.goals.poisson import PoissonParams, score_probabilities
 
 MIN_CARD_FACTOR = 0.1

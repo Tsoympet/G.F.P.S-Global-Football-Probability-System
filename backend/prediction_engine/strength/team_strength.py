@@ -48,14 +48,13 @@ class StrengthModel:
                 n = len(scores)
                 weight = n * self.team_precision
                 prior = max(self.league_strength, 0.0)
+                denom = weight + prior
+                def shrink(mean_value: float, league_mean: float) -> float:
+                    return (mean_value * weight + league_mean * prior) / denom if denom else league_mean
                 mean_for = np.mean(goals_for) if goals_for else league_avg_for
                 mean_against = np.mean(goals_against) if goals_against else league_avg_against
-                shrunk_for = (mean_for * weight + league_avg_for * prior) / (weight + prior) if (weight + prior) else league_avg_for
-                shrunk_against = (
-                    (mean_against * weight + league_avg_against * prior) / (weight + prior)
-                    if (weight + prior)
-                    else league_avg_against
-                )
+                shrunk_for = shrink(float(mean_for), league_avg_for)
+                shrunk_against = shrink(float(mean_against), league_avg_against)
                 attack = shrunk_for / league_avg_for if league_avg_for else 1.0
                 defence = shrunk_against / league_avg_against if league_avg_against else 1.0
                 self.team_params[(league, team)] = TeamStrength(attack=float(attack), defence=float(defence))
