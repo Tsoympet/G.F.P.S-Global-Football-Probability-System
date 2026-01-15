@@ -39,7 +39,7 @@ class StrengthModel:
             total_for, total_against, count = league_totals.get(match.league, (0.0, 0.0, 0))
             league_totals[match.league] = (
                 total_for + match.home_goals + match.away_goals,
-                total_against + match.away_goals + match.home_goals,
+                total_against + match.home_goals + match.away_goals,
                 count + 2,
             )
 
@@ -73,4 +73,3 @@ class StrengthModel:
         if key in self.team_params:
             return self.team_params[key]
         return TeamStrength(attack=1.0, defence=1.0)
-

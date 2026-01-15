@@ -9,6 +9,9 @@ from .time_decay import exponential_decay, linear_decay
 from .momentum_index import adjust_lambda, momentum_index
 from backend.prediction_engine.goals.poisson import PoissonParams, score_probabilities
 
+MIN_CARD_FACTOR = 0.1
+RED_CARD_LAMBDA_PENALTY = 0.2
+
 
 @dataclass
 class InPlayState:
@@ -89,8 +92,8 @@ def update_in_play_probabilities(context: InPlayContext, max_goals: int = 6) -> 
     momentum = momentum_index(context.events)
     lambda_home = adjust_lambda(context.lambda_home, momentum)
     lambda_away = adjust_lambda(context.lambda_away, -momentum)
-    card_factor_home = max(0.1, 1.0 - 0.2 * context.red_cards_home)
-    card_factor_away = max(0.1, 1.0 - 0.2 * context.red_cards_away)
+    card_factor_home = max(MIN_CARD_FACTOR, 1.0 - RED_CARD_LAMBDA_PENALTY * context.red_cards_home)
+    card_factor_away = max(MIN_CARD_FACTOR, 1.0 - RED_CARD_LAMBDA_PENALTY * context.red_cards_away)
     lambda_home *= card_factor_home
     lambda_away *= card_factor_away
 
@@ -105,4 +108,3 @@ def update_in_play_probabilities(context: InPlayContext, max_goals: int = 6) -> 
         total = sum(blended.values())
         return {k: v / total for k, v in blended.items()}
     return live_probs
-

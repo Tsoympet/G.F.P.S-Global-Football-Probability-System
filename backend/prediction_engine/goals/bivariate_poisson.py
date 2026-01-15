@@ -19,17 +19,24 @@ def bivariate_score_matrix(params: BivariatePoissonParams, max_goals: int = 10) 
 
     matrix = np.zeros((max_goals + 1, max_goals + 1))
     exp_term = math.exp(-(params.lambda_home + params.lambda_away + params.lambda_shared))
-    factorials = [math.factorial(k) for k in range(max_goals + 1)]
+    def log_power(lmbda: float, power: int) -> float:
+        if power == 0:
+            return 0.0
+        if lmbda <= 0:
+            return -np.inf
+        return power * math.log(lmbda)
+
     for i in range(max_goals + 1):
         for j in range(max_goals + 1):
             total = 0.0
             max_k = min(i, j)
             for k in range(max_k + 1):
-                total += (
-                    (params.lambda_home ** (i - k)) / factorials[i - k]
-                    * (params.lambda_away ** (j - k)) / factorials[j - k]
-                    * (params.lambda_shared ** k) / factorials[k]
+                log_term = (
+                    log_power(params.lambda_home, i - k) - math.lgamma(i - k + 1)
+                    + log_power(params.lambda_away, j - k) - math.lgamma(j - k + 1)
+                    + log_power(params.lambda_shared, k) - math.lgamma(k + 1)
                 )
+                total += math.exp(log_term)
             matrix[i, j] = exp_term * total
     matrix = matrix / matrix.sum()
     return matrix
@@ -54,4 +61,3 @@ def one_x_two_from_matrix(matrix: np.ndarray) -> Dict[str, float]:
     away = float(matrix[np.tril_indices_from(matrix, k=-1)].sum())
     total = home + draw + away
     return {"home": home / total, "draw": draw / total, "away": away / total}
-

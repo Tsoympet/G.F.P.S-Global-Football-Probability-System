@@ -150,6 +150,7 @@ class PredictionEngine:
                 components.append(np.array([ml_probs["home"], ml_probs["draw"], ml_probs["away"]]))
                 weights.append(0.2)
 
+        components = [np.asarray(component, dtype=float).reshape(-1) for component in components]
         if self.stacking_model:
             stacked = self.stacking_model.predict([c.reshape(1, -1) for c in components])[0]
             pooled = stacked
