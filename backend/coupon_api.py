@@ -57,7 +57,7 @@ def create_coupon(p: CouponCreate, user: User = Depends(require_user), db: Sessi
 
     total_odds = 1.0
     total_prob = 1.0
-    selections_data: list[SelectionSummary] = []
+    selections_data: List[SelectionSummary] = []
 
     for s in p.selections:
         ctx = build_poisson_context(db, s.league_id, s.home, s.away)
