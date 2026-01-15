@@ -9,6 +9,9 @@ describe('settings store', () => {
       refreshIntervalMs: 5000,
       evThreshold: 0.05,
       theme: 'dark',
+      cacheTtlMs: 120000,
+      forceOffline: false,
+      autoOffline: true,
       storageStatus: 'idle',
       initialized: true
     });
@@ -23,9 +26,13 @@ describe('settings store', () => {
 
   it('hydrates saved settings', async () => {
     await useSettingsStore.getState().setEvThreshold(0.1);
+    await useSettingsStore.getState().setCacheTtl(90000);
+    await useSettingsStore.getState().setForceOffline(true);
     useSettingsStore.setState({ initialized: false, evThreshold: 0.05 });
     await useSettingsStore.getState().hydrate();
     expect(useSettingsStore.getState().evThreshold).toBeCloseTo(0.1);
+    expect(useSettingsStore.getState().cacheTtlMs).toBe(90000);
+    expect(useSettingsStore.getState().forceOffline).toBe(true);
     expect(useSettingsStore.getState().initialized).toBe(true);
   });
 });

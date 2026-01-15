@@ -96,19 +96,20 @@ GFPS provides probabilistic analytics, not guarantees. Football outcomes remain 
    npm run dev
    ```
 5. **Create a user and log in**
-   - The protected endpoints (fixtures, live odds, predictions, value bets) require a Bearer token.
+   - The protected endpoints (`/predictions`, `/odds`, `/value`) require a Bearer token.
    - Sign up via `POST /auth/signup` or log in from the desktop Settings screen to store the token for subsequent calls.
 
 The desktop client expects the backend at `http://localhost:8000` by default; adjust `FRONTEND_BASE_URL` if you proxy or deploy elsewhere.
 
 ### Desktop client hardening
 
-- Live-connected screens for Dashboard, Match Center, Value Scanner, Models, and Settings
-- WebSocket streaming with HTTP polling fallback, stale-data indicators, and API health surfacing
-- Encrypted local storage for API endpoint, EV threshold, refresh interval, theme, and auth token
-- Value Scanner with EV slider, league/market filters, EV/kickoff sorting, and threshold-aware API calls
+- Live-connected screens for Dashboard, Match Center (probability/xG curves), Value Scanner, Models, and Settings
+- WebSocket streaming with HTTP polling fallback, stale-data indicators, offline toggle, and API health surfacing
+- Encrypted local storage for API endpoint, EV threshold, refresh interval, theme, cache TTL, and auth token
+- Value Scanner with EV slider, league/market filters, probability floor, CSV export, and threshold-aware API calls
+- Cached/offline mode with TTL, manual override, and auto recovery when `/health` comes back online
 - Tests: `npm test` (Vitest) and production build: `npm run build`
-- Installers: `npm run tauri:build` emits `.msi`, `.dmg`, and `.AppImage` artifacts
+- Installers: `npm run tauri:build` emits `.msi`, `.dmg`, and `.AppImage` artifacts; CI builds on release tags
 
 ---
 
@@ -134,7 +135,7 @@ AUTH_TOKEN="$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"
 AUTH_TOKEN="$AUTH_TOKEN" ./scripts/check_endpoints.sh http://localhost:8000
 ```
 
-It probes `/health`, `/fixtures`, `/live-odds`, `/predictions`, and `/value-bets` and prints a simple OK/failed summary.
+It probes `/health`, `/odds`, `/predictions`, and `/value` and prints a simple OK/failed summary.
 
 ---
 

@@ -20,9 +20,13 @@ interface ProbabilityPoint {
 export const LiveMatchCenter = () => {
   const { refreshIntervalMs } = useSettingsStore();
   const { fixtures: liveFixtures, events, markets: liveMarkets, connection, lastMessage } = useLiveMatches();
-  const fixturesQuery = useQuery(api.fixtures, { pollMs: refreshIntervalMs });
-  const oddsQuery = useQuery(api.liveOdds, { pollMs: refreshIntervalMs });
-  const predictionsQuery = useQuery(api.predictions, { pollMs: refreshIntervalMs });
+  const fixturesQuery = useQuery(api.fixtures, { pollMs: refreshIntervalMs, cacheKey: 'fixtures', ttlMs: refreshIntervalMs * 6 });
+  const oddsQuery = useQuery(api.odds, { pollMs: refreshIntervalMs, cacheKey: 'odds', ttlMs: refreshIntervalMs * 4 });
+  const predictionsQuery = useQuery(api.predictions, {
+    pollMs: refreshIntervalMs,
+    cacheKey: 'predictions',
+    ttlMs: refreshIntervalMs * 4
+  });
   const [selected, setSelected] = useState<Fixture | null>(null);
   const [history, setHistory] = useState<Record<string, ProbabilityPoint[]>>({});
 

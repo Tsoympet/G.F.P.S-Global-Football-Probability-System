@@ -51,10 +51,17 @@ export interface Prediction {
   homeWinProbability: number;
   drawProbability: number;
   awayWinProbability: number;
+  homeTeam?: string;
+  awayTeam?: string;
+  league?: string;
+  startTime?: string;
+  expectedGoalsHome?: number;
+  expectedGoalsAway?: number;
   pricedProbabilities?: ProbabilitySet;
   finalOdds?: ProbabilitySet;
   modelVersion?: string;
   confidence?: number;
+  status?: Fixture['status'];
 }
 
 export interface ValueBet {

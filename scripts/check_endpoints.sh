@@ -6,10 +6,9 @@ AUTH_TOKEN=${AUTH_TOKEN:-}
 
 endpoints=(
   "/health"
-  "/fixtures"
-  "/live-odds"
+  "/odds"
   "/predictions"
-  "/value-bets"
+  "/value"
 )
 
 echo "Checking endpoints against ${BASE_URL}";

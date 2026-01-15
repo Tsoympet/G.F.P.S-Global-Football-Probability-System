@@ -5,15 +5,31 @@ import { DataTable } from '@components/DataTable';
 import { palette } from '@theme/palette';
 import { Fixture, PipelineStatus, Prediction, ValueBet } from '@api/types';
 import { useSettingsStore } from '@store/settings';
+import { useEffect, useState } from 'react';
+import { ProbabilityEvolutionChart } from '@charts/ProbabilityEvolutionChart';
+
+const MAX_HISTORY_POINTS = 20;
+const PERCENTAGE_PRECISION = 2;
 
 export const Dashboard = () => {
   const { refreshIntervalMs, evThreshold } = useSettingsStore();
-  const fixtures = useQuery(api.fixtures, { pollMs: refreshIntervalMs });
-  const valueBets = useQuery(() => api.valueBets(evThreshold), { pollMs: refreshIntervalMs, deps: [evThreshold] });
-  const models = useQuery(api.models, { pollMs: refreshIntervalMs * 2 });
-  const pipeline = useQuery<PipelineStatus>(api.pipelineStatus, { pollMs: refreshIntervalMs * 2 });
-  const predictions = useQuery<Prediction[]>(api.predictions, { pollMs: refreshIntervalMs });
-  const health = useQuery(api.health, { pollMs: refreshIntervalMs * 3, staleMs: refreshIntervalMs * 6 });
+  const fixtures = useQuery(api.fixtures, { pollMs: refreshIntervalMs, cacheKey: 'fixtures' });
+  const valueBets = useQuery(() => api.valueBets(evThreshold), {
+    pollMs: refreshIntervalMs,
+    deps: [evThreshold],
+    cacheKey: `value-${evThreshold}`
+  });
+  const models = useQuery(api.models, { pollMs: refreshIntervalMs * 2, cacheKey: 'models' });
+  const pipeline = useQuery<PipelineStatus>(api.pipelineStatus, {
+    pollMs: refreshIntervalMs * 2,
+    cacheKey: 'pipeline'
+  });
+  const predictions = useQuery<Prediction[]>(api.predictions, {
+    pollMs: refreshIntervalMs,
+    cacheKey: 'predictions'
+  });
+  const health = useQuery(api.health, { pollMs: refreshIntervalMs * 3, staleMs: refreshIntervalMs * 6, cacheKey: 'health' });
+  const [probabilityHistory, setProbabilityHistory] = useState<{ label: string; home: number; draw: number; away: number }[]>([]);
 
   const activeMatches = fixtures.data?.filter((f) => f.status === 'live').length ?? 0;
   const scheduled = fixtures.data?.filter((f) => f.status === 'scheduled').length ?? 0;
@@ -38,6 +54,39 @@ export const Dashboard = () => {
         start.getUTCDate() === today.getUTCDate()
       );
     }) ?? [];
+
+  useEffect(() => {
+    if (!predictions.data?.length || !predictions.lastUpdated) return;
+    const totals = predictions.data.reduce(
+      (acc, p) => ({
+        home: acc.home + p.homeWinProbability,
+        draw: acc.draw + p.drawProbability,
+        away: acc.away + p.awayWinProbability
+      }),
+      { home: 0, draw: 0, away: 0 }
+    );
+    const count = predictions.data.length || 1;
+    const home = totals.home / count;
+    const draw = totals.draw / count;
+    const away = totals.away / count;
+    setProbabilityHistory((prev) => {
+      const label = new Date(predictions.lastUpdated || Date.now()).toLocaleTimeString();
+      if (prev.length && prev[prev.length - 1].label === label) return prev;
+      const format = (value: number) => +(value * 100).toFixed(PERCENTAGE_PRECISION);
+      return [...prev.slice(-MAX_HISTORY_POINTS), { label, home: format(home), draw: format(draw), away: format(away) }];
+    });
+  }, [predictions.data, predictions.lastUpdated]);
+
+  const xgRows =
+    predictions.data
+      ?.filter((p) => p.expectedGoalsHome !== undefined || p.expectedGoalsAway !== undefined)
+      .slice(0, 8)
+      .map((p) => ({
+        fixtureId: p.fixtureId,
+        homeTeam: p.homeTeam ?? 'Home',
+        awayTeam: p.awayTeam ?? 'Away',
+        xg: `${(p.expectedGoalsHome ?? 0).toFixed(2)} - ${(p.expectedGoalsAway ?? 0).toFixed(2)}`
+      })) || [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -133,6 +182,40 @@ export const Dashboard = () => {
           ]}
           data={todaysFixtures}
         />
+      </section>
+
+      <section
+        style={{
+          border: `1px solid ${palette.border}`,
+          borderRadius: 14,
+          padding: 16,
+          background: palette.cardElevated,
+          display: 'grid',
+          gridTemplateColumns: '1.2fr 0.8fr',
+          gap: 12
+        }}
+      >
+        <div>
+          <div style={{ color: palette.textPrimary, fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+            Probability Curve (avg)
+          </div>
+          <ProbabilityEvolutionChart
+            labels={probabilityHistory.map((p) => p.label)}
+            home={probabilityHistory.map((p) => p.home)}
+            draw={probabilityHistory.map((p) => p.draw)}
+            away={probabilityHistory.map((p) => p.away)}
+          />
+        </div>
+        <div>
+          <div style={{ color: palette.textPrimary, fontWeight: 700, fontSize: 18, marginBottom: 8 }}>xG Snapshot</div>
+          <DataTable<{ fixtureId: string; homeTeam: string; awayTeam: string; xg: string }>
+            columns={[
+              { header: 'Fixture', key: 'fixtureId', render: (row) => `${row.homeTeam} vs ${row.awayTeam}` },
+              { header: 'xG', key: 'xg' }
+            ]}
+            data={xgRows}
+          />
+        </div>
       </section>
 
       <section

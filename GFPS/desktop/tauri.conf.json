@@ -13,6 +13,17 @@
     "windows": {
       "wix": {
         "language": "en-US"
+      },
+      "certificateThumbprint": "${TAURI_WINDOWS_CERT_THUMBPRINT}",
+      "timestampUrl": "https://timestamp.digicert.com"
+    },
+    "macOS": {
+      "signingIdentity": "${TAURI_MACOS_IDENTITY}",
+      "entitlements": null
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
       }
     }
   },
