@@ -27,11 +27,10 @@ class ConformalPredictor:
         nonconformity = 1.0 - probs[np.arange(n), labels]
         sorted_scores = np.sort(nonconformity)
         k = int(np.ceil((n + 1) * (1 - alpha))) - 1
-        k = int(np.clip(k, 0, n - 1))
+        k = max(0, min(k, n - 1))
         return cls(threshold=float(sorted_scores[k]))
 
     def predict_set(self, probs: np.ndarray) -> np.ndarray:
         """Return confidence sets given calibrated probabilities."""
 
         return (1.0 - probs <= self.threshold).astype(int)
-

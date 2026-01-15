@@ -104,7 +104,8 @@ def update_in_play_probabilities(
 
     remaining = linear_decay(context.elapsed_minutes)
     params = PoissonParams(lambda_home=lambda_home * remaining, lambda_away=lambda_away * remaining)
-    matrix = score_probabilities(params, max_goals=max_goals).score_matrix
+    prediction = score_probabilities(params, max_goals=max_goals)
+    matrix = prediction.score_matrix
     live_probs = _outcome_from_matrix(matrix, context.home_goals, context.away_goals)
 
     if context.base_probs:
