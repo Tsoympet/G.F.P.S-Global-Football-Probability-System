@@ -132,7 +132,21 @@ class TwoFAEnable(BaseModel):
 def signup(p: Signup, db: Session = Depends(get_db)):
     existing = get_user_by_email(p.email, db)
     if existing:
-        raise HTTPException(400, "Email already registered")
+        if not verify_password(p.password, existing.password_hash):
+            raise HTTPException(400, "Email already registered")
+
+        token = create_token(existing.email, existing.token_version, existing.role)
+        return {
+            "ok": True,
+            "token": token,
+            "profile": {
+                "email": existing.email,
+                "display_name": existing.display_name,
+                "avatar_url": existing.avatar_url,
+                "role": existing.role,
+            },
+            "provider": "local",
+        }
 
     u = User(
         email=p.email,
