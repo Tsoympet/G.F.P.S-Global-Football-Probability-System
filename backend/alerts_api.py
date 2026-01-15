@@ -32,9 +32,7 @@ class AlertRuleIn(BaseModel):
 
     @model_validator(mode="after")
     def validate_bounds(self):
-        if self.min_odds is not None and self.max_odds is not None:
-            if self.min_odds > self.max_odds:
-                raise ValueError("min_odds cannot exceed max_odds")
+        _validate_odds_bounds(self.min_odds, self.max_odds)
         return self
 
 
@@ -51,10 +49,14 @@ class AlertRuleUpdate(BaseModel):
 
     @model_validator(mode="after")
     def validate_bounds(self):
-        if self.min_odds is not None and self.max_odds is not None:
-            if self.min_odds > self.max_odds:
-                raise ValueError("min_odds cannot exceed max_odds")
+        _validate_odds_bounds(self.min_odds, self.max_odds)
         return self
+
+
+def _validate_odds_bounds(min_odds: Optional[float], max_odds: Optional[float]) -> None:
+    if min_odds is not None and max_odds is not None:
+        if min_odds > max_odds:
+            raise ValueError("min_odds cannot exceed max_odds")
 
 
 @router.post("/rules")

@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from dataclasses import dataclass
 from pydantic import BaseModel, Field, constr
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -12,6 +13,14 @@ from .prediction_engine import predict_market
 from .stats_context import build_poisson_context
 from .validation import require_decimal_odds
 from .value.ev import expected_value
+
+
+@dataclass(frozen=True)
+class SelectionSummary:
+    selection: "SelectionIn"
+    odds: float
+    prob: float
+    ev: float
 
 router = APIRouter(prefix="/coupon", tags=["coupon"])
 
@@ -48,7 +57,7 @@ def create_coupon(p: CouponCreate, user: User = Depends(require_user), db: Sessi
 
     total_odds = 1.0
     total_prob = 1.0
-    selections_data = []
+    selections_data: list[SelectionSummary] = []
 
     for s in p.selections:
         ctx = build_poisson_context(db, s.league_id, s.home, s.away)
@@ -71,9 +80,9 @@ def create_coupon(p: CouponCreate, user: User = Depends(require_user), db: Sessi
         total_odds *= odds
         total_prob *= prob
 
-        selections_data.append((s, odds, prob, ev))
+        selections_data.append(SelectionSummary(selection=s, odds=odds, prob=prob, ev=ev))
 
-    total_ev = total_prob * total_odds - 1.0
+    total_ev = expected_value(total_prob, total_odds)
 
     coupon = Coupon(
         user_id=user.id,
@@ -87,7 +96,8 @@ def create_coupon(p: CouponCreate, user: User = Depends(require_user), db: Sessi
     db.commit()
     db.refresh(coupon)
 
-    for s, odds, prob, ev in selections_data:
+    for summary in selections_data:
+        s = summary.selection
         cs = CouponSelection(
             coupon_id=coupon.id,
             fixture_id=s.fixture_id,
@@ -97,9 +107,9 @@ def create_coupon(p: CouponCreate, user: User = Depends(require_user), db: Sessi
             away=s.away,
             market=s.market,
             outcome=s.outcome,
-            odds=odds,
-            prob=prob,
-            ev=ev,
+            odds=summary.odds,
+            prob=summary.prob,
+            ev=summary.ev,
         )
         db.add(cs)
     db.commit()
