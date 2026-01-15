@@ -10,6 +10,7 @@ from .db import SessionLocal
 from .models import AlertRule, AlertEvent, Device
 from .prediction_engine import predict_market
 from .stats_context import build_poisson_context
+from .validation import require_decimal_odds
 from .push_notify import send_fcm_push
 
 ALERT_ENGINE_ENABLED = os.getenv("ALERT_ENGINE", "false").lower() in ("1", "true", "yes")
@@ -83,10 +84,8 @@ async def fetch_live_candidates() -> List[dict]:
                         selections = []
                         for v in m.get("values", []):
                             try:
-                                price = float(v.get("odd") or 0)
-                            except Exception:
-                                continue
-                            if price <= 0:
+                                price = require_decimal_odds(float(v.get("odd") or 0), "market")
+                            except ValueError:
                                 continue
                             selections.append(
                                 {
@@ -147,6 +146,7 @@ def evaluate_rule(rule: AlertRule, cand: dict, db: Session) -> List[AlertEvent]:
 
         # build Poisson context once per fixture
         ctx = build_poisson_context(db, league_id, home, away)
+        ctx["league"] = cand.get("league")
 
         # map outcome->odds
         sel_map: Dict[str, float] = {

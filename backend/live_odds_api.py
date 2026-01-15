@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 
 from .auth_dependency import require_user
 from .live_state import live_state
+from .validation import parse_iso_datetime, parse_market_line, require_decimal_odds
 
 APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
 
@@ -35,12 +36,16 @@ def _extract_match_winner_prices(values: List[Dict]) -> Dict[str, float]:
     prices: Dict[str, float] = {}
     for v in values:
         outcome = (v.get("value") or "").lower()
+        try:
+            price = require_decimal_odds(float(v.get("odd") or 0), outcome or "odds")
+        except ValueError:
+            continue
         if outcome in {"home", "1"}:
-            prices["home"] = float(v.get("odd") or 0)
+            prices["home"] = price
         elif outcome in {"draw", "x"}:
-            prices["draw"] = float(v.get("odd") or 0)
+            prices["draw"] = price
         elif outcome in {"away", "2"}:
-            prices["away"] = float(v.get("odd") or 0)
+            prices["away"] = price
     return prices
 
 
@@ -54,7 +59,10 @@ def _collect_market_lines(
 
     for v in values:
         outcome = (v.get("value") or "").lower()
-        price = float(v.get("odd") or 0)
+        try:
+            price = require_decimal_odds(float(v.get("odd") or 0), outcome or "odds")
+        except ValueError:
+            continue
         if lower in {"over/under", "over under", "total goals"} or outcome.startswith(
             "over"
         ) or outcome.startswith("under"):
@@ -78,12 +86,16 @@ def _collect_market_lines(
                     handicaps[line]["away"] = price
 
     for line, data in totals.items():
+        try:
+            parsed_line = parse_market_line(line)
+        except ValueError:
+            continue
         lines.append(
             {
                 "fixtureId": fixture_id,
-                "label": f"Total {line}",
+                "label": f"Total {parsed_line}",
                 "type": "total",
-                "line": line,
+                "line": str(parsed_line),
                 "over": data.get("over"),
                 "under": data.get("under"),
                 "source": source,
@@ -91,12 +103,16 @@ def _collect_market_lines(
         )
 
     for line, data in handicaps.items():
+        try:
+            parsed_line = parse_market_line(line)
+        except ValueError:
+            continue
         lines.append(
             {
                 "fixtureId": fixture_id,
-                "label": f"Handicap {line}",
+                "label": f"Handicap {parsed_line}",
                 "type": "handicap",
-                "line": line,
+                "line": str(parsed_line),
                 "home": data.get("home"),
                 "away": data.get("away"),
                 "source": source,
@@ -113,15 +129,26 @@ async def list_live_odds():
     markets: Dict[str, List[Dict]] = {}
     rows: List[Dict] = []
 
+    if not APIFOOTBALL_KEY:
+        snapshot = live_state.snapshot()
+        return {"outrights": snapshot["odds"], "markets": snapshot["markets"]}
+
     data = await _fetch_api_football("odds/live", params={"page": 1})
 
     for resp in data.get("response", []):
         fixture = resp.get("fixture", {})
         fixture_id = str(fixture.get("id"))
-        match_label = (
-            f"{fixture.get('teams', {}).get('home', {}).get('name', 'Home')} vs "
-            f"{fixture.get('teams', {}).get('away', {}).get('name', 'Away')}"
-        )
+        if not fixture_id or fixture_id == "None":
+            continue
+        try:
+            start_time = parse_iso_datetime(fixture.get("date") or "")
+        except ValueError:
+            continue
+        home_name = fixture.get("teams", {}).get("home", {}).get("name")
+        away_name = fixture.get("teams", {}).get("away", {}).get("name")
+        if not home_name or not away_name:
+            continue
+        match_label = f"{home_name} vs {away_name}"
         for bookmaker in resp.get("bookmakers", []):
             source = bookmaker.get("name")
             for bet in bookmaker.get("bets", []):
@@ -132,11 +159,13 @@ async def list_live_odds():
                     if {"home", "draw", "away"} <= set(prices):
                         rows.append(
                             {
+                                "fixtureId": fixture_id,
                                 "market": match_label,
                                 "home": prices["home"],
                                 "draw": prices["draw"],
                                 "away": prices["away"],
                                 "source": source,
+                                "startTime": start_time,
                             }
                         )
                 extra_lines = _collect_market_lines(
@@ -146,7 +175,6 @@ async def list_live_odds():
                     markets.setdefault(fixture_id, []).extend(extra_lines)
 
     await live_state.set_odds(rows)
-    if markets:
-        await live_state.set_markets(markets)
+    await live_state.set_markets(markets)
 
     return {"outrights": rows, "markets": markets}

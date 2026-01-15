@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict, Tuple
+import math
 import numpy as np
 
 
@@ -19,7 +20,7 @@ class PoissonPrediction:
 
 
 def poisson_pmf(lmbda: float, k: int) -> float:
-    return float(np.exp(-lmbda) * (lmbda ** k) / np.math.factorial(k))
+    return float(np.exp(-lmbda) * (lmbda ** k) / math.factorial(k))
 
 
 def score_probabilities(params: PoissonParams, max_goals: int = 10) -> PoissonPrediction:
@@ -52,5 +53,4 @@ def estimate_from_history(home_goals: Tuple[int, ...], away_goals: Tuple[int, ..
     lambda_home = (sum(home_goals) + smooth) / (n + smooth)
     lambda_away = (sum(away_goals) + smooth) / (n + smooth)
     return PoissonParams(lambda_home=lambda_home, lambda_away=lambda_away)
-
 

@@ -3,6 +3,7 @@ export interface Fixture {
   homeTeam: string;
   awayTeam: string;
   league: string;
+  leagueId?: string | null;
   startTime: string;
   status: 'scheduled' | 'live' | 'finished';
   timer?: string;
@@ -13,11 +14,13 @@ export interface Fixture {
 }
 
 export interface LiveOddsRow {
+  fixtureId?: string;
   market: string;
   home: number;
   draw: number;
   away: number;
   source?: string;
+  startTime?: string;
 }
 
 export interface AdditionalMarketLine {

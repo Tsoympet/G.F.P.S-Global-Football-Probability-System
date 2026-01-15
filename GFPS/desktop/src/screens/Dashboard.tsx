@@ -8,16 +8,18 @@ import { ValueBet } from '@api/types';
 export const Dashboard = () => {
   const fixtures = useQuery(api.fixtures, []);
   const valueBets = useQuery(api.valueBets, []);
+  const models = useQuery(api.models, []);
 
   const activeMatches = fixtures.data?.filter((f) => f.status === 'live').length ?? 0;
   const scheduled = fixtures.data?.filter((f) => f.status === 'scheduled').length ?? 0;
+  const activeModels = models.data?.filter((model) => model.status === 'active').length ?? 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
         <KpiCard label="Live Matches" value={activeMatches.toString()} subLabel="Currently trading" />
         <KpiCard label="Upcoming" value={scheduled.toString()} subLabel="Within next 24h" />
-        <KpiCard label="Active Models" value="3" subLabel="production + variants" />
+        <KpiCard label="Active Models" value={activeModels.toString()} subLabel="production-ready" />
         <KpiCard label="EV+ signals" value={(valueBets.data?.length ?? 0).toString()} subLabel="Today" />
       </div>
 

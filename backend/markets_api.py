@@ -1,8 +1,9 @@
 import os
-from typing import Optional
-
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+
+from .auth_dependency import require_user
+from .validation import require_decimal_odds
 
 APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
 
@@ -23,40 +24,10 @@ async def fetch_api_football(endpoint: str, params: dict) -> dict:
         return r.json()
 
 
-@router.get("/markets")
+@router.get("/markets", dependencies=[Depends(require_user)])
 async def fixture_markets(fixture_id: int):
     if not APIFOOTBALL_KEY:
-        # demo markets
-        return {
-            "ok": True,
-            "markets": [
-                {
-                    "bookmaker": "DemoBook",
-                    "market": "1X2",
-                    "selections": [
-                        {"outcome": "1", "odds": 1.90},
-                        {"outcome": "X", "odds": 3.50},
-                        {"outcome": "2", "odds": 4.00},
-                    ],
-                },
-                {
-                    "bookmaker": "DemoBook",
-                    "market": "Over/Under 2.5",
-                    "selections": [
-                        {"outcome": "Over 2.5", "odds": 2.00},
-                        {"outcome": "Under 2.5", "odds": 1.80},
-                    ],
-                },
-                {
-                    "bookmaker": "DemoBook",
-                    "market": "Both Teams To Score",
-                    "selections": [
-                        {"outcome": "GG", "odds": 1.85},
-                        {"outcome": "NG", "odds": 1.95},
-                    ],
-                },
-            ],
-        }
+        return {"ok": True, "markets": []}
 
     try:
         data = await fetch_api_football("odds", {"fixture": fixture_id})
@@ -72,12 +43,11 @@ async def fixture_markets(fixture_id: int):
                 market_name = m.get("name", "Unknown")
                 selections = []
                 for v in m.get("values", []):
-                    selections.append(
-                        {
-                            "outcome": v.get("value"),
-                            "odds": float(v.get("odd") or 0),
-                        }
-                    )
+                    try:
+                        price = require_decimal_odds(float(v.get("odd") or 0), "market")
+                    except ValueError:
+                        continue
+                    selections.append({"outcome": v.get("value"), "odds": price})
                 markets_out.append(
                     {
                         "bookmaker": bname,

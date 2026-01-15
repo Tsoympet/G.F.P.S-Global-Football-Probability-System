@@ -13,7 +13,7 @@ from .models import (
     PredictionSnapshotRecord,
     ValueBetSnapshotRecord,
 )
-from .prediction_engine import compute_value_bets, generate_predictions
+from .prediction_engine import MODEL_VERSION, compute_value_bets, generate_predictions
 from .live_state import live_state
 
 
@@ -49,7 +49,7 @@ def _persist_value_bets(snapshot_id: int, rows: List[Dict], model_version: str) 
         db.commit()
 
 
-async def capture_snapshot(reason: str = "manual", model_version: str = "demo") -> Dict:
+async def capture_snapshot(reason: str = "manual", model_version: str = MODEL_VERSION) -> Dict:
     """Persist the in-memory state + derived analytics."""
 
     async with _lock:
@@ -86,7 +86,7 @@ def start_snapshot_scheduler(loop: asyncio.AbstractEventLoop) -> None:
     loop.create_task(periodic_capture_loop())
 
 
-def backfill_demo_if_empty() -> Optional[LiveSnapshotRecord]:
+def backfill_seed_if_empty() -> Optional[LiveSnapshotRecord]:
     with SessionLocal() as db:
         has_snapshot = db.query(LiveSnapshotRecord).first()
         if has_snapshot:
@@ -95,8 +95,8 @@ def backfill_demo_if_empty() -> Optional[LiveSnapshotRecord]:
     # Use the in-memory defaults to seed the persistence layer for offline use
     snapshot = live_state.snapshot()
     rec = _persist_live_snapshot(snapshot, reason="seed")
-    _persist_predictions(rec.id, generate_predictions(snapshot), model_version="demo")
-    _persist_value_bets(rec.id, compute_value_bets(snapshot), model_version="demo")
+    _persist_predictions(rec.id, generate_predictions(snapshot), model_version=MODEL_VERSION)
+    _persist_value_bets(rec.id, compute_value_bets(snapshot), model_version=MODEL_VERSION)
     return rec
 
 

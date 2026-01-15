@@ -4,10 +4,18 @@ Backend API (FastAPI)
 """
 
 import asyncio
+import logging
+import os
+import time
+from collections import deque
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exception_handlers import http_exception_handler
 
+from .auth_utils import SECRET_KEY
 from .db import Base, engine
 from . import models  # noqa: F401  # ensure models are imported
 from .alert_engine import start_alert_engine_background
@@ -23,7 +31,7 @@ from .live_ws import router as live_ws_router
 from .markets_api import router as markets_router
 from .ml_api import router as ml_router
 from .predictions_api import router as predictions_router
-from .snapshot_service import backfill_demo_if_empty, start_snapshot_scheduler
+from .snapshot_service import backfill_seed_if_empty, start_snapshot_scheduler
 from .stats_api import router as stats_router
 from .streamer import start_streamer_background
 from .value_bets_api import router as value_bets_router
@@ -33,17 +41,85 @@ app = FastAPI(
     version="0.2.0",
 )
 
+logger = logging.getLogger("gfps.api")
+
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "ALLOWED_ORIGINS", "http://localhost:1420,http://localhost:3000"
+    ).split(",")
+    if origin.strip()
+]
+if not ALLOWED_ORIGINS:
+    ALLOWED_ORIGINS = ["http://localhost:1420"]
+
+RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "120"))
+RATE_LIMIT_WINDOW_SEC = int(os.getenv("RATE_LIMIT_WINDOW_SEC", "60"))
+
 
 # -------------------------------------------------------------------
 # CORS
 # -------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: restrict in production
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class RateLimiter:
+    def __init__(self, limit: int, window_sec: int) -> None:
+        self.limit = limit
+        self.window_sec = window_sec
+        self.hits: dict[str, deque[float]] = {}
+
+    def allow(self, key: str) -> bool:
+        if self.limit <= 0:
+            return True
+        now = time.time()
+        window_start = now - self.window_sec
+        bucket = self.hits.setdefault(key, deque())
+        while bucket and bucket[0] < window_start:
+            bucket.popleft()
+        if len(bucket) >= self.limit:
+            return False
+        bucket.append(now)
+        return True
+
+
+rate_limiter = RateLimiter(RATE_LIMIT_PER_MINUTE, RATE_LIMIT_WINDOW_SEC)
+
+
+@app.middleware("http")
+async def apply_rate_limit(request: Request, call_next):
+    if request.url.path.startswith(("/health", "/docs", "/openapi.json", "/ws")):
+        return await call_next(request)
+    client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+    key = client_ip or (request.client.host if request.client else "unknown")
+    if not rate_limiter.allow(key):
+        return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
+    return await call_next(request)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "Request validation failed", "errors": exc.errors()},
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_override(request: Request, exc: HTTPException):
+    return await http_exception_handler(request, exc)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception on %s", request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 # -------------------------------------------------------------------
@@ -54,11 +130,14 @@ async def startup_event() -> None:
     # Create all DB tables if they don't exist
     Base.metadata.create_all(bind=engine)
 
-    # Ensure demo seeds are persisted for offline use
-    backfill_demo_if_empty()
+    if SECRET_KEY == "change-this-secret":
+        logger.warning("SECRET_KEY is using the default value; set it in production.")
+
+    # Ensure seed snapshots are persisted for offline use
+    backfill_seed_if_empty()
 
     # Start background workers (alerts + live streamer)
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     start_alert_engine_background(loop)
     start_streamer_background(loop)
     start_snapshot_scheduler(loop)

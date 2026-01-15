@@ -3,17 +3,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict, Iterable, Optional
+import os
 import numpy as np
 
 from backend.market.devig_shin import shin_probabilities
 from backend.market.overround import fair_probs_from_overround
 from backend.market.implied_probability import market_entropy, normalize_probabilities
-from backend.prediction_engine.goals.poisson import PoissonParams, score_probabilities
+from backend.prediction_engine.goals.poisson import PoissonParams
+from backend.prediction_engine.goals.dixon_coles import score_probabilities_dc
 from backend.prediction_engine.strength.team_strength import MatchResult, StrengthModel
 from backend.prediction_engine.calibration.temperature_scaling import TemperatureScaler
 from backend.prediction_engine.ensemble.linear_pooling import linear_pool
 from backend.ml.feature_schema import MatchFeatures
 from backend.ml.multiclass_model import ModelBundle
+
+MODEL_VERSION = os.getenv("MODEL_VERSION", "ens_v2.1")
+FORM_WEIGHT = float(os.getenv("FORM_ADJUSTMENT_WEIGHT", "0.15"))
+MIN_GOAL_RATE = float(os.getenv("MIN_GOAL_RATE", "0.05"))
+MARKET_WEIGHT_MIN = float(os.getenv("MARKET_WEIGHT_MIN", "0.35"))
+MARKET_WEIGHT_MAX = float(os.getenv("MARKET_WEIGHT_MAX", "0.7"))
 
 
 @dataclass(frozen=True)
@@ -24,7 +32,15 @@ class PredictionInput:
     away_team: str
     odds: Dict[str, float]
     recent_results: Iterable[MatchResult]
-    base_goal_rate: float = 1.35
+    base_home_goals: float = 1.45
+    base_away_goals: float = 1.15
+    home_attack: float = 1.0
+    away_attack: float = 1.0
+    home_defence: float = 1.0
+    away_defence: float = 1.0
+    form_home: float = 0.5
+    form_away: float = 0.5
+    dixon_coles_rho: float = -0.08
 
 
 class PredictionEngine:
@@ -33,22 +49,34 @@ class PredictionEngine:
     def __init__(self, ml_model: Optional[ModelBundle] = None) -> None:
         self.ml_model = ml_model
 
-    def _market_view(self, odds: Dict[str, float]) -> Dict[str, float]:
+    def market_probabilities(self, odds: Dict[str, float]) -> Dict[str, float]:
+        if not odds:
+            return {}
         fair = fair_probs_from_overround(odds)
         shin = shin_probabilities(odds)
         pooled = {k: 0.5 * fair.get(k, 0.0) + 0.5 * shin.get(k, 0.0) for k in odds}
         return normalize_probabilities(pooled)
 
-    def _poisson_view(self, inp: PredictionInput) -> Dict[str, float]:
+    def poisson_prediction(self, inp: PredictionInput):
         strength_model = StrengthModel()
         strength_model.fit(inp.recent_results)
         home_strength = strength_model.strength(inp.league, inp.home_team)
         away_strength = strength_model.strength(inp.league, inp.away_team)
-        lambda_home = max(inp.base_goal_rate * home_strength.attack * away_strength.defence, 0.1)
-        lambda_away = max(inp.base_goal_rate * away_strength.attack * home_strength.defence * 0.85, 0.1)
+        home_attack = inp.home_attack * home_strength.attack
+        away_attack = inp.away_attack * away_strength.attack
+        home_defence = inp.home_defence * home_strength.defence
+        away_defence = inp.away_defence * away_strength.defence
+
+        form_diff = inp.form_home - inp.form_away
+        form_adjustment = FORM_WEIGHT * form_diff
+        lambda_home = inp.base_home_goals * home_attack * away_defence * (1 + form_adjustment)
+        lambda_away = inp.base_away_goals * away_attack * home_defence * (1 - form_adjustment)
+        lambda_home = max(lambda_home, MIN_GOAL_RATE)
+        lambda_away = max(lambda_away, MIN_GOAL_RATE)
+
+        rho = max(min(inp.dixon_coles_rho, 0.2), -0.2)
         params = PoissonParams(lambda_home=lambda_home, lambda_away=lambda_away)
-        prediction = score_probabilities(params)
-        return prediction.one_x_two
+        return score_probabilities_dc(params, rho=rho)
 
     def _ml_view(self, inp: PredictionInput, market_probs: Dict[str, float]) -> Optional[Dict[str, float]]:
         if self.ml_model is None:
@@ -72,33 +100,40 @@ class PredictionEngine:
         return {mapping[i]: float(probs[i]) for i in range(len(probs))}
 
     def _calibrate(self, probs: np.ndarray) -> np.ndarray:
+        if probs.shape[0] < 2:
+            return probs / probs.sum(axis=1, keepdims=True)
         labels = np.argmax(probs, axis=1)
         scaler = TemperatureScaler.fit(probs, labels)
         return scaler.transform(probs)
 
     def predict(self, inp: PredictionInput) -> Dict[str, object]:
-        market_probs = self._market_view(inp.odds)
-        poisson_probs = self._poisson_view(inp)
-        components = [np.array([poisson_probs["home"], poisson_probs["draw"], poisson_probs["away"]]),
-                      np.array([market_probs["home"], market_probs["draw"], market_probs["away"]])]
-        weights = [0.5, 0.5]
+        poisson_pred = self.poisson_prediction(inp)
+        poisson_probs = poisson_pred.one_x_two
+
+        components = [np.array([poisson_probs["home"], poisson_probs["draw"], poisson_probs["away"]])]
+        weights = [1.0]
+
+        market_probs = self.market_probabilities(inp.odds)
+        if market_probs:
+            market_confidence = 1.0 - market_entropy(market_probs) / np.log(3)
+            market_weight = max(min(market_confidence, MARKET_WEIGHT_MAX), MARKET_WEIGHT_MIN)
+            components.append(np.array([market_probs["home"], market_probs["draw"], market_probs["away"]]))
+            weights = [1.0 - market_weight, market_weight]
+
         if self.ml_model:
-            ml_probs = self._ml_view(inp, market_probs)
+            ml_probs = self._ml_view(inp, market_probs or poisson_probs)
             if ml_probs:
                 components.append(np.array([ml_probs["home"], ml_probs["draw"], ml_probs["away"]]))
-                weights.append(0.4)
-                total_weight = sum(weights)
-                weights = [w / total_weight for w in weights]
+                weights.append(0.2)
+
         pooled = linear_pool(components, weights)
         calibrated = self._calibrate(pooled.reshape(1, -1))[0]
         confidence = 1.0 - market_entropy({"home": calibrated[0], "draw": calibrated[1], "away": calibrated[2]}) / np.log(3)
         result = {
             "fixture_id": inp.fixture_id,
             "probabilities": {"home": calibrated[0], "draw": calibrated[1], "away": calibrated[2]},
-            "model_version": "ens_v2.0",
+            "model_version": MODEL_VERSION,
             "confidence": confidence,
             "calibrated": True,
         }
         return result
-
-

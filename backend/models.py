@@ -205,7 +205,7 @@ class PredictionSnapshotRecord(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     snapshot_id: Mapped[int] = mapped_column(ForeignKey("live_snapshots.id"))
-    model_version: Mapped[str] = mapped_column(String(64), default="demo")
+    model_version: Mapped[str] = mapped_column(String(64), default="ens_v2.1")
     payload: Mapped[list[dict]] = mapped_column(JSON)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
@@ -217,7 +217,7 @@ class ValueBetSnapshotRecord(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     snapshot_id: Mapped[int] = mapped_column(ForeignKey("live_snapshots.id"))
-    model_version: Mapped[str] = mapped_column(String(64), default="demo")
+    model_version: Mapped[str] = mapped_column(String(64), default="ens_v2.1")
     payload: Mapped[list[dict]] = mapped_column(JSON)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 

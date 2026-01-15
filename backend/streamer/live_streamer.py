@@ -7,6 +7,7 @@ import httpx
 from ..fixtures_api import _map_status
 
 from ..live_state import live_state
+from ..validation import parse_iso_datetime
 
 
 STREAMER_ENABLED = os.getenv("STREAMER_ENABLED", "false").lower() in ("1", "true", "yes")
@@ -44,13 +45,18 @@ async def _fetch_live_fixtures() -> List[dict]:
         if goals.get("home") is not None and goals.get("away") is not None:
             score = {"home": goals["home"], "away": goals["away"]}
 
+        try:
+            start_time = parse_iso_datetime(fixture.get("date") or "")
+        except ValueError:
+            continue
         fixtures.append(
             {
                 "id": str(fixture.get("id")),
                 "league": league.get("name"),
+                "leagueId": str(league.get("id")) if league.get("id") is not None else None,
                 "homeTeam": teams.get("home", {}).get("name"),
                 "awayTeam": teams.get("away", {}).get("name"),
-                "startTime": fixture.get("date"),
+                "startTime": start_time,
                 "status": status,
                 "timer": timer,
                 "score": score,
@@ -119,9 +125,7 @@ async def live_streamer_loop():
         try:
             updated = await _refresh_live_snapshot()
             if not updated:
-                # fall back to demo heartbeat so websocket clients still tick
-                await live_state.tick_demo_clock()
-            await live_state.tick_demo_clock()
+                await live_state.tick_fallback_clock()
         except Exception as e:
             print("[streamer] ERROR:", e)
         await asyncio.sleep(STREAMER_INTERVAL_SEC)

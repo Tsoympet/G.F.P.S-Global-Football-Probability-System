@@ -12,27 +12,29 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
-_DEMO_START = datetime.utcnow().replace(microsecond=0)
+_SEED_START = datetime.utcnow().replace(microsecond=0)
 
 
 class LiveState:
     def __init__(self) -> None:
-        # Default demo fixtures
+        # Seed fixtures used when no upstream data is available.
         self.fixtures: List[Dict[str, Any]] = [
             {
                 "id": "1",
                 "league": "Premier League",
-                "homeTeam": "Demo FC",
-                "awayTeam": "Sample United",
-                "startTime": (_DEMO_START + timedelta(hours=1)).isoformat() + "Z",
+                "leagueId": "39",
+                "homeTeam": "Northbridge FC",
+                "awayTeam": "Harbor United",
+                "startTime": (_SEED_START + timedelta(hours=1)).isoformat() + "Z",
                 "status": "scheduled",
             },
             {
                 "id": "2",
                 "league": "La Liga",
-                "homeTeam": "Example Town",
-                "awayTeam": "Placeholder City",
-                "startTime": (_DEMO_START + timedelta(hours=2)).isoformat() + "Z",
+                "leagueId": "140",
+                "homeTeam": "Valencia Norte",
+                "awayTeam": "Costa Azul",
+                "startTime": (_SEED_START + timedelta(hours=2)).isoformat() + "Z",
                 "status": "scheduled",
             },
         ]
@@ -101,8 +103,8 @@ class LiveState:
         )
         await self._persist_snapshot("event")
 
-    async def tick_demo_clock(self) -> None:
-        """Simulate a minimal live update for demo fixtures."""
+    async def tick_fallback_clock(self) -> None:
+        """Simulate a minimal live update for seeded fixtures."""
         if not self.fixtures:
             return
         f = self.fixtures[0]
@@ -111,7 +113,7 @@ class LiveState:
             f["timer"] = "1'"
             f["score"] = {"home": 0, "away": 0}
             await self.add_event(
-                f.get("id", "demo"),
+                f.get("id", "seed"),
                 {"minute": 1, "description": "Kick-off", "type": "info"},
             )
             await self.broadcast({"type": "kickoff", **self.snapshot()})

@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
+from .auth_dependency import require_user
 from .db import SessionLocal
 from .models import TeamStats
 
@@ -30,7 +31,7 @@ class TeamStatsIn(BaseModel):
     avg_goals_against: float = 1.2
 
 
-@router.post("/team/upsert")
+@router.post("/team/upsert", dependencies=[Depends(require_user)])
 def upsert_team_stats(p: TeamStatsIn, db: Session = Depends(get_db)):
     row = db.scalar(
         select(TeamStats).where(
@@ -60,7 +61,7 @@ def upsert_team_stats(p: TeamStatsIn, db: Session = Depends(get_db)):
     return {"ok": True, "id": row.id}
 
 
-@router.get("/team")
+@router.get("/team", dependencies=[Depends(require_user)])
 def get_team_stats(league_id: str, team_name: str, season: str = "2024", db: Session = Depends(get_db)):
     row = db.scalar(
         select(TeamStats).where(
