@@ -1,21 +1,19 @@
 ## Completion Summary
-- Replaced placeholder prediction/EV logic with the full Poisson + Dixon-Coles pipeline, team-strength/form adjustments, validated odds ingestion, and EV filtering.
-- Hardened FastAPI with rate limiting, request validation/error handling, auth enforcement, and cleaned fixtures/markets/live odds pipelines.
-- Updated desktop UI defaults, docs, and added backend unit tests aligned with the production engine.
+- Audited the repo and hardened FastAPI auth flows by consolidating bearer-based access, tightening request validation, and ensuring coupon/alert/device/favorite endpoints use header auth.
+- Added pipeline snapshot status reporting (counts, model version, EV thresholds) and surfaced it in the desktop dashboard alongside updated API documentation.
+- Expanded validation tests, refreshed README architecture details, and updated platform docs to reflect the live data pipeline.
 
 ## Major Systems Finalized
 1. Probability engine (Poisson/Dixon-Coles, team strengths, form adjustments, market pooling).
 2. Expected value engine (EV calculation + thresholds).
 3. Live odds + fixtures ingestion with validation and snapshot persistence.
-4. FastAPI security hardening (auth, rate limiting, validation, error handling).
-5. Desktop analytics views (live match center, EV dashboard, settings cleanup).
-6. Model lifecycle endpoints with data-driven training metrics.
+4. Pipeline telemetry (snapshot status, model metadata, streamer/alert engine state).
+5. FastAPI security hardening (auth, rate limiting, validation, error handling).
+6. Desktop analytics views (dashboard pipeline metrics, EV monitoring).
 
 ## Tests & Verification
-- `python -m unittest discover -s backend/tests`
+- `python -m pytest backend/tests`
 - `cd GFPS/desktop && npm run build`
-- `uvicorn backend.main:app --host 0.0.0.0 --port 8000`
-- `AUTH_TOKEN=... ./scripts/check_endpoints.sh http://localhost:8000`
 
 ## UI Screenshot
-- https://github.com/user-attachments/assets/6a37e9fa-e2e4-490c-9ba7-1f86b470b31f
+- https://github.com/user-attachments/assets/972cc37c-047c-445c-a829-5f53bf77da91
