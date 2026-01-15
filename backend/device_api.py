@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
+from typing import Literal
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from .db import SessionLocal
 from .models import User, Device
-from .auth_utils import decode_token
+from .auth_dependency import require_user
 
 router = APIRouter(prefix="/devices", tags=["devices"])
 
@@ -18,26 +19,13 @@ def get_db():
         db.close()
 
 
-def get_user(token: str, db: Session) -> User:
-    payload = decode_token(token)
-    if not payload:
-        raise HTTPException(401, "Invalid token")
-    email = payload.get("sub")
-    u = db.scalar(select(User).where(User.email == email))
-    if not u:
-        raise HTTPException(404, "User not found")
-    return u
-
-
 class DeviceIn(BaseModel):
-    token: str
-    platform: str  # android / ios / web
-    push_token: str
+    platform: Literal["android", "ios", "web"]
+    push_token: constr(min_length=8, pattern=r"^[A-Za-z0-9:_\-.]+$")
 
 
 @router.post("/register")
-def register_device(p: DeviceIn, db: Session = Depends(get_db)):
-    user = get_user(p.token, db)
+def register_device(p: DeviceIn, user: User = Depends(require_user), db: Session = Depends(get_db)):
     d = db.scalar(
         select(Device).where(
             Device.user_id == user.id,
@@ -58,8 +46,7 @@ def register_device(p: DeviceIn, db: Session = Depends(get_db)):
 
 
 @router.get("")
-def list_devices(token: str, db: Session = Depends(get_db)):
-    user = get_user(token, db)
+def list_devices(user: User = Depends(require_user), db: Session = Depends(get_db)):
     rows = db.scalars(select(Device).where(Device.user_id == user.id)).all()
     return {
         "ok": True,
@@ -71,8 +58,7 @@ def list_devices(token: str, db: Session = Depends(get_db)):
 
 
 @router.delete("/{device_id}")
-def delete_device(device_id: int, token: str, db: Session = Depends(get_db)):
-    user = get_user(token, db)
+def delete_device(device_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
     d = db.scalar(select(Device).where(Device.id == device_id, Device.user_id == user.id))
     if not d:
         raise HTTPException(404, "Not found")

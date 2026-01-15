@@ -5,6 +5,8 @@ dist/
 .env
 .env.*
 *.log
+__pycache__/
+*.pyc
 
 # Tauri / Rust targets
 GFPS/desktop/src-tauri/target/

@@ -16,13 +16,9 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
-def require_user(
-    authorization: str = Header(None), db: Session = Depends(get_db)
-) -> User:
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(401, "Missing or invalid Authorization header")
-
-    token = authorization.split(" ", 1)[1]
+def get_user_from_token(token: str, db: Session) -> User:
+    if not token:
+        raise HTTPException(401, "Missing token")
     payload = decode_token(token)
     if not payload:
         raise HTTPException(401, "Invalid token")
@@ -39,3 +35,13 @@ def require_user(
         raise HTTPException(401, "Token expired")
 
     return user
+
+
+def require_user(
+    authorization: str = Header(None), db: Session = Depends(get_db)
+) -> User:
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(401, "Missing or invalid Authorization header")
+
+    token = authorization.split(" ", 1)[1]
+    return get_user_from_token(token, db)

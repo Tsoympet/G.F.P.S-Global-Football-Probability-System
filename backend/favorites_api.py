@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from .db import SessionLocal
 from .models import User, FavoriteLeague, FavoriteTeam
-from .auth_utils import decode_token
+from .auth_dependency import require_user
 
 router = APIRouter(prefix="/favorites", tags=["favorites"])
 
@@ -18,34 +18,20 @@ def get_db():
         db.close()
 
 
-def get_user(token: str, db: Session) -> User:
-    payload = decode_token(token)
-    if not payload:
-        raise HTTPException(401, "Invalid token")
-    email = payload.get("sub")
-    u = db.scalar(select(User).where(User.email == email))
-    if not u:
-        raise HTTPException(404, "User not found")
-    return u
-
-
 class FavLeagueIn(BaseModel):
-    token: str
-    league_id: str
-    league_name: str
+    league_id: constr(min_length=1)
+    league_name: constr(min_length=1)
 
 
 class FavTeamIn(BaseModel):
-    token: str
-    team_id: str
-    team_name: str
-    league_id: str | None = None
-    league_name: str | None = None
+    team_id: constr(min_length=1)
+    team_name: constr(min_length=1)
+    league_id: constr(min_length=1) | None = None
+    league_name: constr(min_length=1) | None = None
 
 
 @router.post("/league")
-def add_league(p: FavLeagueIn, db: Session = Depends(get_db)):
-    user = get_user(p.token, db)
+def add_league(p: FavLeagueIn, user: User = Depends(require_user), db: Session = Depends(get_db)):
     existing = db.scalar(
         select(FavoriteLeague).where(
             FavoriteLeague.user_id == user.id,
@@ -66,8 +52,7 @@ def add_league(p: FavLeagueIn, db: Session = Depends(get_db)):
 
 
 @router.get("/leagues")
-def list_leagues(token: str, db: Session = Depends(get_db)):
-    user = get_user(token, db)
+def list_leagues(user: User = Depends(require_user), db: Session = Depends(get_db)):
     rows = db.scalars(select(FavoriteLeague).where(FavoriteLeague.user_id == user.id)).all()
     return {
         "ok": True,
@@ -79,8 +64,7 @@ def list_leagues(token: str, db: Session = Depends(get_db)):
 
 
 @router.delete("/league/{fav_id}")
-def delete_league(fav_id: int, token: str, db: Session = Depends(get_db)):
-    user = get_user(token, db)
+def delete_league(fav_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
     r = db.scalar(
         select(FavoriteLeague).where(FavoriteLeague.id == fav_id, FavoriteLeague.user_id == user.id)
     )
@@ -92,8 +76,7 @@ def delete_league(fav_id: int, token: str, db: Session = Depends(get_db)):
 
 
 @router.post("/team")
-def add_team(p: FavTeamIn, db: Session = Depends(get_db)):
-    user = get_user(p.token, db)
+def add_team(p: FavTeamIn, user: User = Depends(require_user), db: Session = Depends(get_db)):
     existing = db.scalar(
         select(FavoriteTeam).where(
             FavoriteTeam.user_id == user.id,
@@ -116,8 +99,7 @@ def add_team(p: FavTeamIn, db: Session = Depends(get_db)):
 
 
 @router.get("/teams")
-def list_teams(token: str, db: Session = Depends(get_db)):
-    user = get_user(token, db)
+def list_teams(user: User = Depends(require_user), db: Session = Depends(get_db)):
     rows = db.scalars(select(FavoriteTeam).where(FavoriteTeam.user_id == user.id)).all()
     return {
         "ok": True,
@@ -135,8 +117,7 @@ def list_teams(token: str, db: Session = Depends(get_db)):
 
 
 @router.delete("/team/{fav_id}")
-def delete_team(fav_id: int, token: str, db: Session = Depends(get_db)):
-    user = get_user(token, db)
+def delete_team(fav_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
     r = db.scalar(
         select(FavoriteTeam).where(FavoriteTeam.id == fav_id, FavoriteTeam.user_id == user.id)
     )

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from .db import SessionLocal
@@ -15,6 +15,7 @@ from .models import (
 )
 from .prediction_engine import MODEL_VERSION, compute_value_bets, generate_predictions
 from .live_state import live_state
+from .validation import format_iso_datetime
 
 
 SNAPSHOT_INTERVAL_SEC = int(os.getenv("SNAPSHOT_INTERVAL_SEC", "60"))
@@ -110,3 +111,53 @@ def latest_snapshot_payload() -> Optional[Dict]:
         if not rec:
             return None
         return rec.payload
+
+
+def _market_line_count(markets: Dict[str, List[Dict]]) -> int:
+    return sum(len(lines) for lines in (markets or {}).values())
+
+
+def latest_snapshot_summary() -> Optional[Dict]:
+    with SessionLocal() as db:
+        snapshot = (
+            db.query(LiveSnapshotRecord)
+            .order_by(LiveSnapshotRecord.created_at.desc())
+            .first()
+        )
+        if not snapshot:
+            return None
+        prediction = (
+            db.query(PredictionSnapshotRecord)
+            .filter(PredictionSnapshotRecord.snapshot_id == snapshot.id)
+            .order_by(PredictionSnapshotRecord.created_at.desc())
+            .first()
+        )
+        value_bets = (
+            db.query(ValueBetSnapshotRecord)
+            .filter(ValueBetSnapshotRecord.snapshot_id == snapshot.id)
+            .order_by(ValueBetSnapshotRecord.created_at.desc())
+            .first()
+        )
+
+    payload = snapshot.payload or {}
+    markets = payload.get("markets") or {}
+    captured_at = format_iso_datetime(snapshot.created_at)
+    age_sec = None
+    if snapshot.created_at:
+        created_at = snapshot.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        age_sec = (datetime.now(timezone.utc) - created_at).total_seconds()
+
+    return {
+        "snapshotId": snapshot.id,
+        "reason": snapshot.reason,
+        "capturedAt": captured_at,
+        "ageSec": age_sec,
+        "fixtureCount": len(payload.get("fixtures") or []),
+        "oddsCount": len(payload.get("odds") or []),
+        "marketLineCount": _market_line_count(markets),
+        "predictionCount": len(prediction.payload or []) if prediction else 0,
+        "valueBetCount": len(value_bets.payload or []) if value_bets else 0,
+        "modelVersion": prediction.model_version if prediction else MODEL_VERSION,
+    }

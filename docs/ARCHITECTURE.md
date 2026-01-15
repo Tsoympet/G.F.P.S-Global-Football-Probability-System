@@ -39,6 +39,8 @@ GFPS is composed of three main layers:
   - polls live fixtures and odds
   - calls prediction engine
   - triggers alerts and logs events
+- `snapshot_service.py` – live snapshot persistence, prediction/EV backfills
+- `pipeline_api.py` – pipeline health + snapshot status endpoint
 - `prediction_engine/` – probability engine:
   - Poisson + Dixon-Coles goal modelling
   - Market normalization (overround + shin) and ensemble pooling

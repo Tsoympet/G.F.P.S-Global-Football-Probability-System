@@ -37,6 +37,43 @@ branding/         # Logo prompts, brand guidelines
 
 ---
 
+## 🧠 Architecture Overview
+
+GFPS runs a live analytics pipeline that streams fixtures/odds, computes probabilities, and persists snapshots for offline review.
+
+1. **Ingestion** – API-Football pulls fixtures, events, and odds (seeded fallback data if no key).
+2. **Normalization** – Odds are de-vigged, markets validated, and fixtures sanitized.
+3. **Prediction Engine** – Poisson + Dixon-Coles with team-strength/form adjustments, market pooling, and calibration.
+4. **EV Engine** – EV = (prob × odds) − 1 with threshold filtering for value bets.
+5. **Persistence & Delivery** – Snapshots, predictions, and EV lists are stored and served to the desktop client.
+
+---
+
+## 📊 Model & EV Engine
+
+- **Goal model**: Poisson goals with Dixon-Coles low-score correction.
+- **Team strength**: league/team attack & defense multipliers + recent form weighting.
+- **Market calibration**: overround + Shin de-vigging blended with model outputs using linear pooling.
+- **Probability calibration**: temperature scaling to keep distributions coherent and well-calibrated.
+- **Expected value**: `EV = (prob × odds) − 1`, filtered via `EV_MIN_THRESHOLD`.
+
+---
+
+## ⚠️ Risk Disclaimer
+
+GFPS provides probabilistic analytics, not guarantees. Football outcomes remain uncertain, and nothing in GFPS is financial advice or a promise of profit. Use responsibly and validate against your own risk tolerance.
+
+---
+
+## 🔌 Extensibility
+
+- Swap or add data providers (API-Football, custom feeds).
+- Extend markets (totals, handicaps, props) and EV filters.
+- Add new model components (Elo, xG, ML ensembles).
+- Scale out the pipeline with additional workers and storage backends.
+
+---
+
 ## 🚀 Getting started locally
 
 1. **Install backend dependencies**

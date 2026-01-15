@@ -1,6 +1,6 @@
 import { useAuthStore } from '@store/auth';
 import { useSettingsStore } from '@store/settings';
-import { Fixture, LiveOddsPayload, ModelInfo, Prediction, ValueBet } from './types';
+import { Fixture, LiveOddsPayload, ModelInfo, PipelineStatus, Prediction, ValueBet } from './types';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
@@ -37,7 +37,8 @@ export const api = {
   valueBets: () => get<ValueBet[]>('/value-bets'),
   trainModel: () => post<{ message: string }>('/ml/train'),
   models: () => get<ModelInfo[]>('/ml/models'),
-  activateModel: (version: string) => post<{ message: string }>(`/ml/activate/${version}`)
+  activateModel: (version: string) => post<{ message: string }>(`/ml/activate/${version}`),
+  pipelineStatus: () => get<PipelineStatus>('/pipeline/status')
 };
 
 export const websocketUrl = () => {

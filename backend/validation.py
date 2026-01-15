@@ -14,6 +14,12 @@ def parse_date_string(value: Optional[str]) -> str:
         raise ValueError(f"Invalid date format: {value}") from exc
 
 
+def _normalize_to_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 def parse_iso_datetime(value: str) -> str:
     if not value:
         raise ValueError("Missing datetime value")
@@ -22,9 +28,18 @@ def parse_iso_datetime(value: str) -> str:
         parsed = datetime.fromisoformat(normalized)
     except ValueError as exc:
         raise ValueError(f"Invalid datetime value: {value}") from exc
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    return _normalize_to_utc(parsed).isoformat().replace("+00:00", "Z")
+
+
+def format_iso_datetime(value: Optional[datetime]) -> Optional[str]:
+    if not value:
+        return None
+    return _normalize_to_utc(value).isoformat().replace("+00:00", "Z")
+
+
+def validate_odds_bounds(min_odds: Optional[float], max_odds: Optional[float]) -> None:
+    if min_odds is not None and max_odds is not None and min_odds > max_odds:
+        raise ValueError("min_odds cannot exceed max_odds")
 
 
 def require_decimal_odds(value: float, label: str) -> float:

@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, constr, model_validator
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from .db import SessionLocal
 from .models import AlertRule, AlertEvent, User
-from .auth_utils import decode_token
+from .auth_dependency import require_user
+from .validation import validate_odds_bounds
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
@@ -19,46 +20,42 @@ def get_db():
         db.close()
 
 
-def get_user(token: str, db: Session) -> User:
-    payload = decode_token(token)
-    if not payload:
-        raise HTTPException(401, "Invalid token")
-    email = payload.get("sub")
-    u = db.scalar(select(User).where(User.email == email))
-    if not u:
-        raise HTTPException(404, "User not found")
-    return u
-
-
 class AlertRuleIn(BaseModel):
-    token: str
-    name: str
-    league_filter: Optional[str] = None
-    team_filter: Optional[str] = None
-    market_filter: Optional[str] = None
-    outcome_filter: Optional[str] = None
-    min_odds: Optional[float] = None
-    max_odds: Optional[float] = None
-    min_ev: Optional[float] = None
+    name: constr(min_length=1)
+    league_filter: Optional[constr(min_length=1)] = None
+    team_filter: Optional[constr(min_length=1)] = None
+    market_filter: Optional[constr(min_length=1)] = None
+    outcome_filter: Optional[constr(min_length=1)] = None
+    min_odds: Optional[float] = Field(default=None, gt=1.0)
+    max_odds: Optional[float] = Field(default=None, gt=1.0)
+    min_ev: Optional[float] = Field(default=None)
     is_active: bool = True
+
+    @model_validator(mode="after")
+    def validate_bounds(self):
+        validate_odds_bounds(self.min_odds, self.max_odds)
+        return self
 
 
 class AlertRuleUpdate(BaseModel):
-    token: str
-    name: Optional[str] = None
-    league_filter: Optional[str] = None
-    team_filter: Optional[str] = None
-    market_filter: Optional[str] = None
-    outcome_filter: Optional[str] = None
-    min_odds: Optional[float] = None
-    max_odds: Optional[float] = None
-    min_ev: Optional[float] = None
+    name: Optional[constr(min_length=1)] = None
+    league_filter: Optional[constr(min_length=1)] = None
+    team_filter: Optional[constr(min_length=1)] = None
+    market_filter: Optional[constr(min_length=1)] = None
+    outcome_filter: Optional[constr(min_length=1)] = None
+    min_odds: Optional[float] = Field(default=None, gt=1.0)
+    max_odds: Optional[float] = Field(default=None, gt=1.0)
+    min_ev: Optional[float] = Field(default=None)
     is_active: Optional[bool] = None
+
+    @model_validator(mode="after")
+    def validate_bounds(self):
+        validate_odds_bounds(self.min_odds, self.max_odds)
+        return self
 
 
 @router.post("/rules")
-def create_rule(p: AlertRuleIn, db: Session = Depends(get_db)):
-    user = get_user(p.token, db)
+def create_rule(p: AlertRuleIn, user: User = Depends(require_user), db: Session = Depends(get_db)):
     r = AlertRule(
         user_id=user.id,
         name=p.name,
@@ -78,8 +75,7 @@ def create_rule(p: AlertRuleIn, db: Session = Depends(get_db)):
 
 
 @router.get("/rules")
-def list_rules(token: str, db: Session = Depends(get_db)):
-    user = get_user(token, db)
+def list_rules(user: User = Depends(require_user), db: Session = Depends(get_db)):
     rows = db.scalars(select(AlertRule).where(AlertRule.user_id == user.id)).all()
     return {
         "ok": True,
@@ -102,8 +98,7 @@ def list_rules(token: str, db: Session = Depends(get_db)):
 
 
 @router.patch("/rules/{rule_id}")
-def update_rule(rule_id: int, p: AlertRuleUpdate, db: Session = Depends(get_db)):
-    user = get_user(p.token, db)
+def update_rule(rule_id: int, p: AlertRuleUpdate, user: User = Depends(require_user), db: Session = Depends(get_db)):
     r = db.scalar(
         select(AlertRule).where(AlertRule.id == rule_id, AlertRule.user_id == user.id)
     )
@@ -136,8 +131,7 @@ def update_rule(rule_id: int, p: AlertRuleUpdate, db: Session = Depends(get_db))
 
 
 @router.delete("/rules/{rule_id}")
-def delete_rule(rule_id: int, token: str, db: Session = Depends(get_db)):
-    user = get_user(token, db)
+def delete_rule(rule_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
     r = db.scalar(
         select(AlertRule).where(AlertRule.id == rule_id, AlertRule.user_id == user.id)
     )
@@ -149,8 +143,7 @@ def delete_rule(rule_id: int, token: str, db: Session = Depends(get_db)):
 
 
 @router.get("/events")
-def list_events(token: str, limit: int = 50, db: Session = Depends(get_db)):
-    user = get_user(token, db)
+def list_events(user: User = Depends(require_user), limit: int = 50, db: Session = Depends(get_db)):
     q = (
         db.query(AlertEvent)
         .filter(AlertEvent.user_id == user.id)

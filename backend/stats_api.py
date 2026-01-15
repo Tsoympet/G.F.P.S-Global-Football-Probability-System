@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, constr
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
@@ -19,16 +19,16 @@ def get_db():
 
 
 class TeamStatsIn(BaseModel):
-    league_id: str
-    league_name: str
-    team_name: str
-    season: str = "2024"
-    home_attack: float = 1.0
-    away_attack: float = 1.0
-    home_defense: float = 1.0
-    away_defense: float = 1.0
-    avg_goals_for: float = 1.5
-    avg_goals_against: float = 1.2
+    league_id: constr(min_length=1)
+    league_name: constr(min_length=1)
+    team_name: constr(min_length=1)
+    season: constr(min_length=4, max_length=8) = "2024"
+    home_attack: float = Field(default=1.0, gt=0.0)
+    away_attack: float = Field(default=1.0, gt=0.0)
+    home_defense: float = Field(default=1.0, gt=0.0)
+    away_defense: float = Field(default=1.0, gt=0.0)
+    avg_goals_for: float = Field(default=1.5, gt=0.0)
+    avg_goals_against: float = Field(default=1.2, gt=0.0)
 
 
 @router.post("/team/upsert", dependencies=[Depends(require_user)])
