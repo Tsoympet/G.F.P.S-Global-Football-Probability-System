@@ -14,4 +14,3 @@ def linear_decay(elapsed_minutes: float, total_minutes: float = 90.0) -> float:
     remaining = max(total_minutes - elapsed_minutes, 0.0)
     return remaining / total_minutes
 
-

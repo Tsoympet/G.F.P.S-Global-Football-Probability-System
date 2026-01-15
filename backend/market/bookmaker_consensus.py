@@ -40,7 +40,7 @@ def market_entropy_weight(line: BookmakerLine) -> float:
 
     probs = line.implied_probs()
     probs = normalize_probabilities(probs)
-    entropy = -sum(p * np.log(p) for p in probs.values())
+    entropy = -sum(p * np.log(max(p, 1e-12)) for p in probs.values())
     max_entropy = np.log(len(probs)) if probs else 1.0
     return 1.0 - entropy / max_entropy
 
@@ -53,5 +53,4 @@ def weighted_by_sharpness(lines: Iterable[BookmakerLine]) -> Dict[str, float]:
         w = market_entropy_weight(line)
         weighted_lines.append(BookmakerLine(name=line.name, odds=line.odds, weight=w))
     return consensus_probabilities(weighted_lines)
-
 

@@ -107,7 +107,7 @@ def market_entropy(probs: Mapping[str, float]) -> float:
     """
 
     normalized = normalize_probabilities(probs)
-    return -sum(p * math.log(p) for p in normalized.values())
+    return -sum(p * math.log(max(p, 1e-12)) for p in normalized.values())
 
 
 def price_spread(quotes: Iterable[OddsQuote]) -> float:
@@ -117,5 +117,4 @@ def price_spread(quotes: Iterable[OddsQuote]) -> float:
     if not decimals:
         return 0.0
     return max(decimals) - min(decimals)
-
 

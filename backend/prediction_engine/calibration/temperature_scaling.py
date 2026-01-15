@@ -5,9 +5,14 @@ from dataclasses import dataclass
 import numpy as np
 
 
+def _log_softmax(logits: np.ndarray) -> np.ndarray:
+    shifted = logits - np.max(logits, axis=1, keepdims=True)
+    return shifted - np.log(np.sum(np.exp(shifted), axis=1, keepdims=True))
+
+
 def _nll(temp: float, logits: np.ndarray, labels: np.ndarray) -> float:
     scaled = logits / temp
-    log_probs = scaled - np.log(np.sum(np.exp(scaled), axis=1, keepdims=True))
+    log_probs = _log_softmax(scaled)
     idx = (np.arange(len(labels)), labels)
     return float(-np.mean(log_probs[idx]))
 
@@ -29,9 +34,14 @@ class TemperatureScaler:
         return cls(temperature=temp)
 
     def transform(self, logits: np.ndarray) -> np.ndarray:
-        scaled = logits / self.temperature
-        exps = np.exp(scaled - np.max(scaled, axis=1, keepdims=True))
-        probs = exps / np.sum(exps, axis=1, keepdims=True)
-        return probs
+        scaled = logits / max(self.temperature, 1e-6)
+        log_probs = _log_softmax(scaled)
+        return np.exp(log_probs)
 
+
+def logits_from_probabilities(probs: np.ndarray, eps: float = 1e-12) -> np.ndarray:
+    """Convert probabilities into logit-like scores for calibration."""
+
+    clipped = np.clip(probs, eps, 1.0)
+    return np.log(clipped)
 

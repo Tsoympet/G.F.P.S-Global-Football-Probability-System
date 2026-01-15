@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict
+import math
 import numpy as np
 
 
 def poisson_pmf(lmbda: float, k: int) -> float:
-    return float(np.exp(-lmbda) * (lmbda ** k) / np.math.factorial(k))
+    return float(np.exp(-lmbda) * (lmbda ** k) / math.factorial(k))
 
 
 @dataclass(frozen=True)
@@ -27,5 +28,4 @@ def skellam_probabilities(params: SkellamParams, max_goals: int = 10) -> Dict[st
     away = float(matrix[np.tril_indices_from(matrix, k=-1)].sum())
     total = home + draw + away
     return {"home": home / total, "draw": draw / total, "away": away / total}
-
 

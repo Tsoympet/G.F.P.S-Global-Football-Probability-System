@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, Optional
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import GradientBoostingClassifier
@@ -13,7 +13,7 @@ from sklearn.metrics import log_loss
 @dataclass
 class ModelBundle:
     model: object
-    label_mapping: dict
+    label_mapping: Dict[int, str]
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         probs = self.model.predict_proba(X)
@@ -25,6 +25,12 @@ def train_logistic(X: np.ndarray, y: np.ndarray, C: float = 1.0) -> ModelBundle:
     clf = LogisticRegression(max_iter=500, multi_class="multinomial", C=C)
     clf.fit(X, y)
     return ModelBundle(model=clf, label_mapping={0: "home", 1: "draw", 2: "away"})
+
+
+def train_softmax(X: np.ndarray, y: np.ndarray, C: float = 1.0) -> ModelBundle:
+    """Train a softmax (multinomial logistic) classifier."""
+
+    return train_logistic(X, y, C=C)
 
 
 def train_gradient_boosting(X: np.ndarray, y: np.ndarray, n_estimators: int = 200) -> ModelBundle:
@@ -39,5 +45,4 @@ def validate_model(bundle: ModelBundle, X: np.ndarray, y: np.ndarray, test_size:
     model.fit(X_train, y_train)
     probs = model.predict_proba(X_val)
     return float(log_loss(y_val, probs))
-
 
