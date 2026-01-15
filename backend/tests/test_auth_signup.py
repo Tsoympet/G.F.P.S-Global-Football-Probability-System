@@ -1,25 +1,24 @@
-import os
 import unittest
 
-os.environ["DATABASE_URL"] = "sqlite:////tmp/gfps_test_auth.db"
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from backend import db, models
+from backend import models
 from backend.google_auth import Signup, signup
 
 
 class SignupIdempotencyTests(unittest.TestCase):
     def setUp(self):
-        models.Base.metadata.drop_all(bind=db.engine)
-        models.Base.metadata.create_all(bind=db.engine)
-        self.session = db.SessionLocal()
+        self.engine = create_engine("sqlite:///:memory:", future=True)
+        models.Base.metadata.create_all(bind=self.engine)
+        SessionLocal = sessionmaker(
+            bind=self.engine, autoflush=False, autocommit=False, future=True
+        )
+        self.session = SessionLocal()
 
     def tearDown(self):
         self.session.close()
-        db.engine.dispose()
-        try:
-            os.remove("/tmp/gfps_test_auth.db")
-        except FileNotFoundError:
-            pass
+        self.engine.dispose()
 
     def test_duplicate_signup_returns_token(self):
         payload = Signup(email="duplicate@gfps.app", password="password123")
