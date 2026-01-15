@@ -32,21 +32,15 @@ class StrengthModel:
 
     def fit(self, results: Iterable[MatchResult]) -> None:
         leagues: Dict[str, Dict[str, list]] = {}
-        league_totals: Dict[str, Tuple[float, float, int]] = {}
         for match in results:
             leagues.setdefault(match.league, {}).setdefault(match.home_team, []).append((match.home_goals, match.away_goals))
             leagues.setdefault(match.league, {}).setdefault(match.away_team, []).append((match.away_goals, match.home_goals))
-            total_for, total_against, count = league_totals.get(match.league, (0.0, 0.0, 0))
-            league_totals[match.league] = (
-                total_for + match.home_goals + match.away_goals,
-                total_against + match.home_goals + match.away_goals,
-                count + 2,
-            )
 
         for league, team_data in leagues.items():
-            total_for, total_against, count = league_totals.get(league, (0.0, 0.0, 0))
-            league_avg_for = total_for / count if count else 1.0
-            league_avg_against = total_against / count if count else 1.0
+            goals_for_all = [g[0] for scores in team_data.values() for g in scores]
+            goals_against_all = [g[1] for scores in team_data.values() for g in scores]
+            league_avg_for = float(np.mean(goals_for_all)) if goals_for_all else 1.0
+            league_avg_against = float(np.mean(goals_against_all)) if goals_against_all else 1.0
             self.league_averages[league] = (league_avg_for, league_avg_against)
             for team, scores in team_data.items():
                 goals_for = [g[0] for g in scores]

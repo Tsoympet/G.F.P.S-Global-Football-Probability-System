@@ -86,14 +86,19 @@ def _outcome_from_matrix(matrix: np.ndarray, home_goals: int, away_goals: int) -
     return {"home": home / total, "draw": draw / total, "away": away / total}
 
 
-def update_in_play_probabilities(context: InPlayContext, max_goals: int = 6) -> Dict[str, float]:
+def update_in_play_probabilities(
+    context: InPlayContext,
+    max_goals: int = 6,
+    red_card_penalty: float = RED_CARD_LAMBDA_PENALTY,
+    min_card_factor: float = MIN_CARD_FACTOR,
+) -> Dict[str, float]:
     """Update 1X2 probabilities during a match using Bayesian-style blending."""
 
     momentum = momentum_index(context.events)
     lambda_home = adjust_lambda(context.lambda_home, momentum)
     lambda_away = adjust_lambda(context.lambda_away, -momentum)
-    card_factor_home = max(MIN_CARD_FACTOR, 1.0 - RED_CARD_LAMBDA_PENALTY * context.red_cards_home)
-    card_factor_away = max(MIN_CARD_FACTOR, 1.0 - RED_CARD_LAMBDA_PENALTY * context.red_cards_away)
+    card_factor_home = max(min_card_factor, 1.0 - red_card_penalty * context.red_cards_home)
+    card_factor_away = max(min_card_factor, 1.0 - red_card_penalty * context.red_cards_away)
     lambda_home *= card_factor_home
     lambda_away *= card_factor_away
 

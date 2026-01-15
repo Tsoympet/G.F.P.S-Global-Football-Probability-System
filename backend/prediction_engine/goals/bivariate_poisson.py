@@ -19,11 +19,13 @@ def bivariate_score_matrix(params: BivariatePoissonParams, max_goals: int = 10) 
 
     matrix = np.zeros((max_goals + 1, max_goals + 1))
     exp_term = math.exp(-(params.lambda_home + params.lambda_away + params.lambda_shared))
+    log_floor = -1e12
+
     def log_power(lmbda: float, power: int) -> float:
         if power == 0:
             return 0.0
         if lmbda <= 0:
-            return -np.inf
+            return log_floor
         return power * math.log(lmbda)
 
     for i in range(max_goals + 1):
