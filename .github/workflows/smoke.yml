@@ -22,11 +22,12 @@ jobs:
 
       - name: Launch backend
         run: |
-          uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
+          uvicorn backend.main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
           echo $! > backend.pid
 
       - name: Wait for backend health
         run: |
+          # Wait up to 30 seconds for backend to become healthy
           for i in {1..30}; do
             if curl -sf http://127.0.0.1:8000/health > /dev/null 2>&1; then
               echo "Backend is healthy"
@@ -43,7 +44,7 @@ jobs:
           if ! kill -0 $(cat backend.pid) 2>/dev/null; then
             echo "Backend process has died!"
             echo "=== Backend logs ==="
-            cat nohup.out 2>/dev/null || echo "No logs found"
+            cat backend.log 2>/dev/null || echo "No logs found"
             exit 1
           fi
           echo "Backend process is still running (PID: $(cat backend.pid))"
