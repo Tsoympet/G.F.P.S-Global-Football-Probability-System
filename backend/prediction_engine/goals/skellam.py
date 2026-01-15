@@ -28,4 +28,3 @@ def skellam_probabilities(params: SkellamParams, max_goals: int = 10) -> Dict[st
     away = float(matrix[np.tril_indices_from(matrix, k=-1)].sum())
     total = home + draw + away
     return {"home": home / total, "draw": draw / total, "away": away / total}
-

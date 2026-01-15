@@ -31,6 +31,11 @@ class ConformalPredictor:
         return cls(threshold=float(sorted_scores[k]))
 
     def predict_set(self, probs: np.ndarray) -> np.ndarray:
-        """Return confidence sets given calibrated probabilities."""
+        """Return confidence sets given calibrated probabilities.
+
+        Returns:
+            Binary array shaped (n_samples, n_classes) with 1 indicating
+            membership of the prediction set for each class.
+        """
 
         return (1.0 - probs <= self.threshold).astype(int)
