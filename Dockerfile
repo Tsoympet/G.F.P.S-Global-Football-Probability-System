@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# System dependencies for psycopg2 and scientific stack
+# System deps for psycopg2 & others
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
