@@ -103,16 +103,18 @@ EOF
           TAG="${GITHUB_REF_NAME}"
           NOTES_FILE="${{ steps.notes.outputs.file }}"
 
-          if ! gh release view "$TAG" > /dev/null 2>&1; then
-            if [ "$RELEASE_CHANNEL" = "beta" ]; then
-              gh release create "$TAG" --prerelease --notes-file "$NOTES_FILE" --title "$TAG (Beta)"
-            else
-              gh release create "$TAG" --notes-file "$NOTES_FILE" --title "$TAG" --latest
-            fi
+          CREATE_ARGS=(--notes-file "$NOTES_FILE" --title "$TAG")
+          EDIT_ARGS=(--notes-file "$NOTES_FILE" --title "$TAG")
+          if [ "$RELEASE_CHANNEL" = "beta" ]; then
+            CREATE_ARGS=(--prerelease --notes-file "$NOTES_FILE" --title "$TAG (Beta)")
+            EDIT_ARGS=(--prerelease --notes-file "$NOTES_FILE" --title "$TAG (Beta)")
           else
-            if [ "$RELEASE_CHANNEL" = "beta" ]; then
-              gh release edit "$TAG" --prerelease --notes-file "$NOTES_FILE" --title "$TAG (Beta)"
-            else
-              gh release edit "$TAG" --latest --notes-file "$NOTES_FILE" --title "$TAG"
-            fi
+            CREATE_ARGS+=(--latest)
+            EDIT_ARGS+=(--latest)
+          fi
+
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" "${CREATE_ARGS[@]}"
+          else
+            gh release edit "$TAG" "${EDIT_ARGS[@]}"
           fi
