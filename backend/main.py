@@ -36,6 +36,7 @@ from .predictions_api import router as predictions_router
 from .pipeline_api import router as pipeline_router
 from .performance_api import router as performance_router
 from .snapshot_service import backfill_seed_if_empty, start_snapshot_scheduler
+from .odds_snapshot_pipeline import start_odds_snapshot_scheduler
 from .stats_api import router as stats_router
 from .streamer import start_streamer_background
 from .value_bets_api import router as value_bets_router
@@ -147,6 +148,7 @@ async def startup_event() -> None:
     start_alert_engine_background(loop)
     start_streamer_background(loop)
     start_snapshot_scheduler(loop)
+    start_odds_snapshot_scheduler(loop)
 
 
 # -------------------------------------------------------------------

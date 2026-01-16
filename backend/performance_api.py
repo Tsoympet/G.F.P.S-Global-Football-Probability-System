@@ -18,6 +18,7 @@ from .performance_tracking import (
     settle_entry,
 )
 from .models import BacktestRun, BetJournalEntry, User
+from .evaluation.clv import clv_odds_space, clv_probability_space
 
 router = APIRouter(prefix="/performance", tags=["performance"])
 
@@ -31,6 +32,7 @@ class BetJournalCreate(BaseModel):
     market: str = "1x2"
     line: Optional[float] = None
     side: str = Field(..., description="home/draw/away or selection key")
+    odds_at_pick: Optional[float] = None
     model_probability: float = Field(..., ge=0, le=1)
     fair_odds: Optional[float] = None
     bookmaker_odds: Optional[float] = None
@@ -41,6 +43,9 @@ class BetJournalCreate(BaseModel):
     stake_rule: Optional[str] = None
     result: Optional[str] = Field(None, description="win/loss/push/void")
     closing_odds: Optional[float] = None
+    clv_odds: Optional[float] = None
+    clv_prob: Optional[float] = None
+    snapshot_provider: Optional[str] = None
 
 
 class BacktestRulePayload(BaseModel):
@@ -110,6 +115,7 @@ async def list_journal(limit: int = 200, db: Session = Depends(get_db), user: Us
             "market": row.market,
             "line": row.line,
             "side": row.side,
+            "odds_at_pick": row.odds_at_pick,
             "model_probability": row.model_probability,
             "fair_odds": row.fair_odds,
             "bookmaker_odds": row.bookmaker_odds,
@@ -122,6 +128,9 @@ async def list_journal(limit: int = 200, db: Session = Depends(get_db), user: Us
             "result": row.result,
             "realized_roi": row.realized_roi,
             "closing_odds": row.closing_odds,
+            "clv_odds": row.clv_odds,
+            "clv_prob": row.clv_prob,
+            "snapshot_provider": row.snapshot_provider,
         }
         for row in rows
     ]
@@ -134,6 +143,7 @@ async def record_journal_entry(
     user: User = Depends(require_user),
 ):
     ev = payload.ev
+    odds_at_pick = payload.odds_at_pick or payload.bookmaker_odds or payload.fair_odds
     if ev is None and payload.bookmaker_odds and payload.bookmaker_odds > 0:
         ev = payload.model_probability * payload.bookmaker_odds - 1.0
     if ev is None:
@@ -149,10 +159,14 @@ async def record_journal_entry(
         market=payload.market,
         line=payload.line,
         side=payload.side,
+        odds_at_pick=odds_at_pick,
         model_probability=payload.model_probability,
         fair_odds=payload.fair_odds,
         bookmaker_odds=payload.bookmaker_odds,
         closing_odds=payload.closing_odds,
+        clv_odds=payload.clv_odds,
+        clv_prob=payload.clv_prob,
+        snapshot_provider=payload.snapshot_provider,
         ev=ev or 0.0,
         correlation_risk=payload.correlation_risk or 0.0,
         confidence=payload.confidence or 0.0,
@@ -176,6 +190,9 @@ async def record_journal_entry(
             entry.realized_roi = 0.0
             if payload.closing_odds:
                 entry.closing_odds = payload.closing_odds
+    if entry.clv_odds is None and entry.closing_odds and entry.odds_at_pick:
+        entry.clv_odds = clv_odds_space(entry.odds_at_pick, entry.closing_odds)
+        entry.clv_prob = clv_probability_space(entry.odds_at_pick, entry.closing_odds)
     db.add(entry)
     db.commit()
     db.refresh(entry)
