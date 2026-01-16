@@ -4,6 +4,7 @@ sqlalchemy>=2.0
 pydantic[email]
 python-dotenv
 passlib[bcrypt]
+bcrypt<4
 PyJWT
 httpx
 aiosmtplib
