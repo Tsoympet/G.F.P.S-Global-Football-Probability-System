@@ -4,6 +4,8 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./gfps.db")
 
+CONNECT_ARGS = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+
 
 class Base(DeclarativeBase):
     pass
@@ -12,6 +14,7 @@ class Base(DeclarativeBase):
 engine = create_engine(
     DATABASE_URL,
     echo=False,
+    connect_args=CONNECT_ARGS,
     future=True,
 )
 
