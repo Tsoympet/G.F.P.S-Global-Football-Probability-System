@@ -1,6 +1,7 @@
 import os
 import secrets
 import datetime
+import hashlib
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -67,6 +68,14 @@ def verify_totp(secret: str, code: str) -> bool:
         return totp.verify(code, valid_window=1)
     except Exception:
         return False
+
+
+RESET_TOKEN_HASH_LEN = 64  # SHA-256 hex digest length
+
+
+def _hash_reset_token(token: str) -> str:
+    """Hash reset token so we never persist raw secrets."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 async def send_email(to_email: str, subject: str, body: str):
@@ -277,7 +286,7 @@ async def request_reset(p: ResetRequest, db: Session = Depends(get_db)):
     token = secrets.token_urlsafe(32)
     exp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)
 
-    u.reset_token = token
+    u.reset_token = _hash_reset_token(token)
     u.reset_token_exp = exp
     db.add(u)
     db.commit()
@@ -300,16 +309,23 @@ async def request_reset(p: ResetRequest, db: Session = Depends(get_db)):
 @router.post("/confirm-reset")
 def confirm_reset(p: ResetConfirm, db: Session = Depends(get_db)):
     now = datetime.datetime.now(datetime.timezone.utc)
-    u = db.scalar(select(User).where(User.reset_token == p.token))
-    if not u or not u.reset_token_exp or u.reset_token_exp < now:
+    hashed_token = _hash_reset_token(p.token)
+    user = db.scalar(
+        select(User).where(
+            User.reset_token == hashed_token,
+            User.reset_token_exp.isnot(None),
+            User.reset_token_exp >= now,
+        )
+    )
+    if not user:
         raise HTTPException(400, "Invalid or expired reset token")
 
-    u.password_hash = hash_password(p.new_password)
-    u.reset_token = None
-    u.reset_token_exp = None
-    u.token_version += 1  # invalidate old JWTs
+    user.password_hash = hash_password(p.new_password)
+    user.reset_token = None
+    user.reset_token_exp = None
+    user.token_version += 1  # invalidate old JWTs
 
-    db.add(u)
+    db.add(user)
     db.commit()
 
     return {"ok": True}
