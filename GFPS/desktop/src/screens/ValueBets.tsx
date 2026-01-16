@@ -5,8 +5,9 @@ import { palette } from '@theme/palette';
 import { ValueBet } from '@api/types';
 import { useSettingsStore } from '@store/settings';
 import { useBetSlipStore } from '@store/betslip';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { escapeCsvField } from '@app/csv';
+import { BookmakerView } from '@components/BookmakerView';
 
 export const ValueBets = () => {
   const { evThreshold, setEvThreshold, refreshIntervalMs } = useSettingsStore();
@@ -22,6 +23,8 @@ export const ValueBets = () => {
   const [marketFilter, setMarketFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<'ev' | 'kickoff'>('ev');
   const [minProb, setMinProb] = useState<number>(0);
+  const [bookmakerOpen, setBookmakerOpen] = useState<boolean>(false);
+  const [bookmakerFocusKey, setBookmakerFocusKey] = useState<string | null>(null);
 
   const fixtureLookup = useMemo(() => {
     const map: Record<string, { league?: string; startTime?: string; fixtureId?: string }> = {};
@@ -56,6 +59,14 @@ export const ValueBets = () => {
     }
     return (b.expectedValue ?? 0) - (a.expectedValue ?? 0);
   });
+
+  useEffect(() => {
+    if (!bookmakerFocusKey && sorted.length) {
+      setBookmakerFocusKey(`${sorted[0].match}__${sorted[0].market}`);
+    }
+  }, [bookmakerFocusKey, sorted]);
+
+  const bookmakerFocus = sorted.find((row) => `${row.match}__${row.market}` === bookmakerFocusKey) ?? sorted[0];
 
   const handleExport = () => {
     const rows = sorted.map((row) => ({
@@ -129,6 +140,93 @@ export const ValueBets = () => {
           EV threshold {Math.round(evThreshold * 100)}% • {valueBets.stale ? 'refreshing…' : 'live'}
         </div>
       </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ color: palette.textSecondary, fontSize: 12 }}>
+          Toggle the bookmaker desk perspective to stress test edges before acting.
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <label style={{ color: palette.textSecondary, fontSize: 12 }}>Bookmaker View</label>
+          <button
+            onClick={() => setBookmakerOpen((prev) => !prev)}
+            style={{
+              background: bookmakerOpen ? palette.accentAlt : palette.background,
+              color: palette.textPrimary,
+              border: `1px solid ${palette.border}`,
+              padding: '8px 12px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 700,
+              fontSize: 12
+            }}
+            aria-pressed={bookmakerOpen}
+            aria-label="Toggle bookmaker analysis panel"
+          >
+            {bookmakerOpen ? 'Hide' : 'Show'}
+          </button>
+        </div>
+      </div>
+      {bookmakerOpen && (
+        <div
+          style={{
+            border: `1px solid ${palette.border}`,
+            borderRadius: 12,
+            padding: 12,
+            background: palette.cardElevated,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ color: palette.textPrimary, fontWeight: 600 }}>Market Risk Commentary</div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <label htmlFor="bookmaker-focus" style={{ color: palette.textSecondary, fontSize: 12 }}>
+                Focus market
+              </label>
+              <select
+                id="bookmaker-focus"
+                value={bookmakerFocus ? `${bookmakerFocus.match}__${bookmakerFocus.market}` : ''}
+                onChange={(e) => setBookmakerFocusKey(e.target.value)}
+                style={{
+                  background: palette.card,
+                  border: `1px solid ${palette.border}`,
+                  color: palette.textPrimary,
+                  padding: '8px 10px',
+                  borderRadius: 8
+                }}
+              >
+                {sorted.map((row) => {
+                  const key = `${row.match}__${row.market}`;
+                  return (
+                    <option key={key} value={key}>
+                      {row.match} • {row.market}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
+          {bookmakerFocus ? (
+            <BookmakerView
+              visible
+              context={{
+                match: bookmakerFocus.match,
+                market: bookmakerFocus.market,
+                odds: bookmakerFocus.odds,
+                modelProbability: bookmakerFocus.modelProbability,
+                expectedValue: bookmakerFocus.expectedValue,
+                fairOdds: bookmakerFocus.modelProbability ? 1 / bookmakerFocus.modelProbability : undefined,
+                bookmakerOdds: bookmakerFocus.odds,
+                startTime: bookmakerFocus.startTime,
+                isLive: false
+              }}
+              onClose={() => setBookmakerOpen(false)}
+            />
+          ) : (
+            <div style={{ color: palette.textSecondary, fontSize: 12 }}>No market available to analyze.</div>
+          )}
+        </div>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <label style={{ color: palette.textSecondary, fontSize: 12 }}>EV threshold (%)</label>
