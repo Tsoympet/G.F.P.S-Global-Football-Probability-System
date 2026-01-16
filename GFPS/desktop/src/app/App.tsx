@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Sidebar } from '@components/Sidebar';
 import { TopBar } from '@components/TopBar';
+import { BetSlip } from '@components/BetSlip';
 import { useNavigationStore } from '@store/navigation';
 import { Dashboard } from '@screens/Dashboard';
 import { LiveMatchCenter } from '@screens/LiveMatchCenter';
@@ -10,16 +11,19 @@ import { Settings } from '@screens/Settings';
 import { palette } from '@theme/palette';
 import { useSettingsStore } from '@store/settings';
 import { useAuthStore } from '@store/auth';
+import { useBetSlipStore } from '@store/betslip';
 
 export const App = () => {
   const { section } = useNavigationStore();
   const { hydrate: hydrateSettings, initialized: settingsReady, theme } = useSettingsStore();
   const { hydrate: hydrateAuth, initialized: authReady } = useAuthStore();
+  const { hydrate: hydrateBetSlip } = useBetSlipStore();
 
   useEffect(() => {
     hydrateSettings();
     hydrateAuth();
-  }, [hydrateSettings, hydrateAuth]);
+    hydrateBetSlip();
+  }, [hydrateSettings, hydrateAuth, hydrateBetSlip]);
 
   useEffect(() => {
     document.body.dataset.theme = theme;
@@ -55,6 +59,7 @@ export const App = () => {
           {section === 'Settings' && <Settings />}
         </main>
       </div>
+      <BetSlip />
     </div>
   );
 };

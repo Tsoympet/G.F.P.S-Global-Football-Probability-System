@@ -20,6 +20,7 @@ from .db import Base, engine
 from . import models  # noqa: F401  # ensure models are imported
 from .alert_engine import start_alert_engine_background
 from .alerts_api import router as alerts_router
+from .analysis_api import router as analysis_router
 from .coupon_api import router as coupon_router
 from .device_api import router as device_router
 from .favorites_api import router as favorites_router
@@ -160,6 +161,7 @@ app.include_router(ml_router)
 app.include_router(health_router)
 app.include_router(markets_router)
 app.include_router(coupon_router)
+app.include_router(analysis_router)
 app.include_router(favorites_router)
 app.include_router(device_router)
 app.include_router(stats_router)
