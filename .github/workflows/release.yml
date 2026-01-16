@@ -15,6 +15,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Determine channel from tag
+        id: channel
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+          elif [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]; then
+            echo "channel=beta" >> "$GITHUB_OUTPUT"
+          else
+            echo "Invalid release tag format: $TAG" >&2
+            exit 1
+          fi
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -34,9 +47,75 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Build release notes
+        id: notes
+        env:
+          RELEASE_CHANNEL: ${{ steps.channel.outputs.channel }}
+        run: |
+          CHANNEL_TITLE=${RELEASE_CHANNEL^}
+          TAG_PATTERN='v[0-9]*\.[0-9]*\.[0-9]*'
+          CURRENT_TAG="${GITHUB_REF_NAME}"
+          FALLBACK_COMMIT_COUNT=20
+          if [ "$RELEASE_CHANNEL" = "beta" ]; then
+            TAG_PATTERN='v[0-9]*\.[0-9]*\.[0-9]*-beta\.[0-9]*'
+          fi
+
+          PREVIOUS_TAG=$(git tag --list "$TAG_PATTERN" --sort=-v:refname | grep -v "^${CURRENT_TAG}$" | head -n 1)
+          if [ -n "$PREVIOUS_TAG" ]; then
+            CHANGELOG=$(git log --pretty='- %s' "${PREVIOUS_TAG}..HEAD")
+          else
+            CHANGELOG=$(git log --pretty='- %s' -n "$FALLBACK_COMMIT_COUNT")
+          fi
+
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="- See commit history for full changes."
+          fi
+
+          if [ "$RELEASE_CHANNEL" = "beta" ]; then
+            RISK_LINE="- Experimental build; features may change and issues may be present."
+          else
+            RISK_LINE="- Fully tested release intended for all users."
+          fi
+
+          NOTES_FILE=$(mktemp)
+          cat > "$NOTES_FILE" <<EOF
+Channel: ${CHANNEL_TITLE}
+
+Major changes:
+${CHANGELOG}
+
+Risks:
+${RISK_LINE}
+EOF
+          echo "file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+
       - name: Build and publish
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: GFPS/desktop
+
+      - name: Enforce release notes and channel flags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_CHANNEL: ${{ steps.channel.outputs.channel }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          NOTES_FILE="${{ steps.notes.outputs.file }}"
+
+          CREATE_ARGS=(--notes-file "$NOTES_FILE")
+          EDIT_ARGS=(--notes-file "$NOTES_FILE")
+          if [ "$RELEASE_CHANNEL" = "beta" ]; then
+            CREATE_ARGS+=(--prerelease --title "$TAG (Beta)")
+            EDIT_ARGS+=(--prerelease --title "$TAG (Beta)")
+          else
+            CREATE_ARGS+=(--title "$TAG" --latest)
+            EDIT_ARGS+=(--title "$TAG" --latest)
+          fi
+
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" "${CREATE_ARGS[@]}"
+          else
+            gh release edit "$TAG" "${EDIT_ARGS[@]}"
+          fi
