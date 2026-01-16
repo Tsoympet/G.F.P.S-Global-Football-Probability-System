@@ -106,3 +106,110 @@ export interface MatchEvent {
   description: string;
   type: 'goal' | 'card' | 'substitution' | 'info';
 }
+
+export interface BetJournalEntry {
+  id: number;
+  created_at: string;
+  fixture_ids: string[];
+  league: string;
+  league_id?: string;
+  home_team: string;
+  away_team: string;
+  market: string;
+  line?: number | null;
+  side: string;
+  model_probability: number;
+  fair_odds?: number | null;
+  bookmaker_odds?: number | null;
+  ev: number;
+  correlation_risk: number;
+  confidence: number;
+  stake: number;
+  stake_rule?: string | null;
+  status: string;
+  result?: string | null;
+  realized_roi?: number | null;
+  closing_odds?: number | null;
+}
+
+export interface PerformanceBreakdown {
+  label: string;
+  roi: number;
+  hitRate: number;
+  count: number;
+}
+
+export interface PerformanceKpis {
+  totalBets: number;
+  wins: number;
+  losses: number;
+  pushes: number;
+  pending: number;
+  roi: number;
+  yield: number;
+  hitRate: number;
+  avgEv: number;
+  avgRealizedRoi: number;
+  clvProxy: number;
+  varianceProxy: number;
+  maxDrawdown: number;
+  currentDrawdown: number;
+  drawdownCurve: { idx: number; equity: number; drawdown: number }[];
+  roiCurve: { timestamp: string; roi: number }[];
+  byMarket: PerformanceBreakdown[];
+  byLeague: PerformanceBreakdown[];
+  byTeam: PerformanceBreakdown[];
+  windows: Record<string, { count: number; roi: number; hitRate: number }>;
+  dataQuality: { pending: number; missing_results: number };
+}
+
+export interface BacktestRuleRequest {
+  markets: string[];
+  min_ev: number;
+  min_confidence: number;
+  max_per_day: number;
+  correlation_threshold: number | null;
+  stake_model: string;
+  base_stake: number;
+  kelly_fraction: number;
+  stake_cap?: number | null;
+  use_fair_odds_if_missing: boolean;
+  league_whitelist?: string[] | null;
+  league_blacklist?: string[] | null;
+  team_whitelist?: string[] | null;
+}
+
+export interface BacktestRequestPayload {
+  start_date?: string;
+  end_date?: string;
+  seed?: number;
+  rules: BacktestRuleRequest;
+}
+
+export interface BacktestMetrics {
+  roi: number;
+  yield: number;
+  hitRate: number;
+  maxDrawdown: number;
+  currentDrawdown: number;
+  totalStake: number;
+  profit: number;
+  sampleSize: number;
+  drawdownCurve: { idx: number; equity: number; drawdown: number }[];
+  returns: number[];
+  missingResults: number;
+  correlationImpact: { withFilter: number; withoutFilter: number };
+  honesty: { warnings: string[]; dataCompleteness: number };
+  sensitivity: { evThreshold: number; roi: number }[];
+}
+
+export interface BacktestRun {
+  id: number;
+  status: string;
+  params: any;
+  metrics?: BacktestMetrics;
+  warnings?: string[];
+  seed: number;
+  startedAt?: string | null;
+  completedAt?: string | null;
+}

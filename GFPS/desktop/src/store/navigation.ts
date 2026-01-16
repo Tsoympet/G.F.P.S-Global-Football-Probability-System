@@ -5,6 +5,8 @@ export type Section =
   | 'Live Match Center'
   | 'Value Bets (EV+)'
   | 'Models & Training'
+  | 'Performance'
+  | 'Backtest'
   | 'Settings';
 
 interface NavigationState {
