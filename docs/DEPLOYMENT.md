@@ -79,5 +79,8 @@ The desktop client lives in `GFPS/desktop` and is built with Vite + Tauri 2.0.
 - Install dependencies: `cd GFPS/desktop && npm install`
 - Run locally: `npm run tauri:dev`
 - Build release binaries: `npm run tauri:build`
+- Signing hooks: set `TAURI_WINDOWS_CERT_THUMBPRINT` or `TAURI_MACOS_IDENTITY` environment variables in CI/your shell to sign installers (kept secret)
+- Endpoints consumed: `/predictions`, `/odds`, `/value`, `/health` with polling + cached offline fallback (configurable TTL)
+- CI: `.github/workflows/desktop-ci.yml` runs tests/build on PRs; `.github/workflows/desktop-release.yml` ships `.msi`, `.dmg`, `.AppImage` on version tags
 
 Ensure the backend URL is configured in the desktop app's environment before packaging so the client can talk to the API.

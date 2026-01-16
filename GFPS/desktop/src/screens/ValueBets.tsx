@@ -5,14 +5,21 @@ import { palette } from '@theme/palette';
 import { ValueBet } from '@api/types';
 import { useSettingsStore } from '@store/settings';
 import { useMemo, useState } from 'react';
+import { escapeCsvField } from '@app/csv';
 
 export const ValueBets = () => {
   const { evThreshold, setEvThreshold, refreshIntervalMs } = useSettingsStore();
-  const valueBets = useQuery(() => api.valueBets(evThreshold), { pollMs: refreshIntervalMs, deps: [evThreshold] });
-  const fixtures = useQuery(api.fixtures, { pollMs: refreshIntervalMs * 2 });
+  const valueBets = useQuery(() => api.valueBets(evThreshold), {
+    pollMs: refreshIntervalMs,
+    deps: [evThreshold],
+    cacheKey: `value-${evThreshold}`,
+    ttlMs: refreshIntervalMs * 6
+  });
+  const fixtures = useQuery(api.fixtures, { pollMs: refreshIntervalMs * 2, cacheKey: 'fixtures' });
   const [leagueFilter, setLeagueFilter] = useState<string>('all');
   const [marketFilter, setMarketFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<'ev' | 'kickoff'>('ev');
+  const [minProb, setMinProb] = useState<number>(0);
 
   const fixtureLookup = useMemo(() => {
     const map: Record<string, { league?: string; startTime?: string; fixtureId?: string }> = {};
@@ -35,7 +42,8 @@ export const ValueBets = () => {
   const filtered = enriched.filter((row) => {
     const leagueOk = leagueFilter === 'all' || row.league === leagueFilter;
     const marketOk = marketFilter === 'all' || row.market === marketFilter;
-    return leagueOk && marketOk;
+    const probOk = (row.modelProbability ?? 0) >= minProb;
+    return leagueOk && marketOk && probOk;
   });
 
   const sorted = filtered.sort((a, b) => {
@@ -46,6 +54,39 @@ export const ValueBets = () => {
     }
     return (b.expectedValue ?? 0) - (a.expectedValue ?? 0);
   });
+
+  const handleExport = () => {
+    const rows = sorted.map((row) => ({
+      match: row.match,
+      market: row.market,
+      odds: row.odds,
+      modelProbability: row.modelProbability,
+      expectedValue: row.expectedValue,
+      league: row.league,
+      startTime: row.startTime
+    }));
+    const csv = [
+      'match,market,odds,modelProbability,expectedValue,league,startTime',
+      ...rows.map((r) =>
+        [
+          escapeCsvField(r.match),
+          escapeCsvField(r.market),
+          escapeCsvField(r.odds.toFixed(2)),
+          escapeCsvField(((r.modelProbability ?? 0) * 100).toFixed(2)),
+          escapeCsvField(((r.expectedValue ?? 0) * 100).toFixed(2)),
+          escapeCsvField(r.league ?? ''),
+          escapeCsvField(r.startTime ?? '')
+        ].join(',')
+      )
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'gfps-value-bets.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <section
@@ -135,9 +176,43 @@ export const ValueBets = () => {
             <option value="kickoff">Kickoff time</option>
           </select>
         </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <label style={{ color: palette.textSecondary, fontSize: 12 }}>Min model probability</label>
+          <input
+            type="number"
+            min={0}
+            max={1}
+            step={0.01}
+            value={minProb}
+            onChange={(e) => setMinProb(Number(e.target.value))}
+            style={{
+              background: palette.card,
+              border: `1px solid ${palette.border}`,
+              color: palette.textPrimary,
+              padding: '10px 12px',
+              borderRadius: 8
+            }}
+          />
+        </div>
       </div>
-      {(valueBets.loading || fixtures.loading) && <div style={{ color: palette.textSecondary }}>Loading EV feed…</div>}
-      {valueBets.error && <div style={{ color: palette.danger }}>{valueBets.error}</div>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: palette.textSecondary }}>
+        {(valueBets.loading || fixtures.loading) && <div>Loading EV feed…</div>}
+        {valueBets.error && <div style={{ color: palette.danger }}>{valueBets.error}</div>}
+        <button
+          onClick={handleExport}
+          style={{
+            background: 'linear-gradient(90deg, #1f9ae5, #0fd7a1)',
+            color: '#0b0f1a',
+            border: 'none',
+            padding: '8px 12px',
+            borderRadius: 10,
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}
+        >
+          Export CSV
+        </button>
+      </div>
       <DataTable<ValueBet>
         columns={[
           { header: 'Match', key: 'match' },
@@ -146,9 +221,13 @@ export const ValueBets = () => {
           {
             header: 'Model Probability',
             key: 'modelProbability',
-            render: (row) => `${(row.modelProbability * 100).toFixed(1)}%`
+            render: (row) => `${((row.modelProbability ?? 0) * 100).toFixed(1)}%`
           },
-          { header: 'EV%', key: 'expectedValue', render: (row) => `${(row.expectedValue * 100).toFixed(1)}%` },
+          {
+            header: 'EV%',
+            key: 'expectedValue',
+            render: (row) => `${((row.expectedValue ?? 0) * 100).toFixed(1)}%`
+          },
           {
             header: 'Kickoff',
             key: 'startTime',

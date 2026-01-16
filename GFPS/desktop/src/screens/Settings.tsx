@@ -9,16 +9,23 @@ export const Settings = () => {
     refreshIntervalMs,
     evThreshold,
     theme,
+    cacheTtlMs,
+    forceOffline,
+    autoOffline,
     lastSaved,
     storageStatus,
     storageMessage,
     setApiUrl,
     setRefreshInterval,
     setEvThreshold,
-    setTheme
+    setTheme,
+    setCacheTtl,
+    setForceOffline,
+    setAutoOffline
   } = useSettingsStore();
   const [urlInput, setUrlInput] = useState(apiUrl);
   const [refreshInput, setRefreshInput] = useState(refreshIntervalMs);
+  const [ttlInput, setTtlInput] = useState(cacheTtlMs);
   const { token, profile, status, error, login, logout } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -134,6 +141,58 @@ export const Settings = () => {
             <option value="dark">Dark analytics</option>
             <option value="contrast">High contrast</option>
           </select>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <label style={{ color: palette.textSecondary, fontSize: 14 }}>Cache TTL (ms)</label>
+          <input
+            type="number"
+            value={ttlInput}
+            onChange={(e) => setTtlInput(Number(e.target.value))}
+            style={{
+              background: palette.card,
+              border: `1px solid ${palette.border}`,
+              color: palette.textPrimary,
+              padding: '12px 14px',
+              borderRadius: 10
+            }}
+          />
+          <button
+            onClick={() => setCacheTtl(ttlInput)}
+            style={{
+              alignSelf: 'flex-start',
+              background: 'transparent',
+              border: `1px solid ${palette.border}`,
+              color: palette.textPrimary,
+              padding: '10px 14px',
+              borderRadius: 10,
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            Update Cache TTL
+          </button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <label style={{ color: palette.textSecondary, fontSize: 14 }}>Offline mode</label>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              checked={forceOffline}
+              onChange={(e) => setForceOffline(e.target.checked)}
+            />
+            <span style={{ color: palette.textSecondary, fontSize: 13 }}>Force offline (manual)</span>
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              checked={autoOffline}
+              onChange={(e) => setAutoOffline(e.target.checked)}
+            />
+            <span style={{ color: palette.textSecondary, fontSize: 13 }}>Auto-detect offline</span>
+          </div>
         </div>
       </div>
 

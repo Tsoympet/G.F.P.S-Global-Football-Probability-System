@@ -1,8 +1,13 @@
 import { useAuthStore } from '@store/auth';
 import { useSettingsStore } from '@store/settings';
+import { loadCached, saveCached } from '@app/cache';
+import { isOffline } from '@app/network';
 import { Fixture, LiveOddsPayload, ModelInfo, PipelineStatus, Prediction, ValueBet } from './types';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
+const UNKNOWN_HOME = 'Home';
+const UNKNOWN_AWAY = 'Away';
+const UNKNOWN_LEAGUE = 'Unknown';
 
 const buildUrl = (path: string) => {
   const baseUrl = useSettingsStore.getState().apiUrl.replace(/\/$/, '');
@@ -14,10 +19,20 @@ const authHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-async function get<T>(path: string): Promise<T> {
+async function get<T>(path: string, cacheKey?: string): Promise<T> {
+  const { cacheTtlMs, forceOffline, autoOffline } = useSettingsStore.getState();
+  const cached = cacheKey ? await loadCached<T>(cacheKey, cacheTtlMs) : undefined;
+  const offline = isOffline(forceOffline, autoOffline);
+  if (offline && cached?.data) return cached.data;
+
   const res = await fetch(buildUrl(path), { headers: { ...authHeaders() } });
-  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-  return res.json();
+  if (!res.ok) {
+    if (cached?.data) return cached.data;
+    throw new Error(`Request failed: ${res.status}`);
+  }
+  const data = await res.json();
+  if (cacheKey) await saveCached(cacheKey, data, cacheTtlMs);
+  return data;
 }
 
 async function post<T>(path: string, body?: unknown): Promise<T> {
@@ -31,10 +46,40 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
 }
 
 export const api = {
-  fixtures: () => get<Fixture[]>('/fixtures'),
-  liveOdds: () => get<LiveOddsPayload>('/live-odds'),
-  predictions: () => get<Prediction[]>('/predictions'),
-  valueBets: (minEv?: number) => get<ValueBet[]>(`/value-bets${minEv ? `?min_ev=${minEv}` : ''}`),
+  fixtures: async () => {
+    try {
+      return await get<Fixture[]>('/fixtures', 'fixtures');
+    } catch {
+      // Fallback: derive minimal fixture rows from predictions when dedicated fixtures endpoint is unavailable.
+      const predictions = await get<Prediction[]>('/predictions', 'predictions');
+      return predictions.map((p) => ({
+        id: p.fixtureId,
+        homeTeam: p.homeTeam || UNKNOWN_HOME,
+        awayTeam: p.awayTeam || UNKNOWN_AWAY,
+        league: p.league || UNKNOWN_LEAGUE,
+        startTime: p.startTime || new Date().toISOString(),
+        status:
+          p.status ||
+          (p.startTime && new Date(p.startTime) < new Date() ? ('finished' as const) : ('scheduled' as const))
+      }));
+    }
+  },
+  odds: async () => {
+    try {
+      return await get<LiveOddsPayload>('/odds', 'odds');
+    } catch {
+      return get<LiveOddsPayload>('/live-odds', 'odds');
+    }
+  },
+  predictions: () => get<Prediction[]>('/predictions', 'predictions'),
+  valueBets: async (minEv?: number) => {
+    const path = `/value${minEv ? `?min_ev=${minEv}` : ''}`;
+    try {
+      return await get<ValueBet[]>(path, `value-bets-${minEv ?? 'all'}`);
+    } catch {
+      return get<ValueBet[]>(`/value-bets${minEv ? `?min_ev=${minEv}` : ''}`, `value-bets-${minEv ?? 'all'}`);
+    }
+  },
   trainModel: () => post<{ message: string }>('/ml/train'),
   models: () => get<ModelInfo[]>('/ml/models'),
   activateModel: (version: string) => post<{ message: string }>(`/ml/activate/${version}`),

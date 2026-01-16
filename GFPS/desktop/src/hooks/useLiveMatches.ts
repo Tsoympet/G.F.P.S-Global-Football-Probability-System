@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { websocketUrl } from '@api/client';
 import { AdditionalMarketLine, Fixture, MatchEvent } from '@api/types';
+import { useSettingsStore } from '@store/settings';
+import { isOffline } from '@app/network';
 
 interface LiveMatchState {
   fixtures: Fixture[];
@@ -18,10 +20,16 @@ export const useLiveMatches = () => {
     connection: 'connecting'
   });
   const retryRef = useRef<NodeJS.Timeout | null>(null);
+  const { forceOffline, autoOffline } = useSettingsStore();
 
   useEffect(() => {
     let socket: WebSocket | null = null;
     const connect = () => {
+      const offline = isOffline(forceOffline, autoOffline);
+      if (offline) {
+        setState((prev) => ({ ...prev, connection: 'closed' }));
+        return;
+      }
       socket = new WebSocket(websocketUrl());
       setState((prev) => ({ ...prev, connection: 'connecting' }));
 
@@ -69,7 +77,7 @@ export const useLiveMatches = () => {
       socket?.close();
       if (retryRef.current) clearTimeout(retryRef.current);
     };
-  }, []);
+  }, [forceOffline, autoOffline]);
 
   return state;
 };
