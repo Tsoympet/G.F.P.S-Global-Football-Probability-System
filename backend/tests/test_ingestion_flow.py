@@ -15,21 +15,21 @@ class IngestionFlowTests(unittest.TestCase):
         Base.metadata.create_all(bind=self.engine)
         Session = sessionmaker(bind=self.engine, future=True)
         self.session = Session()
-        # Patch pipeline to use in-memory engine
-        self._previous_engine = ingestion_pipeline.engine
-        ingestion_pipeline.engine = self.engine
 
     def tearDown(self):
-        ingestion_pipeline.engine = self._previous_engine
         self.session.close()
 
     def test_ingest_and_feature_build(self):
         provider = OpenFootballCSVProvider(base_path=Path("backend/sample_data"))
-        stats = ingestion_pipeline.ingest_fixtures(session=self.session, providers=[provider])
+        stats = ingestion_pipeline.ingest_fixtures(
+            session=self.session, providers=[provider], db_engine=self.engine
+        )
         self.assertGreater(stats["fixtures"], 0)
         self.assertGreater(stats["results"], 0)
 
-        features = ingestion_pipeline.build_features(session=self.session)
+        features = ingestion_pipeline.build_features(
+            session=self.session, db_engine=self.engine
+        )
         self.assertTrue(features)
         # ensure persistence
         self.assertGreater(self.session.query(FixtureEntity).count(), 0)

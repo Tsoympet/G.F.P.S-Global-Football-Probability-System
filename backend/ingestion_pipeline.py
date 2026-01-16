@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Iterable, Optional
+from typing import Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from .data_normalization import normalize_fixture
 from .data_providers import KeyBasedStubProvider, OpenFootballCSVProvider, Provider
@@ -36,10 +36,20 @@ def _default_providers() -> list[Provider]:
     return providers
 
 
-def ingest_fixtures(session: Optional[Session] = None, providers: Optional[list[Provider]] = None) -> dict:
-    ensure_schema(engine)
+def _session_factory_for_engine(db_engine):
+    if db_engine is engine:
+        return SessionLocal
+    return sessionmaker(bind=db_engine, autoflush=False, autocommit=False, future=True)
+
+
+def ingest_fixtures(
+    session: Optional[Session] = None,
+    providers: Optional[list[Provider]] = None,
+    db_engine=engine,
+) -> dict:
+    ensure_schema(db_engine)
     stats = {"fixtures": 0, "results": 0, "anomalies": 0}
-    local_session = session or SessionLocal()
+    local_session = session or _session_factory_for_engine(db_engine)()
 
     for provider in providers or _default_providers():
         run_status = "completed"
@@ -104,9 +114,14 @@ def ingest_fixtures(session: Optional[Session] = None, providers: Optional[list[
     return stats
 
 
-def ingest_live(session: Optional[Session] = None, providers: Optional[list[Provider]] = None, cache: Optional[TTLCache] = None):
-    ensure_schema(engine)
-    local_session = session or SessionLocal()
+def ingest_live(
+    session: Optional[Session] = None,
+    providers: Optional[list[Provider]] = None,
+    cache: Optional[TTLCache] = None,
+    db_engine=engine,
+):
+    ensure_schema(db_engine)
+    local_session = session or _session_factory_for_engine(db_engine)()
     cache = cache or TTLCache()
     for provider in providers or _default_providers():
         if not provider.meta.supports_live:
@@ -142,9 +157,13 @@ def ingest_live(session: Optional[Session] = None, providers: Optional[list[Prov
     local_session.commit()
 
 
-def build_features(session: Optional[Session] = None, fixture_ids: Optional[list[str]] = None) -> dict[str, dict]:
-    ensure_schema(engine)
-    local_session = session or SessionLocal()
+def build_features(
+    session: Optional[Session] = None,
+    fixture_ids: Optional[list[str]] = None,
+    db_engine=engine,
+) -> dict[str, dict]:
+    ensure_schema(db_engine)
+    local_session = session or _session_factory_for_engine(db_engine)()
     results: dict[str, dict] = {}
     ids = fixture_ids
     if not ids:
