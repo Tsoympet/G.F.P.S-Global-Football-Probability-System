@@ -42,7 +42,6 @@ class DbExecutionAdapter:
             db.commit()
             db.refresh(row)
             payload = asdict(request)
-            payload["id"] = row.id
             return {"id": row.id, "status": row.status, "adapter": self.name, "payload": payload}
 
 
@@ -50,4 +49,6 @@ def get_execution_adapter() -> Optional[ExecutionAdapter]:
     name = os.getenv("EXECUTION_ADAPTER", "db").lower()
     if name in {"", "none", "disabled"}:
         return None
-    return DbExecutionAdapter()
+    if name == "db":
+        return DbExecutionAdapter()
+    return None

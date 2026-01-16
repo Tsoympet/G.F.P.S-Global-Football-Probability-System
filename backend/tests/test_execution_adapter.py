@@ -27,7 +27,7 @@ class ExecutionAdapterTests(unittest.TestCase):
         )
         result = adapter.execute_value_bet(req)
         self.assertEqual(result["status"], "queued")
-        order_id = result["payload"]["id"]
+        order_id = result["id"]
         with SessionLocal() as db:
             row = db.get(ExecutionOrder, order_id)
             self.assertIsNotNone(row)
