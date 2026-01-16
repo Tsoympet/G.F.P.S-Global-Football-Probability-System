@@ -25,7 +25,7 @@ class LiveState:
                 "leagueId": "39",
                 "homeTeam": "Northbridge FC",
                 "awayTeam": "Harbor United",
-                "startTime": (_SEED_START + timedelta(hours=1)).isoformat().replace("+00:00", "Z"),
+                "startTime": (_SEED_START + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "status": "scheduled",
             },
             {
@@ -34,7 +34,7 @@ class LiveState:
                 "leagueId": "140",
                 "homeTeam": "Valencia Norte",
                 "awayTeam": "Costa Azul",
-                "startTime": (_SEED_START + timedelta(hours=2)).isoformat().replace("+00:00", "Z"),
+                "startTime": (_SEED_START + timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "status": "scheduled",
             },
         ]
