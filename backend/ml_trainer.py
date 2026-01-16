@@ -237,7 +237,7 @@ def _train_model(run_id: int, version: str) -> None:
 
 
 async def _run_training(run_id: int, version: str) -> None:
-    """Execute training work in a thread; status persistence is handled inside _train_model."""
+    """Execute training work in a thread; _train_model handles success/failure persistence and model updates."""
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, _train_model, run_id, version)
 
