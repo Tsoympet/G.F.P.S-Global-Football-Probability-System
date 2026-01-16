@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
-
-import pytest
+from math import isclose
 
 from backend.models import BetJournalEntry
 from backend.performance_tracking import (
@@ -68,7 +67,7 @@ def test_settlement_logic_and_drawdown():
     )
     settle_entry(entry, "home", closing_odds=2.2)
     assert entry.result == "win"
-    assert entry.realized_roi == pytest.approx(1.2)
+    assert isclose(entry.realized_roi, 1.2, rel_tol=1e-9)
     entry2 = BetJournalEntry(
         stake=25,
         market="1x2",
