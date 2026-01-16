@@ -23,8 +23,15 @@ if(NOT GFPS_SKIP_PIP_INSTALL)
 endif()
 
 enable_testing()
-add_test(
-  NAME backend_pytest
-  COMMAND ${Python3_EXECUTABLE} -m pytest "${GFPS_BACKEND_TEST_DIR}"
-  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-)
+if(GFPS_SKIP_PIP_INSTALL)
+  add_test(
+    NAME backend_pytest
+    COMMAND ${Python3_EXECUTABLE} -m pytest "${GFPS_BACKEND_TEST_DIR}"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  )
+else()
+  add_test(
+    NAME backend_pytest
+    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}" --target run_backend_tests
+  )
+endif()
