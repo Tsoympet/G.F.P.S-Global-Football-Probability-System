@@ -134,6 +134,7 @@ cmake --build build --target run_backend_tests
 ```
 
 The `install_backend_deps` target installs into your active Python environment; run these commands inside a virtualenv if you want to avoid mutating system packages.
+It pulls from `backend/requirements-dev.txt` (which includes pytest). If you've already prepared an environment, configure with `-DGFPS_SKIP_PIP_INSTALL=ON` to skip the install step when running tests.
 
 ---
 
