@@ -82,6 +82,6 @@ Use dark backgrounds plus blue/green highlights for a “data / analytics / AI�
 ## 7. Favicon & App Icon Export Checklist
 
 - Derive from the icon-only variant (section 2A) with solid dark background.
-- Export PNGs at: 16×16, 32×32, 64×64, 180×180 (Apple touch), 256×256, 512×512.
+- Export PNGs at: 16×16, 32×32, 48×48, 64×64, 180×180 (Apple touch), 192×192 (Android/manifest), 256×256, 512×512.
 - Include an SVG source for scalable uses and maskable icon for PWA.
 - Keep line weights thick enough for legibility at 16×16 and avoid gradients that blur when downscaled.
