@@ -25,9 +25,13 @@ class OpenFootballCSVProvider(Provider):
     meta = ProviderMetadata(
         name="openfootball-csv",
         description="OpenFootball CSV snapshot (no key, offline safe)",
+        data_types={"fixtures", "results"},
         requires_api_key=False,
         rate_limit_per_minute=0,
         supports_live=False,
+        reliability=0.7,
+        refresh_seconds=86400,
+        priority=5,
     )
 
     def __init__(self, base_path: Optional[Path] = None) -> None:

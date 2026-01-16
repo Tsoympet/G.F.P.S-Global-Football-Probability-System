@@ -18,6 +18,7 @@ from backend.prediction_engine.ensemble.linear_pooling import linear_pool
 from backend.prediction_engine.ensemble.stacking import StackingEnsemble
 from backend.ml.feature_schema import MatchFeatures
 from backend.ml.multiclass_model import ModelBundle
+from backend.odds_abstraction import resolve_odds_from_sources
 
 MODEL_VERSION = os.getenv("MODEL_VERSION", "ens_v2.1")
 FORM_WEIGHT = float(os.getenv("FORM_ADJUSTMENT_WEIGHT", "0.15"))
@@ -193,12 +194,14 @@ class PredictionEngine:
         priced_probabilities = self._insert_margin(fair_probabilities, target_overround=TARGET_OVERROUND)
         shaded_probabilities = self._apply_risk_shading(priced_probabilities, inp.exposure, target_overround=TARGET_OVERROUND)
         final_odds = {k: 1.0 / v for k, v in shaded_probabilities.items()}
+        resolved_odds = resolve_odds_from_sources(inp.odds, fair_probabilities, target_overround=TARGET_OVERROUND)
         confidence = 1.0 - market_entropy({"home": calibrated[0], "draw": calibrated[1], "away": calibrated[2]}) / np.log(3)
         result = {
             "fixture_id": inp.fixture_id,
             "probabilities": fair_probabilities,
             "priced_probabilities": priced_probabilities,
             "final_odds": final_odds,
+            "resolved_odds": resolved_odds,
             "model_version": MODEL_VERSION,
             "confidence": confidence,
             "calibrated": True,

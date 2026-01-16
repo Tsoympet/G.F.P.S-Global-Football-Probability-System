@@ -3,7 +3,15 @@ from __future__ import annotations
 import os
 from typing import Iterable
 
-from .base import EventRecord, FixtureRecord, LineupRecord, Provider, ProviderMetadata, ResultRecord
+from .base import (
+    EventRecord,
+    FixtureRecord,
+    LineupRecord,
+    Provider,
+    ProviderMetadata,
+    ProviderTier,
+    ResultRecord,
+)
 
 
 class KeyBasedStubProvider(Provider):
@@ -17,9 +25,14 @@ class KeyBasedStubProvider(Provider):
     meta = ProviderMetadata(
         name="api-football-stub",
         description="Placeholder for key-based providers (e.g., API-Football)",
+        data_types={"fixtures", "results", "events", "odds"},
         requires_api_key=True,
         rate_limit_per_minute=30,
         supports_live=True,
+        tier=ProviderTier.PREMIUM,
+        reliability=0.85,
+        auth_note="Set APIFOOTBALL_KEY to activate",
+        priority=80,
     )
 
     def __init__(self, api_key_env: str = "API_FOOTBALL_KEY") -> None:

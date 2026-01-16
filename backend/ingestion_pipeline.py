@@ -7,7 +7,17 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from .data_normalization import normalize_fixture
-from .data_providers import KeyBasedStubProvider, OpenFootballCSVProvider, Provider
+from .data_providers import (
+    ApiFootballProvider,
+    DataSourceSettings,
+    FootballDataOrgProvider,
+    KeyBasedStubProvider,
+    OpenFootballCSVProvider,
+    OpenLigaDBLiveProvider,
+    Provider,
+    ProviderRegistry,
+    load_settings_from_env,
+)
 from .data_quality import (
     confidence_score,
     deduplicate_records,
@@ -27,14 +37,15 @@ from .storage import (
     upsert_result,
 )
 from .storage.cache import TTLCache
-
-
-def _default_providers() -> list[Provider]:
-    providers: list[Provider] = [OpenFootballCSVProvider()]
-    stub = KeyBasedStubProvider()
-    if stub.api_key:
-        providers.append(stub)
-    return providers
+def _build_registry(settings: Optional[DataSourceSettings] = None) -> ProviderRegistry:
+    settings = settings or load_settings_from_env()
+    registry = ProviderRegistry(settings)
+    registry.register(OpenFootballCSVProvider())
+    registry.register(FootballDataOrgProvider(api_key=settings.api_keys.get("football-data.org"), allow_network=settings.live_network_enabled))
+    registry.register(OpenLigaDBLiveProvider(allow_network=settings.live_network_enabled))
+    registry.register(ApiFootballProvider(api_key=settings.api_keys.get("api-football-premium")))
+    registry.register(KeyBasedStubProvider())
+    return registry
 
 
 def _session_factory_for_engine(db_engine):
@@ -47,12 +58,18 @@ def ingest_fixtures(
     session: Optional[Session] = None,
     providers: Optional[list[Provider]] = None,
     db_engine=engine,
+    settings: Optional[DataSourceSettings] = None,
 ) -> dict:
     ensure_schema(db_engine)
     stats = {"fixtures": 0, "results": 0, "anomalies": 0}
     local_session = session or _session_factory_for_engine(db_engine)()
-
-    for provider in providers or _default_providers():
+    registry = _build_registry(settings)
+    active_providers = (
+        [(p, getattr(p.meta, "reliability", 0.5)) for p in providers]
+        if providers is not None
+        else [(p, registry.reliability(p)) for p in registry.active(data_types={"fixtures", "results"})]
+    )
+    for provider, source_weight in active_providers:
         run_status = "completed"
         try:
             fixtures = [
@@ -62,7 +79,7 @@ def ingest_fixtures(
             fixtures = deduplicate_records(
                 fixtures,
                 key_func=lambda f: f.fixture_id,
-                confidence_func=lambda f: confidence_score(f, source_priority=1),
+                confidence_func=lambda f: confidence_score(f, source_priority=source_weight),
             )
             for fx in fixtures:
                 upsert_fixture(
@@ -86,7 +103,7 @@ def ingest_fixtures(
             results = deduplicate_records(
                 results,
                 key_func=lambda r: r.fixture_id,
-                confidence_func=lambda r: confidence_score(r, source_priority=2),
+                confidence_func=lambda r: confidence_score(r, source_priority=source_weight),
             )
             for res in results:
                 anomalies = detect_anomalies(res)
@@ -120,11 +137,14 @@ def ingest_live(
     providers: Optional[list[Provider]] = None,
     cache: Optional[TTLCache] = None,
     db_engine=engine,
+    settings: Optional[DataSourceSettings] = None,
 ):
     ensure_schema(db_engine)
     local_session = session or _session_factory_for_engine(db_engine)()
     cache = cache or TTLCache()
-    for provider in providers or _default_providers():
+    registry = _build_registry(settings)
+    active_providers = providers or list(registry.active(data_types={"live_events", "fixtures"}, live_only=True))
+    for provider in active_providers:
         if not provider.meta.supports_live:
             continue
         events = list(provider.get_live_events())
