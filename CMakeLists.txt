@@ -9,7 +9,7 @@ set(GFPS_BACKEND_DEV_REQUIREMENTS "${GFPS_BACKEND_DIR}/requirements-dev.txt")
 set(GFPS_SKIP_PIP_INSTALL OFF CACHE BOOL "Skip pip install when running CMake test target")
 
 add_custom_target(install_backend_deps
-  COMMAND ${Python3_EXECUTABLE} -m pip install --upgrade -r "${GFPS_BACKEND_DEV_REQUIREMENTS}"
+  COMMAND ${Python3_EXECUTABLE} -m pip install -r "${GFPS_BACKEND_DEV_REQUIREMENTS}"
   COMMENT "Install backend dependencies (mutates user Python environment)"
 )
 
@@ -23,15 +23,16 @@ if(NOT GFPS_SKIP_PIP_INSTALL)
 endif()
 
 enable_testing()
+set(GFPS_TEST_COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}" --target run_backend_tests)
 if(GFPS_SKIP_PIP_INSTALL)
-  add_test(
-    NAME backend_pytest
-    COMMAND ${Python3_EXECUTABLE} -m pytest "${GFPS_BACKEND_TEST_DIR}"
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-  )
-else()
-  add_test(
-    NAME backend_pytest
-    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}" --target run_backend_tests
-  )
+  set(GFPS_TEST_COMMAND ${Python3_EXECUTABLE} -m pytest "${GFPS_BACKEND_TEST_DIR}")
+endif()
+
+add_test(
+  NAME backend_pytest
+  COMMAND ${GFPS_TEST_COMMAND}
+)
+
+if(GFPS_SKIP_PIP_INSTALL)
+  set_tests_properties(backend_pytest PROPERTIES WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
