@@ -268,3 +268,85 @@ class ModelActivation(Base):
     reason: Mapped[Optional[str]] = mapped_column(String(256), default=None)
     rollback_of: Mapped[Optional[str]] = mapped_column(String(64), default=None)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class FixtureEntity(Base):
+    __tablename__ = "fixtures"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(64), default="openfootball-csv")
+    league: Mapped[str] = mapped_column(String(128), index=True)
+    season: Mapped[str] = mapped_column(String(16))
+    home_team: Mapped[str] = mapped_column(String(128))
+    away_team: Mapped[str] = mapped_column(String(128))
+    kickoff_utc: Mapped[DateTime] = mapped_column(DateTime(timezone=True))
+    venue: Mapped[Optional[str]] = mapped_column(String(128), default=None)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    results: Mapped[list["ResultEntity"]] = relationship(back_populates="fixture")
+    events: Mapped[list["EventEntity"]] = relationship(back_populates="fixture")
+    lineups: Mapped[list["LineupEntity"]] = relationship(back_populates="fixture")
+    features: Mapped[list["ModelFeatureEntity"]] = relationship(back_populates="fixture")
+
+
+class ResultEntity(Base):
+    __tablename__ = "results"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[str] = mapped_column(ForeignKey("fixtures.fixture_id"), index=True)
+    provider: Mapped[str] = mapped_column(String(64), default="openfootball-csv")
+    home_score: Mapped[int] = mapped_column(Integer)
+    away_score: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(16), default="FT")
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    fixture: Mapped["FixtureEntity"] = relationship(back_populates="results")
+
+
+class EventEntity(Base):
+    __tablename__ = "events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[str] = mapped_column(ForeignKey("fixtures.fixture_id"), index=True)
+    minute: Mapped[int] = mapped_column(Integer)
+    team: Mapped[str] = mapped_column(String(128))
+    type: Mapped[str] = mapped_column(String(64))
+    player: Mapped[Optional[str]] = mapped_column(String(128), default=None)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    fixture: Mapped["FixtureEntity"] = relationship(back_populates="events")
+
+
+class LineupEntity(Base):
+    __tablename__ = "lineups"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[str] = mapped_column(ForeignKey("fixtures.fixture_id"), index=True)
+    team: Mapped[str] = mapped_column(String(128))
+    players: Mapped[list[str]] = mapped_column(JSON)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    fixture: Mapped["FixtureEntity"] = relationship(back_populates="lineups")
+
+
+class ModelFeatureEntity(Base):
+    __tablename__ = "model_features"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[str] = mapped_column(ForeignKey("fixtures.fixture_id"), unique=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    fixture: Mapped["FixtureEntity"] = relationship(back_populates="features")
+
+
+class IngestionRunEntity(Base):
+    __tablename__ = "ingestion_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    provider: Mapped[str] = mapped_column(String(64))
+    started_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    completed_at: Mapped[Optional[DateTime]] = mapped_column(DateTime, default=None)
+    status: Mapped[str] = mapped_column(String(32), default="started")
+    stats: Mapped[Optional[dict]] = mapped_column(JSON, default=None)

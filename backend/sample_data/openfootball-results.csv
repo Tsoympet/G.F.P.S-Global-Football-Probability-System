@@ -1,0 +1,5 @@
+fixture_id,league,season,home_team,away_team,kickoff,venue,home_score,away_score,status
+EPL-2024-01,Premier League,2024,Manchester United,Liverpool,2024-07-15T15:30:00Z,Old Trafford,2,2,FT
+EPL-2024-02,Premier League,2024,Arsenal,Chelsea,2024-07-16T17:00:00Z,Emirates Stadium,3,1,FT
+EPL-2024-04,Premier League,2024,Liverpool,Arsenal,2024-07-18T18:00:00Z,Anfield,1,0,FT
+EPL-2024-05,Premier League,2024,Manchester City,Tottenham Hotspur,2024-07-19T20:00:00Z,Etihad Stadium,2,1,FT
