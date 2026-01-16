@@ -275,7 +275,7 @@ async def request_reset(p: ResetRequest, db: Session = Depends(get_db)):
         return {"ok": True}
 
     token = secrets.token_urlsafe(32)
-    exp = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    exp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)
 
     u.reset_token = token
     u.reset_token_exp = exp
@@ -299,7 +299,7 @@ async def request_reset(p: ResetRequest, db: Session = Depends(get_db)):
 
 @router.post("/confirm-reset")
 def confirm_reset(p: ResetConfirm, db: Session = Depends(get_db)):
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     u = db.scalar(select(User).where(User.reset_token == p.token))
     if not u or not u.reset_token_exp or u.reset_token_exp < now:
         raise HTTPException(400, "Invalid or expired reset token")

@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -22,7 +22,7 @@ def _ensure_seed_model() -> None:
                 version="v1",
                 status="active",
                 metrics={"roi": 0.08, "logLoss": 0.55},
-                activated_at=datetime.utcnow(),
+                activated_at=datetime.now(timezone.utc),
             )
             db.add(seed)
             db.commit()
@@ -82,7 +82,7 @@ def _activate_version(
             )
             raise HTTPException(409, "Multiple active models detected; activation aborted")
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         target.status = "active"
         target.activated_at = now
         db.add(target)

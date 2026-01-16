@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
@@ -192,7 +192,7 @@ def _train_model(run_id: int, version: str) -> None:
             if run:
                 run.status = "failed"
                 run.metrics = {"error": "No completed fixtures with odds available"}
-                run.completed_at = datetime.utcnow()
+                run.completed_at = datetime.now(timezone.utc)
                 db.add(run)
                 db.commit()
         return
@@ -202,7 +202,7 @@ def _train_model(run_id: int, version: str) -> None:
             if run:
                 run.status = "failed"
                 run.metrics = {"error": "Insufficient outcome diversity for training"}
-                run.completed_at = datetime.utcnow()
+                run.completed_at = datetime.now(timezone.utc)
                 db.add(run)
                 db.commit()
         return
@@ -223,7 +223,7 @@ def _train_model(run_id: int, version: str) -> None:
         if run:
             run.status = "completed"
             run.metrics = metrics
-            run.completed_at = datetime.utcnow()
+            run.completed_at = datetime.now(timezone.utc)
             db.add(run)
 
         model = db.query(ModelVersion).filter(ModelVersion.version == version).first()
@@ -239,22 +239,6 @@ def _train_model(run_id: int, version: str) -> None:
 async def _run_training(run_id: int, version: str) -> None:
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, _train_model, run_id, version)
-    with SessionLocal() as db:
-        run = db.get(TrainingRun, run_id)
-        if run:
-            run.status = "completed"
-            run.metrics = metrics
-            run.completed_at = datetime.utcnow()
-            db.add(run)
-
-        model = db.query(ModelVersion).filter(ModelVersion.version == version).first()
-        if not model:
-            model = ModelVersion(version=version, status="ready", metrics=metrics)
-        else:
-            model.metrics = metrics
-            model.status = "ready"
-        db.add(model)
-        db.commit()
 
 
 def queue_training(loop: asyncio.AbstractEventLoop, version: str) -> int:
