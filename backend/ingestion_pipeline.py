@@ -38,7 +38,7 @@ def _default_providers() -> list[Provider]:
 
 
 def _session_factory_for_engine(db_engine):
-    if db_engine is engine:
+    if getattr(db_engine, "url", None) == getattr(engine, "url", None):
         return SessionLocal
     return sessionmaker(bind=db_engine, autoflush=False, autocommit=False, future=True)
 
@@ -128,10 +128,10 @@ def ingest_live(
         if not provider.meta.supports_live:
             continue
         events = list(provider.get_live_events())
-        events_payload = [e.model_dump() for e in events] if events else []
-        if events_payload:
+        if events:
             key = f"{provider.meta.name}-events"
             cached = cache.get(key)
+            events_payload = [e.model_dump() for e in events]
             if cached == events_payload:
                 continue
             cache.set(key, events_payload)

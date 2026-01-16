@@ -30,7 +30,10 @@ class TTLCache:
         entry = data.get(key)
         if not entry:
             return None
-        if time.time() - entry.get("ts", 0) > self.ttl_seconds:
+        ts = entry.get("ts")
+        if ts is None:
+            return entry.get("value")
+        if time.time() - ts > self.ttl_seconds:
             return entry.get("last_good") if self.fallback_to_last_good else None
         return entry.get("value")
 

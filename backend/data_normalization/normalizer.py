@@ -44,7 +44,12 @@ def normalize_timezone(dt: datetime) -> datetime:
 
 
 def stable_fixture_id(record: FixtureRecord) -> str:
-    base = f"{normalize_league(record.league)}-{record.season}-{normalize_team_name(record.home_team)}-{normalize_team_name(record.away_team)}-{record.kickoff.date().isoformat()}"
+    league = normalize_league(record.league)
+    season = record.season
+    home = normalize_team_name(record.home_team)
+    away = normalize_team_name(record.away_team)
+    date_str = record.kickoff.date().isoformat()
+    base = f"{league}-{season}-{home}-{away}-{date_str}"
     return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
 
 

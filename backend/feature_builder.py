@@ -66,7 +66,7 @@ def rest_days(rows: Iterable[tuple[ResultEntity, FixtureEntity]], reference: dat
         days = delta.total_seconds() / 86400
         if days > 0:
             closest = min(closest, days)
-    return closest
+    return 0.0 if closest == float("inf") else closest
 
 
 def poisson_lambda(goal_rate: float) -> float:

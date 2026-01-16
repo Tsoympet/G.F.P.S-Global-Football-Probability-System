@@ -12,6 +12,7 @@ from .base import (
     ResultRecord,
     EventRecord,
     LineupRecord,
+    OddsRecord,
     Provider,
 )
 from .openfootball import OpenFootballCSVProvider
@@ -23,6 +24,7 @@ __all__ = [
     "ResultRecord",
     "EventRecord",
     "LineupRecord",
+    "OddsRecord",
     "Provider",
     "OpenFootballCSVProvider",
     "KeyBasedStubProvider",

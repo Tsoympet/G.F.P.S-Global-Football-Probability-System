@@ -59,6 +59,15 @@ class LineupRecord(BaseModel):
     players: list[str]
 
 
+class OddsRecord(BaseModel):
+    fixture_id: str
+    market: str
+    outcome: str
+    odds: float
+    provider: Optional[str] = None
+    captured_at: Optional[datetime] = None
+
+
 class Provider(Protocol):
     meta: ProviderMetadata
 
@@ -74,5 +83,5 @@ class Provider(Protocol):
     def get_lineups(self) -> Iterable[LineupRecord]:
         return []
 
-    def get_odds(self) -> Optional[Iterable[dict]]:
+    def get_odds(self) -> Optional[Iterable[OddsRecord]]:
         return None
