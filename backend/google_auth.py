@@ -2,7 +2,6 @@ import os
 import secrets
 import datetime
 import hashlib
-import hmac
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -71,16 +70,12 @@ def verify_totp(secret: str, code: str) -> bool:
         return False
 
 
+RESET_TOKEN_HASH_LEN = 64  # SHA-256 hex digest length
+
+
 def _hash_reset_token(token: str) -> str:
     """Hash reset token so we never persist raw secrets."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
-
-
-def _tokens_match(token_from_request: str, stored_token: Optional[str]) -> bool:
-    if not stored_token:
-        return False
-    hashed = _hash_reset_token(token_from_request)
-    return hmac.compare_digest(hashed, stored_token) or hmac.compare_digest(token_from_request, stored_token)
 
 
 async def send_email(to_email: str, subject: str, body: str):
@@ -314,24 +309,23 @@ async def request_reset(p: ResetRequest, db: Session = Depends(get_db)):
 @router.post("/confirm-reset")
 def confirm_reset(p: ResetConfirm, db: Session = Depends(get_db)):
     now = datetime.datetime.now(datetime.timezone.utc)
-    u = db.scalar(
+    hashed_token = _hash_reset_token(p.token)
+    user = db.scalar(
         select(User).where(
-            # support both hashed (new) and legacy plaintext tokens to avoid breaking pending resets
-            (User.reset_token == _hash_reset_token(p.token)) | (User.reset_token == p.token)
+            User.reset_token == hashed_token,
+            User.reset_token_exp.isnot(None),
+            User.reset_token_exp >= now,
         )
     )
-    exp = u.reset_token_exp if u else None
-    if exp and exp.tzinfo is None:
-        exp = exp.replace(tzinfo=datetime.timezone.utc)
-    if not u or not exp or exp < now or not _tokens_match(p.token, u.reset_token):
+    if not user:
         raise HTTPException(400, "Invalid or expired reset token")
 
-    u.password_hash = hash_password(p.new_password)
-    u.reset_token = None
-    u.reset_token_exp = None
-    u.token_version += 1  # invalidate old JWTs
+    user.password_hash = hash_password(p.new_password)
+    user.reset_token = None
+    user.reset_token_exp = None
+    user.token_version += 1  # invalidate old JWTs
 
-    db.add(u)
+    db.add(user)
     db.commit()
 
     return {"ok": True}
