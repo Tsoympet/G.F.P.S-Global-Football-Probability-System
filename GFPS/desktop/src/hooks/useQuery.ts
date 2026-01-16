@@ -41,7 +41,7 @@ export const useQuery = <T,>(fn: () => Promise<T>, options: QueryOptions = {}): 
           ...prev,
           data: cached.data,
           loading: false,
-          stale: cached.stale,
+          stale: prev.stale || cached.stale,
           lastUpdated: cached.timestamp
         }));
       }
