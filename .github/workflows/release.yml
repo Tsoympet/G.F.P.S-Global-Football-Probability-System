@@ -52,9 +52,22 @@ jobs:
         env:
           RELEASE_CHANNEL: ${{ steps.channel.outputs.channel }}
         run: |
-          MAJOR_CHANGE=$(git log -1 --pretty=format:%s)
-          if [ -z "$MAJOR_CHANGE" ]; then
-            MAJOR_CHANGE="See commit history for full changes."
+          CHANNEL_TITLE=$(printf '%s\n' "$RELEASE_CHANNEL" | sed 's/^./\U&/')
+          TAG_PATTERN='^v[0-9]+\.[0-9]+\.[0-9]+$'
+          CURRENT_TAG="${GITHUB_REF_NAME}"
+          if [ "$RELEASE_CHANNEL" = "beta" ]; then
+            TAG_PATTERN='^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$'
+          fi
+
+          PREVIOUS_TAG=$(git tag --list 'v*' --sort=-v:refname | grep -E "$TAG_PATTERN" | grep -v "^${CURRENT_TAG}$" | head -n 1)
+          if [ -n "$PREVIOUS_TAG" ]; then
+            CHANGELOG=$(git log --pretty='- %s' "${PREVIOUS_TAG}..HEAD")
+          else
+            CHANGELOG=$(git log --pretty='- %s' -n 20)
+          fi
+
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="- See commit history for full changes."
           fi
 
           if [ "$RELEASE_CHANNEL" = "beta" ]; then
@@ -64,10 +77,10 @@ jobs:
           fi
 
           cat > /tmp/release_notes.md <<EOF
-Channel: ${RELEASE_CHANNEL^}
+Channel: ${CHANNEL_TITLE}
 
 Major changes:
-- ${MAJOR_CHANGE}
+${CHANGELOG}
 
 Risks:
 ${RISK_LINE}
@@ -91,14 +104,14 @@ EOF
 
           if ! gh release view "$TAG" > /dev/null 2>&1; then
             if [ "$RELEASE_CHANNEL" = "beta" ]; then
-              gh release create "$TAG" --prerelease --notes-file "$NOTES_FILE" --title "$TAG"
+              gh release create "$TAG" --prerelease --notes-file "$NOTES_FILE" --title "$TAG (Beta)"
             else
               gh release create "$TAG" --notes-file "$NOTES_FILE" --title "$TAG" --latest
             fi
-          fi
-
-          if [ "$RELEASE_CHANNEL" = "beta" ]; then
-            gh release edit "$TAG" --prerelease --notes-file "$NOTES_FILE" --title "$TAG (Beta)"
           else
-            gh release edit "$TAG" --latest --notes-file "$NOTES_FILE" --title "$TAG"
+            if [ "$RELEASE_CHANNEL" = "beta" ]; then
+              gh release edit "$TAG" --prerelease --notes-file "$NOTES_FILE" --title "$TAG (Beta)"
+            else
+              gh release edit "$TAG" --latest --notes-file "$NOTES_FILE" --title "$TAG"
+            fi
           fi
