@@ -15,6 +15,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Determine channel from tag
+        id: channel
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+          elif [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]; then
+            echo "channel=beta" >> "$GITHUB_OUTPUT"
+          else
+            echo "Invalid release tag format: $TAG" >&2
+            exit 1
+          fi
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -34,9 +47,58 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Build release notes
+        id: notes
+        env:
+          RELEASE_CHANNEL: ${{ steps.channel.outputs.channel }}
+        run: |
+          MAJOR_CHANGE=$(git log -1 --pretty=format:%s)
+          if [ -z "$MAJOR_CHANGE" ]; then
+            MAJOR_CHANGE="See commit history for full changes."
+          fi
+
+          if [ "$RELEASE_CHANNEL" = "beta" ]; then
+            RISK_LINE="- Experimental build; features may change and issues may be present."
+          else
+            RISK_LINE="- Fully tested release intended for all users."
+          fi
+
+          cat > /tmp/release_notes.md <<EOF
+Channel: ${RELEASE_CHANNEL^}
+
+Major changes:
+- ${MAJOR_CHANGE}
+
+Risks:
+${RISK_LINE}
+EOF
+          echo "file=/tmp/release_notes.md" >> "$GITHUB_OUTPUT"
+
       - name: Build and publish
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: GFPS/desktop
+
+      - name: Enforce release notes and channel flags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_CHANNEL: ${{ steps.channel.outputs.channel }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          NOTES_FILE="${{ steps.notes.outputs.file }}"
+
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            if [ "$RELEASE_CHANNEL" = "beta" ]; then
+              gh release create "$TAG" --prerelease --notes-file "$NOTES_FILE" --title "$TAG"
+            else
+              gh release create "$TAG" --notes-file "$NOTES_FILE" --title "$TAG" --latest
+            fi
+          fi
+
+          if [ "$RELEASE_CHANNEL" = "beta" ]; then
+            gh release edit "$TAG" --prerelease --notes-file "$NOTES_FILE" --title "$TAG (Beta)"
+          else
+            gh release edit "$TAG" --latest --notes-file "$NOTES_FILE" --title "$TAG"
+          fi
