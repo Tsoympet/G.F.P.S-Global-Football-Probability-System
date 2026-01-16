@@ -38,6 +38,7 @@ from .stats_api import router as stats_router
 from .streamer import start_streamer_background
 from .value_bets_api import router as value_bets_router
 from .observability_api import router as observability_router
+from .xg_api import router as xg_router
 
 app = FastAPI(
     title="GFPS – Global Football Probability System",
@@ -166,6 +167,7 @@ app.include_router(alerts_router)
 app.include_router(pipeline_router)
 app.include_router(replay_router)
 app.include_router(observability_router)
+app.include_router(xg_router)
 
 
 # -------------------------------------------------------------------

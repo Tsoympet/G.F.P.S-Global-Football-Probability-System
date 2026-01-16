@@ -86,6 +86,27 @@ class LiveState:
         await self.broadcast({"type": "odds", **self.snapshot()})
         await self._persist_snapshot("odds_update")
 
+    async def apply_odds_delta(self, odds_delta: Dict[str, Any]) -> None:
+        """
+        Apply a partial odds update for a single fixture without replacing the entire book.
+        """
+        fixture_id = str(odds_delta.get("fixtureId") or odds_delta.get("fixture_id") or "")
+        if not fixture_id:
+            return
+        updated = False
+        for row in self.odds:
+            current_id = str(row.get("fixtureId") or row.get("fixture_id") or "")
+            if current_id == fixture_id:
+                row.update(odds_delta)
+                updated = True
+                break
+        if not updated:
+            payload = {"fixtureId": fixture_id}
+            payload.update(odds_delta)
+            self.odds.append(payload)
+        await self.broadcast({"type": "odds_delta", "fixtureId": fixture_id, **self.snapshot()})
+        await self._persist_snapshot("odds_delta")
+
     async def set_markets(self, markets: Dict[str, List[Dict[str, Any]]]) -> None:
         self.market_lines = deepcopy(markets)
         await self.broadcast({"type": "markets", **self.snapshot()})

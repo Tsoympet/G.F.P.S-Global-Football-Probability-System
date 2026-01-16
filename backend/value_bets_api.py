@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from .auth_dependency import require_user
 from .live_state import live_state
 from .prediction_engine import compute_value_bets
+from .value.presets import get_value_presets
 from .snapshot_service import latest_snapshot_payload
 
 router = APIRouter(prefix="/value-bets", tags=["value-bets"])
@@ -16,3 +17,8 @@ async def list_value_bets(min_ev: float | None = None) -> List[dict]:
 
     snapshot = latest_snapshot_payload() or live_state.snapshot()
     return compute_value_bets(snapshot, min_ev=min_ev)
+
+
+@router.get("/presets", dependencies=[Depends(require_user)])
+async def list_value_presets() -> List[dict]:
+    return get_value_presets()

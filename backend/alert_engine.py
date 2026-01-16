@@ -12,9 +12,13 @@ from .prediction_engine import predict_market
 from .stats_context import build_poisson_context
 from .validation import require_decimal_odds
 from .push_notify import send_fcm_push
+from .execution_adapter import ExecutionRequest, get_execution_adapter
 
 ALERT_ENGINE_ENABLED = os.getenv("ALERT_ENGINE", "false").lower() in ("1", "true", "yes")
 ALERT_ENGINE_INTERVAL_SEC = int(os.getenv("ALERT_ENGINE_INTERVAL_SEC", "120"))
+EXECUTION_ENABLED = os.getenv("EXECUTION_ENABLED", "false").lower() in ("1", "true", "yes")
+EXECUTION_MIN_EV = float(os.getenv("EXECUTION_MIN_EV", "0.08"))
+_EXECUTION_ADAPTER = get_execution_adapter()
 
 APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
 
@@ -189,6 +193,26 @@ def evaluate_rule(rule: AlertRule, cand: dict, db: Session) -> List[AlertEvent]:
                     "away": away,
                 },
             )
+            if EXECUTION_ENABLED and ev >= EXECUTION_MIN_EV and _EXECUTION_ADAPTER:
+                try:
+                    exec_meta = _EXECUTION_ADAPTER.execute_value_bet(
+                        ExecutionRequest(
+                            fixture_id=str(cand["fixture_id"]),
+                            market=mname,
+                            outcome=outcome,
+                            odds=odds,
+                            ev=ev,
+                            meta={
+                                "league": cand.get("league"),
+                                "home": home,
+                                "away": away,
+                                "rule_id": rule.id,
+                            },
+                        )
+                    )
+                    e.meta["execution"] = exec_meta
+                except Exception as exc:  # pragma: no cover - best effort
+                    e.meta["execution_error"] = str(exc)
             events.append(e)
 
     return events
