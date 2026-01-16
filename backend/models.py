@@ -200,6 +200,23 @@ class LiveSnapshotRecord(Base):
     value_bets: Mapped[list["ValueBetSnapshotRecord"]] = relationship(back_populates="snapshot")
 
 
+class ExecutionOrder(Base):
+    __tablename__ = "execution_orders"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    adapter: Mapped[str] = mapped_column(String(64), default="db")
+    status: Mapped[str] = mapped_column(String(32), default="queued")
+
+    fixture_id: Mapped[str] = mapped_column(String(64))
+    market: Mapped[str] = mapped_column(String(128))
+    outcome: Mapped[str] = mapped_column(String(128))
+    odds: Mapped[float] = mapped_column(Float)
+    ev: Mapped[float] = mapped_column(Float)
+
+    meta: Mapped[Optional[dict]] = mapped_column(JSON, default=None)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
 class PredictionSnapshotRecord(Base):
     __tablename__ = "prediction_snapshots"
 

@@ -14,6 +14,7 @@ from backend.prediction_engine.goals.poisson import PoissonParams
 from backend.prediction_engine.goals.dixon_coles import score_probabilities_dc
 from backend.prediction_engine.strength.team_strength import MatchResult, StrengthModel
 from backend.prediction_engine.calibration.temperature_scaling import TemperatureScaler, logits_from_probabilities
+from backend.prediction_engine.calibration.boosting_head import BoostingCalibrationHead, load_boosting_head
 from backend.prediction_engine.ensemble.linear_pooling import linear_pool
 from backend.prediction_engine.ensemble.stacking import StackingEnsemble
 from backend.ml.feature_schema import MatchFeatures
@@ -58,10 +59,12 @@ class PredictionEngine:
         ml_model: Optional[ModelBundle] = None,
         calibrator: Optional[TemperatureScaler] = None,
         stacking_model: Optional[StackingEnsemble] = None,
+        boosting_head: Optional[BoostingCalibrationHead] = None,
     ) -> None:
         self.ml_model = ml_model
         self.calibrator = calibrator or TemperatureScaler(temperature=1.0)
         self.stacking_model = stacking_model
+        self.boosting_head = boosting_head or load_boosting_head()
 
     def market_probabilities(self, odds: Dict[str, float]) -> Dict[str, float]:
         if not odds:
@@ -191,6 +194,8 @@ class PredictionEngine:
             pooled = linear_pool(components, weights)
         calibrated = self._calibrate(pooled.reshape(1, -1))[0]
         fair_probabilities = {"home": calibrated[0], "draw": calibrated[1], "away": calibrated[2]}
+        if self.boosting_head:
+            fair_probabilities = self.boosting_head.adjust(fair_probabilities)
         priced_probabilities = self._insert_margin(fair_probabilities, target_overround=TARGET_OVERROUND)
         shaded_probabilities = self._apply_risk_shading(priced_probabilities, inp.exposure, target_overround=TARGET_OVERROUND)
         final_odds = {k: 1.0 / v for k, v in shaded_probabilities.items()}
