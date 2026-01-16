@@ -52,15 +52,15 @@ jobs:
         env:
           RELEASE_CHANNEL: ${{ steps.channel.outputs.channel }}
         run: |
-          CHANNEL_TITLE=$(printf '%s\n' "$RELEASE_CHANNEL" | sed 's/^./\U&/')
-          TAG_PATTERN='^v[0-9]+\.[0-9]+\.[0-9]+$'
+          CHANNEL_TITLE=${RELEASE_CHANNEL^}
+          TAG_PATTERN='v[0-9]*.[0-9]*.[0-9]*'
           CURRENT_TAG="${GITHUB_REF_NAME}"
           FALLBACK_COMMIT_COUNT=20
           if [ "$RELEASE_CHANNEL" = "beta" ]; then
-            TAG_PATTERN='^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$'
+            TAG_PATTERN='v[0-9]*.[0-9]*.[0-9]*-beta.[0-9]*'
           fi
 
-          PREVIOUS_TAG=$(git tag --list 'v*' --sort=-v:refname | grep -E "$TAG_PATTERN" | grep -v "^${CURRENT_TAG}$" | head -n 1)
+          PREVIOUS_TAG=$(git tag --list "$TAG_PATTERN" --sort=-v:refname | grep -v "^${CURRENT_TAG}$" | head -n 1)
           if [ -n "$PREVIOUS_TAG" ]; then
             CHANGELOG=$(git log --pretty='- %s' "${PREVIOUS_TAG}..HEAD")
           else
@@ -77,7 +77,8 @@ jobs:
             RISK_LINE="- Fully tested release intended for all users."
           fi
 
-          cat > /tmp/release_notes.md <<EOF
+          NOTES_FILE=$(mktemp)
+          cat > "$NOTES_FILE" <<EOF
 Channel: ${CHANNEL_TITLE}
 
 Major changes:
@@ -86,7 +87,7 @@ ${CHANGELOG}
 Risks:
 ${RISK_LINE}
 EOF
-          echo "file=/tmp/release_notes.md" >> "$GITHUB_OUTPUT"
+          echo "file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Build and publish
         uses: tauri-apps/tauri-action@v0
