@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
-
-import pytest
+from math import isclose
 
 from backend.db import Base, SessionLocal, engine
 from backend.models import OddsSnapshotRecord
@@ -37,6 +36,6 @@ def test_closing_odds_selection_and_clv_math():
     assert close_price == 2.2  # uses last price before kickoff
     clv_odds = clv_odds_space(2.4, close_price)
     clv_prob = clv_probability_space(2.4, close_price)
-    assert clv_odds == pytest.approx((2.4 / close_price) - 1)
-    assert clv_prob == pytest.approx((1 / close_price) - (1 / 2.4))
+    assert isclose(clv_odds, (2.4 / close_price) - 1, rel_tol=1e-9)
+    assert isclose(clv_prob, (1 / close_price) - (1 / 2.4), rel_tol=1e-9)
     assert beat_closing_line(2.4, close_price) is True
