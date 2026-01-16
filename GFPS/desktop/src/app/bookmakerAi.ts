@@ -38,7 +38,7 @@ export const buildBookmakerVerdict = (ctx: BookmakerContext): BookmakerVerdict =
   const ev = ctx.expectedValue ?? (modelProb && ctx.odds ? modelProb * ctx.odds - 1 : undefined);
 
   const limitations: string[] = [];
-  if (!ctx.clv) limitations.push('CLV snapshot missing; pricing drift unknown.');
+  if (ctx.clv === undefined || ctx.clv === null) limitations.push('CLV snapshot missing; pricing drift unknown.');
   if (!ctx.startTime) limitations.push('Kickoff time missing; timing risk inferred statically.');
   limitations.push('No odds tape provided; line movement interpreted from static inputs only.');
 

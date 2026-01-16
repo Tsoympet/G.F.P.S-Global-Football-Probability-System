@@ -45,4 +45,16 @@ describe('Bookmaker View', () => {
     expect(screen.getByText(/A\. Market Read/i)).toBeInTheDocument();
     expect(screen.getByText(/C\. Trap Indicators/i)).toBeInTheDocument();
   });
+
+  it('surfaces limitations consistently without flagging zero CLV as missing', () => {
+    const withZeroClv = { ...context, clv: 0 };
+    const verdictWithClv = buildBookmakerVerdict(withZeroClv);
+    expect(verdictWithClv.limitations).toContain('No odds tape provided; line movement interpreted from static inputs only.');
+    expect(verdictWithClv.limitations).not.toContain('CLV snapshot missing; pricing drift unknown.');
+
+    const missingData = { ...context, clv: undefined, startTime: undefined };
+    const verdictMissing = buildBookmakerVerdict(missingData);
+    expect(verdictMissing.limitations).toContain('CLV snapshot missing; pricing drift unknown.');
+    expect(verdictMissing.limitations).toContain('Kickoff time missing; timing risk inferred statically.');
+  });
 });
