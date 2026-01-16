@@ -184,7 +184,10 @@ def _compute_implied_probability(odds: float) -> float:
     """Compute implied probability from decimal odds."""
     if odds <= 1.0:
         return 0.0
-    return 1.0 / odds
+    try:
+        return 1.0 / odds
+    except (ZeroDivisionError, ValueError):
+        return 0.0
 
 
 def _resolve_probability(

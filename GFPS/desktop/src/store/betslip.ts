@@ -112,7 +112,7 @@ const getStoredData = (): Partial<BetSlipState> | null => {
   }
 };
 
-const saveToStorage = (selections: BetSlipSelection[], mode: BetSlipMode) => {
+const saveToStorage = (selections: BetSlipSelection[], mode: BetSlipMode): boolean => {
   try {
     const data = {
       selections,
@@ -120,8 +120,10 @@ const saveToStorage = (selections: BetSlipSelection[], mode: BetSlipMode) => {
       savedAt: new Date().toISOString(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return true;
   } catch (error) {
     console.error('Failed to save bet slip to localStorage:', error);
+    return false;
   }
 };
 

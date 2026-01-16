@@ -4,7 +4,7 @@ Generates structured, analytical reports for bet slip simulations.
 """
 from __future__ import annotations
 
-from typing import List, Dict, Any, Literal
+from typing import List, Dict, Any, Literal, Optional
 from dataclasses import dataclass
 
 from backend.correlation.engine import Selection, CorrelationResult
