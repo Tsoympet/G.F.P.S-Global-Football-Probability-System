@@ -2,18 +2,31 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable, Optional, Protocol
+from enum import Enum
+from typing import Iterable, Optional, Protocol, Set
 
 from pydantic import BaseModel, field_validator
+
+
+class ProviderTier(str, Enum):
+    FREE = "free"
+    PREMIUM = "premium"
 
 
 @dataclass
 class ProviderMetadata:
     name: str
     description: str
+    data_types: Set[str]
+    refresh_seconds: int = 300
+    reliability: float = 0.5
+    tier: ProviderTier = ProviderTier.FREE
     requires_api_key: bool = False
     rate_limit_per_minute: int = 60
     supports_live: bool = False
+    supports_odds: bool = False
+    auth_note: Optional[str] = None
+    priority: int = 100
 
 
 class FixtureRecord(BaseModel):

@@ -1,0 +1,19 @@
+[
+  {
+    "fixture_id": "openliga-001",
+    "league": "Bundesliga",
+    "season": "2024",
+    "home_team": "Union Berlin",
+    "away_team": "Stuttgart",
+    "kickoff": "2024-08-18T14:30:00Z",
+    "venue": "Stadion An der Alten Försterei",
+    "events": [
+      {"minute": 12, "team": "Union Berlin", "type": "goal", "player": "Becker"},
+      {"minute": 44, "team": "Stuttgart", "type": "yellow", "player": "Anton"}
+    ],
+    "lineups": [
+      {"team": "Union Berlin", "players": ["Player A", "Player B"]},
+      {"team": "Stuttgart", "players": ["Player C", "Player D"]}
+    ]
+  }
+]

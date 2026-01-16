@@ -13,10 +13,14 @@ This catalog documents the data needed to power match probabilities, where it co
 
 | Provider | Type | Coverage | Update Frequency | Auth | Licensing / Usage |
 | --- | --- | --- | --- | --- | --- |
-| OpenFootball CSV snapshot (bundled) | No-key | Premier League sample fixtures/results | Static snapshot; refresh manually when new snapshot added | None | Open data / public domain snapshot used for offline-safe ingestion |
-| API-Football (stubbed) | Key-based (optional) | Full fixtures/results/live | As per provider limits; typically minute-level | API key | Commercial; requires valid license. Disabled by default; plug-in only. |
+| OpenFootball CSV snapshot (bundled) | Free / no key | Fixtures & results (sample leagues) | Offline snapshot; manual refresh | None | CC0 / public domain snapshot |
+| Football-Data.org (free tier) | Free (keyed) | Fixtures & results | Polling every 6h (configurable) | `FOOTBALL_DATA_API_KEY` optional | Free tier, rate-limited |
+| OpenLigaDB | Free / no key | Live scores (Bundesliga + limited) | Polling ~90s | None | Public, attribution required |
+| API-Football | Premium (optional) | Fixtures/results/live/odds | Polling ~60s when enabled | `APIFOOTBALL_KEY` | Commercial; disabled by default |
+| API-Football stub | Premium (placeholder) | No data until keyed | N/A | `APIFOOTBALL_KEY` | Placeholder for plug-in providers |
 
 ## Notes
-- Live updates are only supported when a provider explicitly allows unauthenticated live access. The default OpenFootball snapshot is offline-only.
-- Odds are treated as optional. The system will compute “fair odds” internally from probabilities when external odds are absent.
+- Default mode is **free-only**. Premium providers remain disabled until a user opts-in and supplies a key.
+- Live updates use polling with TTL caching and will fall back to cached/offline snapshots if the endpoint is unavailable.
+- Odds are optional. When unavailable, the odds abstraction exposes fair odds derived from the model probabilities.
 - Respect each provider’s terms, rate limits, and attribution rules. No hidden endpoints or scraping are used.
