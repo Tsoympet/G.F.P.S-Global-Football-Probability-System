@@ -30,14 +30,19 @@ class TTLCache:
         return entry.get("value")
 
     def set(self, key: str, value: Any) -> None:
-        payload = {"value": value, "ts": time.time(), "last_good": value}
         data = {}
+        previous_entry = None
         if self.path.exists():
             try:
                 with self.path.open("r", encoding="utf-8") as handle:
                     data = json.load(handle)
+                    previous_entry = data.get(key)
             except json.JSONDecodeError:
                 data = {}
+        last_good = None
+        if previous_entry:
+            last_good = previous_entry.get("last_good", previous_entry.get("value"))
+        payload = {"value": value, "ts": time.time(), "last_good": last_good or value}
         data[key] = payload
         with self.path.open("w", encoding="utf-8") as handle:
             json.dump(data, handle)

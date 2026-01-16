@@ -112,12 +112,13 @@ def ingest_live(session: Optional[Session] = None, providers: Optional[list[Prov
         if not provider.meta.supports_live:
             continue
         events = list(provider.get_live_events())
-        if events:
+        events_payload = [e.model_dump() for e in events] if events else []
+        if events_payload:
             key = f"{provider.meta.name}-events"
             cached = cache.get(key)
-            if cached == [e.model_dump() for e in events]:
+            if cached == events_payload:
                 continue
-            cache.set(key, [e.model_dump() for e in events])
+            cache.set(key, events_payload)
         upsert_events(
             local_session,
             [

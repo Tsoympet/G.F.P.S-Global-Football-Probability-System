@@ -72,7 +72,7 @@ def poisson_lambda(goal_rate: float) -> float:
     return max(0.1, goal_rate)
 
 
-def build_match_features(session: Session, fixture_id: str) -> dict:
+def build_match_features(session: Session, fixture_id: str, reference_time: datetime | None = None) -> dict:
     fixture = session.scalar(select(FixtureEntity).where(FixtureEntity.fixture_id == fixture_id))
     if not fixture:
         raise ValueError("fixture not found")
@@ -85,7 +85,9 @@ def build_match_features(session: Session, fixture_id: str) -> dict:
     home_form = form_score(home_rows, fixture.home_team)
     away_form = form_score(away_rows, fixture.away_team)
 
-    reference_time = fixture.kickoff_utc or datetime.now(timezone.utc)
+    reference_time = reference_time or fixture.kickoff_utc
+    if reference_time is None:
+        raise ValueError("fixture kickoff time is required for feature generation")
     features = {
         "fixture_id": fixture.fixture_id,
         "home_team": fixture.home_team,

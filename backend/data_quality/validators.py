@@ -3,8 +3,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Callable, Iterable, TypeVar
 
-from pydantic import ValidationError
-
 from ..data_providers.base import FixtureRecord, ResultRecord
 from ..data_normalization import normalize_timezone
 
@@ -20,7 +18,7 @@ def validate_fixture_schema(record: FixtureRecord) -> FixtureRecord:
 def validate_result_schema(record: ResultRecord) -> ResultRecord:
     record.kickoff = normalize_timezone(record.kickoff)
     if record.home_score < 0 or record.away_score < 0:
-        raise ValidationError("Negative scores are not allowed")
+        raise ValueError("Negative scores are not allowed")
     return record
 
 
