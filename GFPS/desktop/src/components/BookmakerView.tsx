@@ -59,24 +59,27 @@ export const BookmakerView = ({ context, visible, onClose }: Props) => {
         }}
       >
         <div style={{ color: palette.textSecondary, fontSize: 12, marginBottom: 6 }}>C. Trap Indicators</div>
-        {verdict.trapIndicators.map((trap, idx) => (
-          <div
-            key={`${trap.level}-${idx}`}
-            style={{
-              padding: 8,
-              borderRadius: 8,
-              background: palette.cardElevated,
-              borderLeft: `3px solid ${
-                trap.level === 'high' ? palette.danger : trap.level === 'medium' ? palette.warning : palette.success
-              }`,
-              color: palette.textPrimary,
-              fontSize: 12,
-              marginBottom: idx === verdict.trapIndicators.length - 1 ? 0 : 6
-            }}
-          >
-            <strong style={{ textTransform: 'uppercase', fontSize: 11 }}>{trap.level}</strong> — {trap.note}
-          </div>
-        ))}
+        {verdict.trapIndicators.map((trap, idx) => {
+          const key = `${trap.level}-${trap.note}`;
+          return (
+            <div
+              key={key}
+              style={{
+                padding: 8,
+                borderRadius: 8,
+                background: palette.cardElevated,
+                borderLeft: `3px solid ${
+                  trap.level === 'high' ? palette.danger : trap.level === 'medium' ? palette.warning : palette.success
+                }`,
+                color: palette.textPrimary,
+                fontSize: 12,
+                marginBottom: idx === verdict.trapIndicators.length - 1 ? 0 : 6
+              }}
+            >
+              <strong style={{ textTransform: 'uppercase', fontSize: 11 }}>{trap.level}</strong> — {trap.note}
+            </div>
+          );
+        })}
       </div>
 
       <VerdictRow label="D. Timing Advice" value={verdict.timingAdvice} />

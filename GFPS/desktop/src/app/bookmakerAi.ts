@@ -71,7 +71,7 @@ export const buildBookmakerVerdict = (ctx: BookmakerContext): BookmakerVerdict =
     `Market: ${ctx.market}`,
     `Focus: ${ctx.match}`,
     `Model: ${toPercent(modelProb) ?? 'n/a'}% vs implied ${toPercent(impliedProb) ?? 'n/a'}%`,
-    `Fair: ${fairOdds ? fairOdds.toFixed(2) : 'n/a'} vs book ${ctx.bookmakerOdds ?? ctx.odds}`
+    `Fair: ${fairOdds ? fairOdds.toFixed(2) : 'n/a'} vs book ${ctx.bookmakerOdds ?? ctx.odds}` // bookmakerOdds is feed price; odds is fallback/display.
   ];
 
   const riskAssessment = [

@@ -61,10 +61,10 @@ export const ValueBets = () => {
   });
 
   useEffect(() => {
-    if (!bookmakerFocusKey && sorted.length) {
+    if (!bookmakerFocusKey && sorted.length > 0) {
       setBookmakerFocusKey(`${sorted[0].match}__${sorted[0].market}`);
     }
-  }, [bookmakerFocusKey, sorted]);
+  }, [bookmakerFocusKey, sorted.length, sorted]);
 
   const bookmakerFocus = sorted.find((row) => `${row.match}__${row.market}` === bookmakerFocusKey) ?? sorted[0];
 
