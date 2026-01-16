@@ -35,6 +35,8 @@ class JournalRow:
     bookmaker_odds: Optional[float] = None
     closing_odds: Optional[float] = None
     fair_odds: Optional[float] = None
+    clv_odds: Optional[float] = None
+    clv_prob: Optional[float] = None
 
 
 @dataclass
@@ -190,6 +192,8 @@ def compute_performance_kpis(rows: Iterable[BetJournalEntry | JournalRow]) -> Di
                 bookmaker_odds=getattr(row, "bookmaker_odds", None),
                 closing_odds=getattr(row, "closing_odds", None),
                 fair_odds=getattr(row, "fair_odds", None),
+                clv_odds=getattr(row, "clv_odds", None),
+                clv_prob=getattr(row, "clv_prob", None),
             )
         )
 
@@ -207,13 +211,26 @@ def compute_performance_kpis(rows: Iterable[BetJournalEntry | JournalRow]) -> Di
     hit_rate = wins / len(settled) if settled else 0.0
     avg_ev = mean([r.ev for r in journal_rows]) if journal_rows else 0.0
     avg_realized_roi = mean([r.realized_roi or 0.0 for r in settled]) if settled else 0.0
-    clv_samples: List[float] = []
+    clv_odds_samples: List[float] = []
+    clv_prob_samples: List[float] = []
+    beat_close = 0
     for r in settled:
         reference = r.closing_odds or r.fair_odds
         book = r.bookmaker_odds
-        if reference and book and book > 0:
-            clv_samples.append((reference - book) / book)
-    clv_proxy = mean(clv_samples) if clv_samples else 0.0
+        if getattr(r, "clv_odds", None) is not None:
+            clv_odds_samples.append(r.clv_odds or 0.0)
+            if (r.clv_odds or 0.0) > 0:
+                beat_close += 1
+        elif reference and book and book > 0:
+            delta = (book / reference) - 1.0
+            clv_odds_samples.append(delta)
+            if delta > 0:
+                beat_close += 1
+        if getattr(r, "clv_prob", None) is not None:
+            clv_prob_samples.append(r.clv_prob or 0.0)
+    clv_proxy = mean(clv_odds_samples) if clv_odds_samples else 0.0
+    clv_prob_avg = mean(clv_prob_samples) if clv_prob_samples else 0.0
+    beat_close_pct = beat_close / len(clv_odds_samples) if clv_odds_samples else 0.0
     variance_proxy = pvariance([_pnl(r) for r in settled]) if len(settled) > 1 else 0.0
 
     ordered = sorted(settled, key=lambda r: r.created_at)
@@ -259,6 +276,13 @@ def compute_performance_kpis(rows: Iterable[BetJournalEntry | JournalRow]) -> Di
         "avgEv": avg_ev,
         "avgRealizedRoi": avg_realized_roi,
         "clvProxy": clv_proxy,
+        "clvMetrics": {
+            "avgClvOdds": clv_proxy,
+            "avgClvProb": clv_prob_avg,
+            "beatClosePct": beat_close_pct,
+            "samples": len(clv_odds_samples),
+            "status": "ok" if clv_odds_samples else "needs odds snapshots",
+        },
         "varianceProxy": variance_proxy,
         "maxDrawdown": max_dd,
         "currentDrawdown": current_dd,

@@ -223,10 +223,14 @@ class BetJournalEntry(Base):
     line: Mapped[Optional[float]] = mapped_column(Float, default=None)
     side: Mapped[str] = mapped_column(String(64))
 
+    odds_at_pick: Mapped[Optional[float]] = mapped_column(Float, default=None)
     model_probability: Mapped[float] = mapped_column(Float)
     fair_odds: Mapped[Optional[float]] = mapped_column(Float, default=None)
     bookmaker_odds: Mapped[Optional[float]] = mapped_column(Float, default=None)
     closing_odds: Mapped[Optional[float]] = mapped_column(Float, default=None)
+    clv_odds: Mapped[Optional[float]] = mapped_column(Float, default=None)
+    clv_prob: Mapped[Optional[float]] = mapped_column(Float, default=None)
+    snapshot_provider: Mapped[Optional[str]] = mapped_column(String(64), default=None)
     ev: Mapped[float] = mapped_column(Float, default=0.0)
     correlation_risk: Mapped[float] = mapped_column(Float, default=0.0)
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
@@ -300,6 +304,22 @@ class ValueBetSnapshotRecord(Base):
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     snapshot: Mapped[LiveSnapshotRecord] = relationship(back_populates="value_bets")
+
+
+class OddsSnapshotRecord(Base):
+    __tablename__ = "odds_snapshots"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    provider_id: Mapped[str] = mapped_column(String(64), default="api-football")
+    match_id: Mapped[str] = mapped_column(String(64), index=True)
+    market_id: Mapped[str] = mapped_column(String(128), index=True)
+    selection_id: Mapped[str] = mapped_column(String(64), index=True)
+    line: Mapped[Optional[float]] = mapped_column(Float, default=None)
+    odds_decimal: Mapped[float] = mapped_column(Float)
+    is_live: Mapped[bool] = mapped_column(Boolean, default=False)
+    source_confidence: Mapped[float] = mapped_column(Float, default=1.0)
+    raw_payload_hash: Mapped[Optional[str]] = mapped_column(String(64), default=None)
+    captured_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), index=True)
 
 
 class ModelVersion(Base):
