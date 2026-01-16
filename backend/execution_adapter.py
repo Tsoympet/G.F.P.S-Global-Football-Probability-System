@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import os
-import time
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional, Protocol
+
+from .db import SessionLocal
+from .models import ExecutionOrder
 
 
 class ExecutionAdapter(Protocol):
@@ -21,23 +23,31 @@ class ExecutionRequest:
     meta: Dict[str, Any]
 
 
-class MockExecutionAdapter:
-    name = "mock"
+class DbExecutionAdapter:
+    name = "db"
 
     def execute_value_bet(self, request: ExecutionRequest) -> Dict[str, Any]:
-        return {
-            "id": f"mock-{int(time.time() * 1000)}",
-            "status": "queued",
-            "adapter": self.name,
-            "payload": asdict(request),
-        }
+        with SessionLocal() as db:
+            row = ExecutionOrder(
+                fixture_id=request.fixture_id,
+                market=request.market,
+                outcome=request.outcome,
+                odds=request.odds,
+                ev=request.ev,
+                status="queued",
+                meta=request.meta,
+                adapter=self.name,
+            )
+            db.add(row)
+            db.commit()
+            db.refresh(row)
+            payload = asdict(request)
+            payload["id"] = row.id
+            return {"id": row.id, "status": row.status, "adapter": self.name, "payload": payload}
 
 
 def get_execution_adapter() -> Optional[ExecutionAdapter]:
-    name = os.getenv("EXECUTION_ADAPTER", "mock").lower()
+    name = os.getenv("EXECUTION_ADAPTER", "db").lower()
     if name in {"", "none", "disabled"}:
         return None
-    # extendable registry
-    if name == "mock":
-        return MockExecutionAdapter()
-    return MockExecutionAdapter()
+    return DbExecutionAdapter()
