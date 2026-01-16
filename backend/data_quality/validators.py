@@ -7,6 +7,7 @@ from ..data_providers.base import FixtureRecord, ResultRecord
 from ..data_normalization import normalize_timezone
 
 T = TypeVar("T")
+MINUTES_PER_DAY = 1440
 
 
 def validate_fixture_schema(record: FixtureRecord) -> FixtureRecord:
@@ -36,7 +37,7 @@ def confidence_score(
     source_priority: int = 1,
     freshness_minutes: int = 0,
 ) -> float:
-    recency = max(0, 1440 - freshness_minutes) / 1440  # 0..1
+    recency = max(0, MINUTES_PER_DAY - freshness_minutes) / MINUTES_PER_DAY  # 0..1
     return source_priority + recency
 
 

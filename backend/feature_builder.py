@@ -86,8 +86,6 @@ def build_match_features(session: Session, fixture_id: str, reference_time: date
     away_form = form_score(away_rows, fixture.away_team)
 
     reference_time = reference_time or fixture.kickoff_utc
-    if reference_time is None:
-        raise ValueError("fixture kickoff time is required for feature generation")
     features = {
         "fixture_id": fixture.fixture_id,
         "home_team": fixture.home_team,

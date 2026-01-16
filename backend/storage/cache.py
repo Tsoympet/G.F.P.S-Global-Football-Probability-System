@@ -9,9 +9,10 @@ from typing import Any, Optional
 class TTLCache:
     """Very small JSON-backed cache with TTL and fallback to last known good."""
 
-    def __init__(self, path: Optional[Path] = None, ttl_seconds: int = 900) -> None:
+    def __init__(self, path: Optional[Path] = None, ttl_seconds: int = 900, fallback_to_last_good: bool = True) -> None:
         self.path = path or Path(".cache/gfps-cache.json")
         self.ttl_seconds = ttl_seconds
+        self.fallback_to_last_good = fallback_to_last_good
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
     def get(self, key: str) -> Optional[Any]:
@@ -26,7 +27,7 @@ class TTLCache:
         if not entry:
             return None
         if time.time() - entry.get("ts", 0) > self.ttl_seconds:
-            return entry.get("last_good")
+            return entry.get("last_good") if self.fallback_to_last_good else None
         return entry.get("value")
 
     def set(self, key: str, value: Any) -> None:

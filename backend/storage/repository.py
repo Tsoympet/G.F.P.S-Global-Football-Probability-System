@@ -48,13 +48,15 @@ def upsert_result(session: Session, result: ResultEntity) -> ResultEntity:
 
 
 def upsert_events(session: Session, events: Iterable[EventEntity]) -> None:
-    for event in events:
-        session.add(event)
+    buffered = list(events)
+    if buffered:
+        session.add_all(buffered)
 
 
 def upsert_lineups(session: Session, lineups: Iterable[LineupEntity]) -> None:
-    for lineup in lineups:
-        session.add(lineup)
+    buffered = list(lineups)
+    if buffered:
+        session.add_all(buffered)
 
 
 def save_features(session: Session, fixture_id: str, payload: dict) -> ModelFeatureEntity:

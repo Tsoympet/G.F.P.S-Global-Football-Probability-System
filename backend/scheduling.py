@@ -22,7 +22,7 @@ async def _run_with_backoff(task: Callable[[], Coroutine], base_delay: float = 1
 
 async def schedule_daily_fixtures():
     async def _task():
-        ingest_fixtures()
+        await asyncio.to_thread(ingest_fixtures)
     while True:
         await _run_with_backoff(_task)
         await asyncio.sleep(timedelta(days=1).total_seconds())
@@ -30,7 +30,7 @@ async def schedule_daily_fixtures():
 
 async def schedule_live_refresh():
     async def _task():
-        ingest_live()
+        await asyncio.to_thread(ingest_live)
     while True:
         await _run_with_backoff(_task, base_delay=2.0)
         await asyncio.sleep(120)
@@ -38,7 +38,7 @@ async def schedule_live_refresh():
 
 async def schedule_feature_build():
     async def _task():
-        build_features()
+        await asyncio.to_thread(build_features)
     while True:
         await _run_with_backoff(_task, base_delay=2.0)
         await asyncio.sleep(timedelta(hours=6).total_seconds())

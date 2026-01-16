@@ -16,9 +16,11 @@ class IngestionFlowTests(unittest.TestCase):
         Session = sessionmaker(bind=self.engine, future=True)
         self.session = Session()
         # Patch pipeline to use in-memory engine
+        self._previous_engine = ingestion_pipeline.engine
         ingestion_pipeline.engine = self.engine
 
     def tearDown(self):
+        ingestion_pipeline.engine = self._previous_engine
         self.session.close()
 
     def test_ingest_and_feature_build(self):
