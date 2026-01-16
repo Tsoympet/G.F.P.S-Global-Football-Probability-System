@@ -17,6 +17,17 @@ from ..models import (
 )
 
 
+def _add_in_batches(session: Session, items: Iterable, batch_size: int = 500) -> None:
+    batch: list = []
+    for item in items:
+        batch.append(item)
+        if len(batch) >= batch_size:
+            session.add_all(batch)
+            batch.clear()
+    if batch:
+        session.add_all(batch)
+
+
 def ensure_schema(engine) -> None:
     Base.metadata.create_all(bind=engine)
 
@@ -47,15 +58,11 @@ def upsert_result(session: Session, result: ResultEntity) -> ResultEntity:
 
 
 def upsert_events(session: Session, events: Iterable[EventEntity]) -> None:
-    buffered = list(events)
-    if buffered:
-        session.add_all(buffered)
+    _add_in_batches(session, events)
 
 
 def upsert_lineups(session: Session, lineups: Iterable[LineupEntity]) -> None:
-    buffered = list(lineups)
-    if buffered:
-        session.add_all(buffered)
+    _add_in_batches(session, lineups)
 
 
 def save_features(session: Session, fixture_id: str, payload: dict) -> ModelFeatureEntity:

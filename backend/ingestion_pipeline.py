@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from .data_normalization import normalize_fixture
@@ -105,12 +106,12 @@ def ingest_fixtures(
                 stats["results"] += 1
             record_ingestion_run(local_session, provider.meta.name, stats=stats)
             local_session.commit()
-        except Exception:
+        except (SQLAlchemyError, ValueError) as exc:
             run_status = "failed"
             local_session.rollback()
             record_ingestion_run(local_session, provider.meta.name, stats=stats, status=run_status)
             local_session.commit()
-            raise
+            raise exc
     return stats
 
 

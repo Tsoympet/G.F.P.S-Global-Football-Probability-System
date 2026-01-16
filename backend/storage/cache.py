@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class TTLCache:
@@ -22,6 +25,7 @@ class TTLCache:
             with self.path.open("r", encoding="utf-8") as handle:
                 data = json.load(handle)
         except json.JSONDecodeError:
+            logger.warning("Cache file %s is corrupted; ignoring cache", self.path)
             return None
         entry = data.get(key)
         if not entry:
@@ -39,6 +43,7 @@ class TTLCache:
                     data = json.load(handle)
                     previous_entry = data.get(key)
             except json.JSONDecodeError:
+                logger.warning("Cache file %s is corrupted; resetting entry %s", self.path, key)
                 data = {}
         last_good = None
         if previous_entry:

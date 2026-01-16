@@ -8,6 +8,7 @@ from ..data_normalization import normalize_timezone
 
 T = TypeVar("T")
 MINUTES_PER_DAY = 1440
+SCORE_OUTLIER_THRESHOLD = 20
 
 
 def validate_fixture_schema(record: FixtureRecord) -> FixtureRecord:
@@ -25,7 +26,7 @@ def validate_result_schema(record: ResultRecord) -> ResultRecord:
 
 def detect_anomalies(record: ResultRecord) -> list[str]:
     issues: list[str] = []
-    if record.home_score > 20 or record.away_score > 20:
+    if record.home_score > SCORE_OUTLIER_THRESHOLD or record.away_score > SCORE_OUTLIER_THRESHOLD:
         issues.append("score_out_of_bounds")
     if record.kickoff > datetime.now(timezone.utc):
         issues.append("kickoff_in_future_for_result")
