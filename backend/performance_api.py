@@ -191,8 +191,12 @@ async def record_journal_entry(
             if payload.closing_odds:
                 entry.closing_odds = payload.closing_odds
     if entry.clv_odds is None and entry.closing_odds and entry.odds_at_pick:
-        entry.clv_odds = clv_odds_space(entry.odds_at_pick, entry.closing_odds)
-        entry.clv_prob = clv_probability_space(entry.odds_at_pick, entry.closing_odds)
+        try:
+            entry.clv_odds = clv_odds_space(entry.odds_at_pick, entry.closing_odds)
+            entry.clv_prob = clv_probability_space(entry.odds_at_pick, entry.closing_odds)
+        except ValueError:
+            entry.clv_odds = None
+            entry.clv_prob = None
     db.add(entry)
     db.commit()
     db.refresh(entry)

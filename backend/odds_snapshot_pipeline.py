@@ -12,16 +12,20 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+import logging
 
 from .db import SessionLocal
 from .models import OddsSnapshotRecord
 
 DEDUP_WINDOW_SEC = int(os.getenv("ODDS_SNAPSHOT_DEDUP_SEC", "45"))
+ODDS_COMPARISON_TOLERANCE = 1e-9
+
+logger = logging.getLogger("gfps.odds_snapshots")
 
 
 def _hash_payload(payload: Dict[str, Any]) -> str:
     try:
-        return hashlib.sha1(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+        return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
     except Exception:
         return ""
 
@@ -88,7 +92,7 @@ def _should_skip_duplicate(
     recent_ts = recent.captured_at
     if recent_ts.tzinfo is None:
         recent_ts = recent_ts.replace(tzinfo=timezone.utc)
-    if abs(recent.odds_decimal - entry["odds_decimal"]) > 1e-9:
+    if abs(recent.odds_decimal - entry["odds_decimal"]) > ODDS_COMPARISON_TOLERANCE:
         return False
     delta = abs((captured_at - recent_ts).total_seconds())
     return delta <= DEDUP_WINDOW_SEC
@@ -211,7 +215,7 @@ async def odds_snapshot_scheduler(
                 record_odds_snapshots(odds_rows, provider_id=provider_id)
             interval = _compute_snapshot_interval(fixtures, datetime.now(timezone.utc))
         except Exception as exc:  # pragma: no cover - observability only
-            print(f"[odds_snapshot_scheduler] failed: {exc}")
+            logger.exception("odds_snapshot_scheduler failed: %s", exc)
             interval = 600
         await asyncio.sleep(interval)
 

@@ -1,7 +1,7 @@
 # Closing Line Value (CLV)
 
 ## Definitions
-- **Closing odds**: last pre‑kickoff price for a selection (`closing_odds(match_id, market_id, selection, kickoff)`).
+- **Closing odds**: last pre‑kickoff price for a selection (`closing_odds(match_id, market_id, selection_id, kickoff)`).
 - **CLV (odds space)**: `(odds_at_pick / closing_odds) - 1`
 - **CLV (probability space)**: `(1 / closing_odds) - (1 / odds_at_pick)`
 - **Beat closing**: `odds_at_pick > closing_odds` (better price than close).
