@@ -1,5 +1,6 @@
 **G.F.P.S – Global Football Probability System** is a production-grade football probability and analytics platform.
 It blends Poisson/Dixon-Coles modelling, market odds normalization, EV detection, and a modern desktop client to explain match outcomes with transparent math.
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/99907e89-7991-41a5-be85-9ffe1ff5313c" />
 
 ---
 
