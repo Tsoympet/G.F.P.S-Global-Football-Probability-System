@@ -16,3 +16,9 @@ This roadmap summarizes what is implemented today and outlines optional future e
 - Add model artifact storage and activation history with rollback support.
 - Expand market coverage (player props, Asian lines) with dedicated probability calculators.
 - Extend observability with dashboards/alerts for data freshness and model performance.
+
+## Competitive research (Jan 2026)
+- [Polymarket-live-odds-trading](https://github.com/pietrobogani/Polymarket-live-odds-trading): In-play Poisson/Skellam trading bot; consider a pluggable exchange/execution adapter and latency-aware in-play model updates.
+- [Football-Match-Prediction-App](https://github.com/richway-cmd/Football-Match-Prediction-App): Blends ML with odds-derived features; explore an ensemble head alongside Poisson/Dixon-Coles plus Skellam scoreline calibration.
+- [football-analytics-dashboard](https://github.com/itzmore-mph/football-analytics-dashboard) and [expected-goals](https://github.com/ChloeGobe/expected-goals): xG modeling with interactive dashboards; add an xG pipeline and lightweight dashboard widgets (shot maps, pass networks) to complement EV outputs.
+- [GoalGuru_V1](https://github.com/spectrumkil01-oss/GoalGuru_V1) and [football-odds](https://github.com/tocular/football-odds): Dixon-Coles with value-bet surfacing and GBM ensembles; consider value-scanner presets plus an optional boosting ensemble for calibration.
