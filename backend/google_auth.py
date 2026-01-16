@@ -1,6 +1,8 @@
 import os
 import secrets
 import datetime
+import hashlib
+import hmac
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -67,6 +69,18 @@ def verify_totp(secret: str, code: str) -> bool:
         return totp.verify(code, valid_window=1)
     except Exception:
         return False
+
+
+def _hash_reset_token(token: str) -> str:
+    """Hash reset token so we never persist raw secrets."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _tokens_match(token_from_request: str, stored_token: Optional[str]) -> bool:
+    if not stored_token:
+        return False
+    hashed = _hash_reset_token(token_from_request)
+    return hmac.compare_digest(hashed, stored_token) or hmac.compare_digest(token_from_request, stored_token)
 
 
 async def send_email(to_email: str, subject: str, body: str):
@@ -277,7 +291,7 @@ async def request_reset(p: ResetRequest, db: Session = Depends(get_db)):
     token = secrets.token_urlsafe(32)
     exp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)
 
-    u.reset_token = token
+    u.reset_token = _hash_reset_token(token)
     u.reset_token_exp = exp
     db.add(u)
     db.commit()
@@ -300,8 +314,16 @@ async def request_reset(p: ResetRequest, db: Session = Depends(get_db)):
 @router.post("/confirm-reset")
 def confirm_reset(p: ResetConfirm, db: Session = Depends(get_db)):
     now = datetime.datetime.now(datetime.timezone.utc)
-    u = db.scalar(select(User).where(User.reset_token == p.token))
-    if not u or not u.reset_token_exp or u.reset_token_exp < now:
+    u = db.scalar(
+        select(User).where(
+            # support both hashed (new) and legacy plaintext tokens to avoid breaking pending resets
+            (User.reset_token == _hash_reset_token(p.token)) | (User.reset_token == p.token)
+        )
+    )
+    exp = u.reset_token_exp if u else None
+    if exp and exp.tzinfo is None:
+        exp = exp.replace(tzinfo=datetime.timezone.utc)
+    if not u or not exp or exp < now or not _tokens_match(p.token, u.reset_token):
         raise HTTPException(400, "Invalid or expired reset token")
 
     u.password_hash = hash_password(p.new_password)
