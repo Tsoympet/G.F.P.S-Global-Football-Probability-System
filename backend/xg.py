@@ -53,18 +53,15 @@ def compute_xg_summary(snapshot: Dict, fixture_id: Optional[str] = None) -> List
             team = _team_for_event(ev) or ""
             minute = ev.get("minute") or ev.get("time") or ev.get("clock")
 
-            if home.lower() in team.lower():
+            is_shot_like = val > 0
+            if home.lower() in team.lower() and is_shot_like:
                 home_xg += val
                 home_shots += 1
-            elif away.lower() in team.lower():
+            elif away.lower() in team.lower() and is_shot_like:
                 away_xg += val
                 away_shots += 1
-            elif val > 0:
-                # unknown team, split evenly
-                home_xg += val * 0.5
-                away_xg += val * 0.5
 
-            if val > 0:
+            if is_shot_like:
                 timeline.append(
                     {
                         "minute": minute,

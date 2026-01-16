@@ -40,6 +40,7 @@ class LiveState:
         ]
         self.events: Dict[str, List[Dict[str, Any]]] = {}
         self.odds: List[Dict[str, Any]] = []
+        self._odds_index: Dict[str, int] = {}
         self.market_lines: Dict[str, List[Dict[str, Any]]] = {}
         self.event_feed: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
         self._subscribers: List[asyncio.Queue] = []
@@ -83,6 +84,9 @@ class LiveState:
 
     async def set_odds(self, odds: List[Dict[str, Any]]) -> None:
         self.odds = deepcopy(odds)
+        self._odds_index = {
+            str(row.get("fixtureId") or row.get("fixture_id") or ""): idx for idx, row in enumerate(self.odds)
+        }
         await self.broadcast({"type": "odds", **self.snapshot()})
         await self._persist_snapshot("odds_update")
 
@@ -93,17 +97,14 @@ class LiveState:
         fixture_id = str(odds_delta.get("fixtureId") or odds_delta.get("fixture_id") or "")
         if not fixture_id:
             return
-        updated = False
-        for row in self.odds:
-            current_id = str(row.get("fixtureId") or row.get("fixture_id") or "")
-            if current_id == fixture_id:
-                row.update(odds_delta)
-                updated = True
-                break
-        if not updated:
+        idx = self._odds_index.get(fixture_id)
+        if idx is not None and 0 <= idx < len(self.odds):
+            self.odds[idx].update(odds_delta)
+        else:
             payload = {"fixtureId": fixture_id}
             payload.update(odds_delta)
             self.odds.append(payload)
+            self._odds_index[fixture_id] = len(self.odds) - 1
         await self.broadcast({"type": "odds_delta", "fixtureId": fixture_id, **self.snapshot()})
         await self._persist_snapshot("odds_delta")
 

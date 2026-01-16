@@ -38,7 +38,10 @@ class BoostingCalibrationHead:
             for k, v in residuals.items():
                 updates[k] = updates.get(k, 0.0) + v
 
-        adjusted = {k: max(probs.get(k, 0.0) + self.learning_rate * updates.get(k, 0.0), 0.0) for k in probs}
+        adjusted = {}
+        for key, base_prob in probs.items():
+            adjusted_val = base_prob + self.learning_rate * updates.get(key, 0.0)
+            adjusted[key] = max(adjusted_val, 0.0)
         return normalize_probabilities(adjusted)
 
 

@@ -63,7 +63,7 @@ class PredictionEngine:
         self.ml_model = ml_model
         self.calibrator = calibrator or TemperatureScaler(temperature=1.0)
         self.stacking_model = stacking_model
-        self.boosting_head = boosting_head if boosting_head is not None else load_boosting_head()
+        self.boosting_head = boosting_head or load_boosting_head()
 
     def market_probabilities(self, odds: Dict[str, float]) -> Dict[str, float]:
         if not odds:
