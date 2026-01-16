@@ -32,4 +32,4 @@ def test_run_training_handles_empty_data(monkeypatch, tmp_path):
         updated = db.get(models.TrainingRun, run_id)
         assert updated.status == "failed"
         assert updated.completed_at is not None
-        assert updated.metrics.get("error") == "No completed fixtures with odds available"
+        assert updated.metrics and updated.metrics.get("error") == "No completed fixtures with odds available"
