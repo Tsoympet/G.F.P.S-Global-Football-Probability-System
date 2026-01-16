@@ -55,6 +55,7 @@ jobs:
           CHANNEL_TITLE=$(printf '%s\n' "$RELEASE_CHANNEL" | sed 's/^./\U&/')
           TAG_PATTERN='^v[0-9]+\.[0-9]+\.[0-9]+$'
           CURRENT_TAG="${GITHUB_REF_NAME}"
+          FALLBACK_COMMIT_COUNT=20
           if [ "$RELEASE_CHANNEL" = "beta" ]; then
             TAG_PATTERN='^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$'
           fi
@@ -63,7 +64,7 @@ jobs:
           if [ -n "$PREVIOUS_TAG" ]; then
             CHANGELOG=$(git log --pretty='- %s' "${PREVIOUS_TAG}..HEAD")
           else
-            CHANGELOG=$(git log --pretty='- %s' -n 20)
+            CHANGELOG=$(git log --pretty='- %s' -n "$FALLBACK_COMMIT_COUNT")
           fi
 
           if [ -z "$CHANGELOG" ]; then
