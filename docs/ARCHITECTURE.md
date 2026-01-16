@@ -117,3 +117,19 @@ GFPS is designed to be:
 - **Modular** – each domain (alerts, coupons, stats) is separate
 - **Scalable** – multiple backend instances behind nginx & load balancers
 - **Extendable** – add new markets, sports, prediction models
+
+---
+
+## Ingestion & Probability Pipeline
+
+```mermaid
+flowchart TD
+    A[Providers\nOpenFootball CSV\nAPI-key stubs] --> B[Normalization\nteam/league aliases\nUTC time]
+    B --> C[Quality Layer\nschema validation\nanomaly checks\nconfidence + dedup]
+    C --> D[Storage\nfixtures/results/events\nlineups\nfeatures]
+    D --> E[Feature Builder\nxG proxies\nform/rest\nPoisson lambdas]
+    E --> F[Prediction/EV engines]
+    D <-->|TTL cache + LKG| C
+    G[Scheduler\ncron/async loops] --> A
+    G --> E
+```

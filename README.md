@@ -70,6 +70,16 @@ GFPS provides probabilistic analytics, not guarantees. Football outcomes remain 
 - Swap or add data providers (API-Football, custom feeds).
 - Extend markets (totals, handicaps, props) and EV filters.
 - Add new model components (Elo, xG, ML ensembles).
+
+### Data ingestion pipeline
+
+Run the runnable commands from the repository root:
+
+```bash
+python -m backend.pipeline_cli ingest_fixtures   # pull + normalize fixtures/results
+python -m backend.pipeline_cli ingest_live       # optional live plug-ins (only if allowed)
+python -m backend.pipeline_cli build_features    # build bookmaker-style features
+```
 - Scale out the pipeline with additional workers and storage backends.
 
 ---
