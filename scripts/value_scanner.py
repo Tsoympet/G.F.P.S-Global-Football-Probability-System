@@ -10,7 +10,7 @@ EV = odds * prob - 1
 """
 
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 
 from backend.db import SessionLocal
@@ -138,7 +138,7 @@ def store_value_bets(bets: List[Dict[str, Any]], ttl_hours: int = 24):
     db = SessionLocal()
     try:
         # καθάρισμα παλιών > ttl_hours
-        cutoff = datetime.utcnow() - timedelta(hours=ttl_hours)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=ttl_hours)
         deleted = (
             db.query(ValuePick)
             .filter(ValuePick.created_at < cutoff)

@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import asyncio
 from copy import deepcopy
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-_SEED_START = datetime.utcnow().replace(microsecond=0)
+_SEED_START = datetime.now(timezone.utc).replace(microsecond=0)
 
 
 class LiveState:
@@ -25,7 +25,7 @@ class LiveState:
                 "leagueId": "39",
                 "homeTeam": "Northbridge FC",
                 "awayTeam": "Harbor United",
-                "startTime": (_SEED_START + timedelta(hours=1)).isoformat() + "Z",
+                "startTime": (_SEED_START + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "status": "scheduled",
             },
             {
@@ -34,7 +34,7 @@ class LiveState:
                 "leagueId": "140",
                 "homeTeam": "Valencia Norte",
                 "awayTeam": "Costa Azul",
-                "startTime": (_SEED_START + timedelta(hours=2)).isoformat() + "Z",
+                "startTime": (_SEED_START + timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "status": "scheduled",
             },
         ]

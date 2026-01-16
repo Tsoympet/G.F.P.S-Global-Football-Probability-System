@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from fastapi import APIRouter
@@ -9,7 +9,7 @@ from .db import engine
 router = APIRouter(prefix="/health", tags=["health"])
 
 
-START_TIME = datetime.utcnow()
+START_TIME = datetime.now(timezone.utc)
 
 
 def _check_database() -> Dict[str, Any]:
@@ -28,7 +28,7 @@ async def health() -> Dict[str, Any]:
 
     return {
         "ok": ok,
-        "uptime_sec": (datetime.utcnow() - START_TIME).total_seconds(),
+        "uptime_sec": (datetime.now(timezone.utc) - START_TIME).total_seconds(),
         "services": {
             "api": {"status": "ok"},
             "database": db_status,
