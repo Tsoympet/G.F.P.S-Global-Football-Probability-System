@@ -133,6 +133,8 @@ cmake --build build --target install_backend_deps
 cmake --build build --target run_backend_tests
 ```
 
+The `install_backend_deps` target installs into your active Python environment; run these commands inside a virtualenv if you want to avoid mutating system packages.
+
 ---
 
 ## 🐳 Run with Docker Compose

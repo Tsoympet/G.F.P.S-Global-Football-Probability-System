@@ -17,6 +17,7 @@ add_custom_target(run_backend_tests
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   COMMENT "Run backend pytest suite (requires deps preinstalled)"
 )
+add_dependencies(run_backend_tests install_backend_deps)
 
 enable_testing()
 add_test(
