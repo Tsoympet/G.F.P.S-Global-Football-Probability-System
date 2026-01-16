@@ -84,7 +84,8 @@ export const api = {
   models: () => get<ModelInfo[]>('/ml/models'),
   activateModel: (version: string) => post<{ message: string }>(`/ml/activate/${version}`),
   pipelineStatus: () => get<PipelineStatus>('/pipeline/status'),
-  health: () => get<{ ok: boolean; uptime_sec: number; services: Record<string, { status: string }> }>('/health')
+  health: () => get<{ ok: boolean; uptime_sec: number; services: Record<string, { status: string }> }>('/health'),
+  analyzeBetSlip: (request: any) => post<any>('/analysis/betslip', request)
 };
 
 export const websocketUrl = () => {

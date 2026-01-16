@@ -5,6 +5,7 @@ import { DataTable } from '@components/DataTable';
 import { palette } from '@theme/palette';
 import { Fixture, PipelineStatus, Prediction, ValueBet } from '@api/types';
 import { useSettingsStore } from '@store/settings';
+import { useBetSlipStore } from '@store/betslip';
 import { useEffect, useState } from 'react';
 import { ProbabilityEvolutionChart } from '@charts/ProbabilityEvolutionChart';
 
@@ -13,6 +14,7 @@ const PERCENTAGE_PRECISION = 2;
 
 export const Dashboard = () => {
   const { refreshIntervalMs, evThreshold } = useSettingsStore();
+  const { addSelection, toggleOpen } = useBetSlipStore();
   const fixtures = useQuery(api.fixtures, { pollMs: refreshIntervalMs, cacheKey: 'fixtures' });
   const valueBets = useQuery(() => api.valueBets(evThreshold), {
     pollMs: refreshIntervalMs,
@@ -87,6 +89,23 @@ export const Dashboard = () => {
         awayTeam: p.awayTeam ?? 'Away',
         xg: `${(p.expectedGoalsHome ?? 0).toFixed(2)} - ${(p.expectedGoalsAway ?? 0).toFixed(2)}`
       })) || [];
+
+  const handleAddToBetSlip = (row: ValueBet) => {
+    const [homeTeam, awayTeam] = row.match.split(' vs ');
+    
+    addSelection({
+      clientSelectionKey: `dash-${row.market}-${row.match}-${Date.now()}`,
+      homeTeam: homeTeam || 'Home',
+      awayTeam: awayTeam || 'Away',
+      league: 'Unknown',
+      marketType: row.market.includes('Winner') ? '1x2' : 'other',
+      marketName: row.market,
+      outcome: row.market.split(' - ').pop() || '',
+      oddsBookmaker: row.odds,
+      modelProbability: row.modelProbability,
+    });
+    toggleOpen();
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -247,6 +266,27 @@ export const Dashboard = () => {
               header: 'EV%',
               key: 'expectedValue',
               render: (row) => `${(row.expectedValue * 100).toFixed(1)}%`
+            },
+            {
+              header: 'Action',
+              key: 'action',
+              render: (row) => (
+                <button
+                  onClick={() => handleAddToBetSlip(row)}
+                  style={{
+                    background: palette.primary,
+                    color: palette.textPrimary,
+                    border: 'none',
+                    padding: '4px 8px',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  + Add
+                </button>
+              )
             }
           ]}
           data={valueBets.data ?? []}

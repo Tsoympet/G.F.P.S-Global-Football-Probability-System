@@ -4,11 +4,13 @@ import { useQuery } from '@hooks/useQuery';
 import { palette } from '@theme/palette';
 import { ValueBet } from '@api/types';
 import { useSettingsStore } from '@store/settings';
+import { useBetSlipStore } from '@store/betslip';
 import { useMemo, useState } from 'react';
 import { escapeCsvField } from '@app/csv';
 
 export const ValueBets = () => {
   const { evThreshold, setEvThreshold, refreshIntervalMs } = useSettingsStore();
+  const { addSelection, toggleOpen } = useBetSlipStore();
   const valueBets = useQuery(() => api.valueBets(evThreshold), {
     pollMs: refreshIntervalMs,
     deps: [evThreshold],
@@ -86,6 +88,27 @@ export const ValueBets = () => {
     link.download = 'gfps-value-bets.csv';
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleAddToBetSlip = (row: ValueBet) => {
+    const fixture = fixtureLookup[row.match];
+    const [homeTeam, awayTeam] = row.match.split(' vs ');
+    
+    addSelection({
+      clientSelectionKey: `vb-${row.market}-${row.match}-${Date.now()}`,
+      fixtureId: fixture?.fixtureId,
+      homeTeam: homeTeam || 'Home',
+      awayTeam: awayTeam || 'Away',
+      league: row.league || 'Unknown',
+      leagueId: row.league,
+      startTime: fixture?.startTime,
+      marketType: row.market.includes('Winner') ? '1x2' : 'other',
+      marketName: row.market,
+      outcome: row.market.split(' - ').pop() || '',
+      oddsBookmaker: row.odds,
+      modelProbability: row.modelProbability,
+    });
+    toggleOpen();
   };
 
   return (
@@ -233,7 +256,28 @@ export const ValueBets = () => {
             key: 'startTime',
             render: (row) => (row.startTime ? new Date(row.startTime).toLocaleString() : 'n/a')
           },
-          { header: 'League', key: 'league', render: (row) => row.league || 'n/a' }
+          { header: 'League', key: 'league', render: (row) => row.league || 'n/a' },
+          {
+            header: 'Action',
+            key: 'action',
+            render: (row) => (
+              <button
+                onClick={() => handleAddToBetSlip(row)}
+                style={{
+                  background: palette.primary,
+                  color: palette.textPrimary,
+                  border: 'none',
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                + Add to Bet Slip
+              </button>
+            )
+          }
         ]}
         data={sorted}
       />
