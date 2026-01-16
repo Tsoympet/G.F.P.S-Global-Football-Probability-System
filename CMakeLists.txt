@@ -6,16 +6,21 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 set(GFPS_BACKEND_DIR "${CMAKE_SOURCE_DIR}/backend")
 set(GFPS_BACKEND_TEST_DIR "${GFPS_BACKEND_DIR}/tests")
 
-add_custom_target(run_backend_tests
+add_custom_target(install_backend_deps
   COMMAND ${Python3_EXECUTABLE} -m pip install -r "${GFPS_BACKEND_DIR}/requirements.txt"
   COMMAND ${Python3_EXECUTABLE} -m pip install --upgrade pytest
+  COMMENT "Install backend dependencies (mutates user Python environment)"
+)
+
+add_custom_target(run_backend_tests
   COMMAND ${Python3_EXECUTABLE} -m pytest "${GFPS_BACKEND_TEST_DIR}"
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-  COMMENT "Install backend dependencies and run pytest"
+  COMMENT "Run backend pytest suite (requires deps preinstalled)"
 )
 
 enable_testing()
 add_test(
   NAME backend_pytest
-  COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}" --target run_backend_tests
+  COMMAND ${Python3_EXECUTABLE} -m pytest "${GFPS_BACKEND_TEST_DIR}"
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )

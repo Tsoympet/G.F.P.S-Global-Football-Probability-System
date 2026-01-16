@@ -129,6 +129,7 @@ If you prefer a simple CMake entry point for automation, the root `CMakeLists.tx
 
 ```bash
 cmake -S . -B build
+cmake --build build --target install_backend_deps
 cmake --build build --target run_backend_tests
 ```
 
@@ -140,7 +141,7 @@ If you prefer containers, the `infrastructure/docker-compose.yml` file will star
 
 ```bash
 cp .env.example .env
-  docker compose -f infrastructure/docker-compose.yml up --build
+docker compose -f infrastructure/docker-compose.yml up --build
 ```
 
 The backend will listen on port `8000` (or via Nginx on `80` if you keep that service enabled). Update `DATABASE_URL` or streamer flags in `.env` as needed.
