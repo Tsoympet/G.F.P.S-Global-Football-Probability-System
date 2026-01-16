@@ -70,4 +70,4 @@ Your code must not be.
 
 Build systems that respect mathematics,
 engineering discipline,
-and statistical hones
+and statistical honesty
