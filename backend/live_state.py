@@ -105,7 +105,13 @@ class LiveState:
             payload.update(odds_delta)
             self.odds.append(payload)
             self._odds_index[fixture_id] = len(self.odds) - 1
-        await self.broadcast({"type": "odds_delta", "fixtureId": fixture_id, **self.snapshot()})
+        snapshot_odds = None
+        if fixture_id in self._odds_index:
+            snapshot_odds = deepcopy(self.odds[self._odds_index[fixture_id]])
+        payload = {"type": "odds_delta", "fixtureId": fixture_id}
+        if snapshot_odds is not None:
+            payload["odds"] = snapshot_odds
+        await self.broadcast(payload)
         await self._persist_snapshot("odds_delta")
 
     async def set_markets(self, markets: Dict[str, List[Dict[str, Any]]]) -> None:

@@ -49,6 +49,9 @@ def load_boosting_head() -> Optional[BoostingCalibrationHead]:
     enabled = os.getenv("BOOSTING_HEAD_ENABLED", "false").lower() in {"1", "true", "yes"}
     if not enabled:
         return None
-    lr = float(os.getenv("BOOSTING_HEAD_LR", "0.05"))
+    try:
+        lr = float(os.getenv("BOOSTING_HEAD_LR", "0.05"))
+    except ValueError:
+        lr = 0.05
     offsets = _parse_offsets(os.getenv("BOOSTING_HEAD_OFFSETS", "home:0.02,draw:0.0,away:-0.02"))
     return BoostingCalibrationHead(learning_rate=lr, offsets=offsets)

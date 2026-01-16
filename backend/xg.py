@@ -54,10 +54,10 @@ def compute_xg_summary(snapshot: Dict, fixture_id: Optional[str] = None) -> List
             minute = ev.get("minute") or ev.get("time") or ev.get("clock")
 
             is_shot_like = val > 0
-            if home.lower() in team.lower() and is_shot_like:
+            if team and team.lower() == home.lower() and is_shot_like:
                 home_xg += val
                 home_shots += 1
-            elif away.lower() in team.lower() and is_shot_like:
+            elif team and team.lower() == away.lower() and is_shot_like:
                 away_xg += val
                 away_shots += 1
 
