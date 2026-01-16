@@ -105,9 +105,8 @@ class LiveState:
             payload.update(odds_delta)
             self.odds.append(payload)
             self._odds_index[fixture_id] = len(self.odds) - 1
-        snapshot_odds = None
-        if fixture_id in self._odds_index:
-            snapshot_odds = deepcopy(self.odds[self._odds_index[fixture_id]])
+            idx = self._odds_index[fixture_id]
+        snapshot_odds = deepcopy(self.odds[idx]) if idx is not None and 0 <= idx < len(self.odds) else None
         payload = {"type": "odds_delta", "fixtureId": fixture_id}
         if snapshot_odds is not None:
             payload["odds"] = snapshot_odds

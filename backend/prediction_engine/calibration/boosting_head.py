@@ -5,6 +5,9 @@ from typing import Dict, Optional
 
 from backend.market.implied_probability import normalize_probabilities
 
+DEFAULT_BOOSTING_LR = 0.05
+DEFAULT_OFFSETS = {"home": 0.02, "draw": 0.0, "away": -0.02}
+
 
 def _parse_offsets(raw: str) -> Dict[str, float]:
     offsets: Dict[str, float] = {}
@@ -50,8 +53,13 @@ def load_boosting_head() -> Optional[BoostingCalibrationHead]:
     if not enabled:
         return None
     try:
-        lr = float(os.getenv("BOOSTING_HEAD_LR", "0.05"))
+        lr = float(os.getenv("BOOSTING_HEAD_LR", str(DEFAULT_BOOSTING_LR)))
     except ValueError:
-        lr = 0.05
-    offsets = _parse_offsets(os.getenv("BOOSTING_HEAD_OFFSETS", "home:0.02,draw:0.0,away:-0.02"))
+        lr = DEFAULT_BOOSTING_LR
+    offsets = _parse_offsets(
+        os.getenv(
+            "BOOSTING_HEAD_OFFSETS",
+            ",".join(f"{k}:{v}" for k, v in DEFAULT_OFFSETS.items()),
+        )
+    )
     return BoostingCalibrationHead(learning_rate=lr, offsets=offsets)

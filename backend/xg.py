@@ -3,6 +3,11 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 
+PENALTY_XG = 0.75
+HEADER_XG = 0.08
+SHOT_XG = 0.12
+
+
 def _event_xg(event: Dict) -> float:
     val = event.get("xg")
     try:
@@ -12,11 +17,11 @@ def _event_xg(event: Dict) -> float:
         pass
     desc = (event.get("description") or event.get("type") or "").lower()
     if "penalty" in desc:
-        return 0.75
+        return PENALTY_XG
     if "header" in desc:
-        return 0.08
+        return HEADER_XG
     if "shot" in desc or "goal" in desc:
-        return 0.12
+        return SHOT_XG
     return 0.0
 
 
@@ -40,6 +45,8 @@ def compute_xg_summary(snapshot: Dict, fixture_id: Optional[str] = None) -> List
 
         home = fx.get("homeTeam") or "Home"
         away = fx.get("awayTeam") or "Away"
+        home_l = home.lower()
+        away_l = away.lower()
 
         rows = events.get(fid, []) or []
         home_xg = 0.0
@@ -54,10 +61,10 @@ def compute_xg_summary(snapshot: Dict, fixture_id: Optional[str] = None) -> List
             minute = ev.get("minute") or ev.get("time") or ev.get("clock")
 
             is_shot_like = val > 0
-            if team and team.lower() == home.lower() and is_shot_like:
+            if team and team.lower() == home_l and is_shot_like:
                 home_xg += val
                 home_shots += 1
-            elif team and team.lower() == away.lower() and is_shot_like:
+            elif team and team.lower() == away_l and is_shot_like:
                 away_xg += val
                 away_shots += 1
 
