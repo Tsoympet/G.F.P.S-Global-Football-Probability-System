@@ -2,7 +2,19 @@ import { useAuthStore } from '@store/auth';
 import { useSettingsStore } from '@store/settings';
 import { loadCached, saveCached } from '@app/cache';
 import { isOffline } from '@app/network';
-import { Fixture, LiveOddsPayload, ModelInfo, PipelineStatus, Prediction, ValueBet } from './types';
+import {
+  BacktestMetrics,
+  BacktestRun,
+  BacktestRequestPayload,
+  BetJournalEntry,
+  Fixture,
+  LiveOddsPayload,
+  ModelInfo,
+  PerformanceKpis,
+  PipelineStatus,
+  Prediction,
+  ValueBet,
+} from './types';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 const UNKNOWN_HOME = 'Home';
@@ -85,7 +97,15 @@ export const api = {
   activateModel: (version: string) => post<{ message: string }>(`/ml/activate/${version}`),
   pipelineStatus: () => get<PipelineStatus>('/pipeline/status'),
   health: () => get<{ ok: boolean; uptime_sec: number; services: Record<string, { status: string }> }>('/health'),
-  analyzeBetSlip: (request: any) => post<any>('/analysis/betslip', request)
+  analyzeBetSlip: (request: any) => post<any>('/analysis/betslip', request),
+  performanceKpis: () => get<PerformanceKpis>('/performance/kpis', 'performance-kpis'),
+  betJournal: () => get<BetJournalEntry[]>('/performance/journal', 'bet-journal'),
+  recordBetJournal: (payload: Partial<BetJournalEntry>) => post<{ id: number; status: string }>('/performance/journal', payload),
+  reconcileJournal: () => post<{ settled: number; pending: number }>('/performance/reconcile'),
+  runBacktest: (payload: BacktestRequestPayload) =>
+    post<{ runId: number; status: string; metrics: BacktestMetrics }>('/performance/backtests', payload),
+  backtests: () => get<BacktestRun[]>('/performance/backtests'),
+  backtest: (runId: number) => get<BacktestRun>(`/performance/backtests/${runId}`),
 };
 
 export const websocketUrl = () => {

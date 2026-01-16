@@ -7,6 +7,8 @@ import { Dashboard } from '@screens/Dashboard';
 import { LiveMatchCenter } from '@screens/LiveMatchCenter';
 import { ValueBets } from '@screens/ValueBets';
 import { ModelsTraining } from '@screens/ModelsTraining';
+import { Performance } from '@screens/Performance';
+import { BacktestWorkbench } from '@screens/BacktestWorkbench';
 import { Settings } from '@screens/Settings';
 import { palette } from '@theme/palette';
 import { useSettingsStore } from '@store/settings';
@@ -56,6 +58,8 @@ export const App = () => {
           {section === 'Live Match Center' && <LiveMatchCenter />}
           {section === 'Value Bets (EV+)' && <ValueBets />}
           {section === 'Models & Training' && <ModelsTraining />}
+          {section === 'Performance' && <Performance />}
+          {section === 'Backtest' && <BacktestWorkbench />}
           {section === 'Settings' && <Settings />}
         </main>
       </div>

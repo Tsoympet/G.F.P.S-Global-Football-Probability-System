@@ -15,6 +15,10 @@ from sqlalchemy.sql import func
 from .db import Base
 
 
+def _empty_fixture_list() -> list[str]:
+    return []
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -198,6 +202,63 @@ class LiveSnapshotRecord(Base):
 
     predictions: Mapped[list["PredictionSnapshotRecord"]] = relationship(back_populates="snapshot")
     value_bets: Mapped[list["ValueBetSnapshotRecord"]] = relationship(back_populates="snapshot")
+
+
+class BetJournalEntry(Base):
+    __tablename__ = "bet_journal_entries"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    settled_at: Mapped[Optional[DateTime]] = mapped_column(DateTime, default=None)
+
+    fixture_ids: Mapped[list[str]] = mapped_column(JSON, default=_empty_fixture_list)
+    league: Mapped[str] = mapped_column(String(128), default="")
+    league_id: Mapped[str] = mapped_column(String(64), default="")
+    home_team: Mapped[str] = mapped_column(String(128), default="")
+    away_team: Mapped[str] = mapped_column(String(128), default="")
+
+    market: Mapped[str] = mapped_column(String(128))
+    line: Mapped[Optional[float]] = mapped_column(Float, default=None)
+    side: Mapped[str] = mapped_column(String(64))
+
+    model_probability: Mapped[float] = mapped_column(Float)
+    fair_odds: Mapped[Optional[float]] = mapped_column(Float, default=None)
+    bookmaker_odds: Mapped[Optional[float]] = mapped_column(Float, default=None)
+    closing_odds: Mapped[Optional[float]] = mapped_column(Float, default=None)
+    ev: Mapped[float] = mapped_column(Float, default=0.0)
+    correlation_risk: Mapped[float] = mapped_column(Float, default=0.0)
+    confidence: Mapped[float] = mapped_column(Float, default=0.0)
+    stake: Mapped[float] = mapped_column(Float, default=1.0)
+    stake_rule: Mapped[Optional[str]] = mapped_column(String(64), default=None)
+
+    status: Mapped[str] = mapped_column(String(32), default="pending")  # pending / settled
+    result: Mapped[Optional[str]] = mapped_column(String(32), default=None)  # win / loss / void / push / pending
+    realized_roi: Mapped[Optional[float]] = mapped_column(Float, default=None)
+
+    meta: Mapped[Optional[dict]] = mapped_column(JSON, default=None)
+
+    user: Mapped[Optional["User"]] = relationship()
+
+
+class BacktestRun(Base):
+    __tablename__ = "backtest_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+    label: Mapped[str] = mapped_column(String(128), default="workspace")
+
+    status: Mapped[str] = mapped_column(String(32), default="pending")
+    params: Mapped[dict] = mapped_column(JSON)
+    metrics: Mapped[Optional[dict]] = mapped_column(JSON, default=None)
+    warnings: Mapped[Optional[list[str]]] = mapped_column(JSON, default=None)
+    seed: Mapped[int] = mapped_column(Integer, default=0)
+
+    started_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    completed_at: Mapped[Optional[DateTime]] = mapped_column(DateTime, default=None)
+
+    user: Mapped[Optional["User"]] = relationship()
 
 
 class ExecutionOrder(Base):

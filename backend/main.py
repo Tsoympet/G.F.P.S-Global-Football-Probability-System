@@ -34,6 +34,7 @@ from .ml_api import router as ml_router
 from .replay_api import router as replay_router
 from .predictions_api import router as predictions_router
 from .pipeline_api import router as pipeline_router
+from .performance_api import router as performance_router
 from .snapshot_service import backfill_seed_if_empty, start_snapshot_scheduler
 from .stats_api import router as stats_router
 from .streamer import start_streamer_background
@@ -170,6 +171,7 @@ app.include_router(pipeline_router)
 app.include_router(replay_router)
 app.include_router(observability_router)
 app.include_router(xg_router)
+app.include_router(performance_router)
 
 
 # -------------------------------------------------------------------
