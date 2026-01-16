@@ -123,6 +123,21 @@ The desktop client expects the backend at `http://localhost:8000` by default; ad
 
 ---
 
+### 🛠️ CMake helper
+
+If you prefer a simple CMake entry point for automation, the root `CMakeLists.txt` wires Python dependencies and tests:
+
+```bash
+cmake -S . -B build
+cmake --build build --target install_backend_deps
+cmake --build build --target run_backend_tests
+```
+
+The `install_backend_deps` target installs into your active Python environment; run these commands inside a virtualenv if you want to avoid mutating system packages.
+It pulls from `backend/requirements-dev.txt` (which includes pytest). If you've already prepared an environment, configure with `-DGFPS_SKIP_PIP_INSTALL=ON` to skip the install step when running tests.
+
+---
+
 ## 🐳 Run with Docker Compose
 
 If you prefer containers, the `infrastructure/docker-compose.yml` file will start Postgres, the FastAPI backend, and optional observability tools:
@@ -133,6 +148,17 @@ docker compose -f infrastructure/docker-compose.yml up --build
 ```
 
 The backend will listen on port `8000` (or via Nginx on `80` if you keep that service enabled). Update `DATABASE_URL` or streamer flags in `.env` as needed.
+
+### Standalone Docker image
+
+For a single-container backend build, a top-level `Dockerfile` is available:
+
+```bash
+docker build -t gfps-backend .
+docker run --rm -p 8000:8000 --env-file .env gfps-backend
+```
+
+It mirrors the compose backend image and runs `uvicorn main:app` on port `8000`.
 
 ---
 

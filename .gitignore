@@ -8,6 +8,7 @@ dist/
 __pycache__/
 *.pyc
 *.db
+build/
 
 # Tauri / Rust targets
 GFPS/desktop/src-tauri/target/
