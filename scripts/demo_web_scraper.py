@@ -9,7 +9,6 @@ This script demonstrates:
 4. Integration with the data ingestion pipeline
 """
 
-from pathlib import Path
 from backend.data_providers import WebScraperProvider
 
 

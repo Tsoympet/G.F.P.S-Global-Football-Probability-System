@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -117,7 +118,6 @@ class WebScraperProvider(Provider):
     def _get_cache_path(self, url: str) -> Path:
         """Get cache file path for a URL."""
         # Use SHA-256 for better security and collision resistance
-        import hashlib
         url_hash = hashlib.sha256(url.encode()).hexdigest()
         return self.cache_dir / f"scraper_{url_hash}.html"
 
