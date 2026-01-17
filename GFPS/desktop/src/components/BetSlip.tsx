@@ -5,7 +5,7 @@
  * NO REAL BETTING OR MONEY EXECUTION.
  */
 
-import { useBetSlipStore, BetSlipSelection } from '@store/betslip';
+import { useBetSlipStore } from '@store/betslip';
 import { api } from '@api/client';
 import { palette } from '@theme/palette';
 import { useState } from 'react';
@@ -29,7 +29,7 @@ export const BetSlip = () => {
     setAnalysisError,
   } = useBetSlipStore();
 
-  const [correlationAlpha, setCorrelationAlpha] = useState(1.0);
+  const [correlationAlpha] = useState(1.0);
 
   const handleAnalyze = async () => {
     if (selections.length === 0) {

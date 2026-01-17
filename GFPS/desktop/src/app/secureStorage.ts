@@ -23,7 +23,7 @@ const getCrypto = () => {
   }
 
   // Vitest/jsdom fallback
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { webcrypto } = require('crypto');
   return webcrypto as Crypto;
 };
