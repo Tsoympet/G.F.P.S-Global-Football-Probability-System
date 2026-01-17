@@ -21,6 +21,8 @@ jobs:
         run: python -m scripts.init_db
 
       - name: Launch backend
+        env:
+          SECRET_KEY: test-secret-key-for-smoke-tests-only
         run: |
           uvicorn backend.main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
           echo $! > backend.pid
