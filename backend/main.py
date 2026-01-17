@@ -137,9 +137,7 @@ async def startup_event() -> None:
     # Create all DB tables if they don't exist
     Base.metadata.create_all(bind=engine)
 
-    if SECRET_KEY == "change-this-secret":
-        logger.warning("SECRET_KEY is using the default value; set it in production.")
-
+    # Note: SECRET_KEY validation is enforced in auth_utils.py at import time
     # Ensure seed snapshots are persisted for offline use
     backfill_seed_if_empty()
 

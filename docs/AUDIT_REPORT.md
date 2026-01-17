@@ -1,9 +1,36 @@
 # Repository Audit Report - G.F.P.S
 
 **Date:** January 17, 2026  
+**Re-Audit Date:** January 17, 2026 (Updated)  
 **Auditor:** GitHub Copilot Coding Agent  
 **Repository:** Tsoympet/G.F.P.S-Global-Football-Probability-System  
 **Scope:** Complete codebase review covering security, architecture, testing, documentation, and deployment readiness
+
+---
+
+## Re-Audit Update (January 17, 2026)
+
+Following user-reported minor changes, a re-audit was conducted to identify new issues:
+
+### New Findings:
+
+1. **Fixed: Obsolete SECRET_KEY Check** 🔧
+   - Removed redundant default secret check in `backend/main.py` line 140
+   - The check was obsolete since `auth_utils.py` now raises ValueError on import if SECRET_KEY is missing
+   - Status: ✅ **Resolved**
+
+2. **Identified: Hardcoded Desktop Encryption Salt** ⚠️
+   - `GFPS/desktop/src/app/secureStorage.ts` line 4: `const SECRET_SALT = 'gfps-desktop-local-secret'`
+   - Risk Level: **Medium** - affects local storage encryption strength
+   - Recommendation: Consider environment-based or device-specific key derivation
+   - Status: 📋 **Documented for future improvement**
+
+3. **TypeScript Type Safety** 📊
+   - Confirmed 15+ instances of `any` types across desktop codebase
+   - Locations: `src/api/client.ts`, `src/store/*.ts`, `src/screens/*.tsx`, `src/hooks/useQuery.ts`
+   - Status: 📋 **Previously documented, no new issues**
+
+**Re-Audit Conclusion:** ✅ No critical security regressions found. Codebase remains production-ready.
 
 ---
 
