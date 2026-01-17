@@ -4,6 +4,7 @@ export const palette = {
   cardElevated: '#152238',
   textPrimary: '#e5e7eb',
   textSecondary: '#9ca3af',
+  primary: '#1f9ae5',
   accent: '#1f9ae5',
   accentAlt: '#0fd7a1',
   border: 'rgba(255,255,255,0.08)',

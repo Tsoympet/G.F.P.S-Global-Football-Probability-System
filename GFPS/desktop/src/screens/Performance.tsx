@@ -44,7 +44,7 @@ export const Performance = () => {
     setMessage('');
     try {
       await api.recordBetJournal({
-        fixture_id: form.fixture_id || 'manual',
+        fixture_ids: form.fixture_id ? [form.fixture_id] : ['manual'],
         market: form.market,
         side: form.side,
         model_probability: Number(form.model_probability),

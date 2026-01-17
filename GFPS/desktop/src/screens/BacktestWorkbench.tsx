@@ -46,6 +46,7 @@ export const BacktestWorkbench = () => {
           correlation_threshold: Number(correlation),
           stake_model: 'flat',
           base_stake: Number(stake),
+          kelly_fraction: 0.25,
           use_fair_odds_if_missing: true,
         },
       };
