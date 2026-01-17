@@ -10,6 +10,7 @@
   },
   "bundle": {
     "targets": ["msi", "dmg", "appimage"],
+    "license": "EULA.txt",
     "windows": {
       "wix": {
         "language": "en-US"
