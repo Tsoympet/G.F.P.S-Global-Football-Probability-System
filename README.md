@@ -27,6 +27,47 @@ It blends Poisson/Dixon-Coles modelling, market odds normalization, EV detection
 
 ---
 
+## 📸 Screenshots
+
+Explore the desktop application interface with these screenshots showcasing the main features:
+
+### Dashboard
+The main dashboard provides an overview of live matches, upcoming fixtures, active models, and EV+ signals.
+
+![Dashboard](screenshots/01-dashboard.png)
+
+### Live Match Center
+Monitor live matches with real-time updates and analytics.
+
+![Live Match Center](screenshots/02-live-match-center.png)
+
+### Value Bets (EV+)
+Discover value betting opportunities with configurable EV thresholds and advanced filtering options.
+
+![Value Bets](screenshots/03-value-bets.png)
+
+### Models & Training
+Manage and train prediction models with performance metrics.
+
+![Models & Training](screenshots/04-models-training.png)
+
+### Performance Tracking
+Track your betting performance with detailed ROI, hit rate, and drawdown analytics.
+
+![Performance](screenshots/05-performance.png)
+
+### Backtest Workbench
+Run historical backtests to validate strategies and analyze performance.
+
+![Backtest](screenshots/06-backtest.png)
+
+### Settings
+Configure API endpoints, data providers, themes, and authentication.
+
+![Settings](screenshots/07-settings.png)
+
+---
+
 ## 🧱 Repository Structure
 
 ```text
