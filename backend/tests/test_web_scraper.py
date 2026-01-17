@@ -15,7 +15,6 @@ class WebScraperTests(unittest.TestCase):
         self.assertIn("fixtures", provider.meta.data_types)
         self.assertIn("results", provider.meta.data_types)
 
-
     def test_web_scraper_with_empty_config(self):
         """Test that scraper returns empty lists when not configured."""
         provider = WebScraperProvider(allow_network=False, config={})
@@ -25,7 +24,6 @@ class WebScraperTests(unittest.TestCase):
         
         self.assertEqual(fixtures, [])
         self.assertEqual(results, [])
-
 
     def test_web_scraper_parses_fixtures_from_html(self):
         """Test parsing fixtures from sample HTML."""
@@ -79,7 +77,6 @@ class WebScraperTests(unittest.TestCase):
         self.assertEqual(fixtures[1].fixture_id, "12346")
         self.assertEqual(fixtures[1].home_team, "Team C")
 
-
     def test_web_scraper_parses_results_from_html(self):
         """Test parsing results from sample HTML."""
         html = """
@@ -129,7 +126,6 @@ class WebScraperTests(unittest.TestCase):
         self.assertEqual(results[0].away_score, 1)
         self.assertEqual(results[0].status, "FT")
 
-
     def test_web_scraper_handles_malformed_html(self):
         """Test that scraper handles malformed HTML gracefully."""
         html = """
@@ -164,7 +160,6 @@ class WebScraperTests(unittest.TestCase):
         self.assertEqual(fixtures[0].home_team, "Team A")
         self.assertEqual(fixtures[0].away_team, "TBD")
 
-
     def test_web_scraper_rate_limiting(self):
         """Test that rate limiting delays requests appropriately."""
         import time
@@ -179,7 +174,6 @@ class WebScraperTests(unittest.TestCase):
         
         # Should have waited at least the minimum interval
         self.assertGreaterEqual(elapsed, 0.1)
-
 
     def test_web_scraper_cache_path_generation(self):
         """Test that cache paths are generated correctly."""
@@ -196,7 +190,6 @@ class WebScraperTests(unittest.TestCase):
         self.assertEqual(path1.suffix, ".html")
         self.assertEqual(path2.suffix, ".html")
 
-
     def test_web_scraper_disabled_when_network_off(self):
         """Test that scraper doesn't make requests when network is disabled."""
         config = {
@@ -209,7 +202,6 @@ class WebScraperTests(unittest.TestCase):
         # Should return empty list without attempting network request
         html = provider._fetch_html("http://example.com/fixtures", use_cache=False)
         self.assertIsNone(html)
-
 
     def test_web_scraper_loads_config_from_env(self):
         """Test that scraper loads config from SCRAPER_CONFIG_PATH env variable."""

@@ -1,5 +1,6 @@
 import datetime
 import os
+import secrets
 from typing import Optional
 
 import jwt
@@ -8,7 +9,7 @@ from passlib.context import CryptContext
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     # Use a default key for testing/development - NOT FOR PRODUCTION
-    SECRET_KEY = "test-secret-key-do-not-use-in-production-" + "0" * 32
+    SECRET_KEY = secrets.token_urlsafe(32)
     import warnings
     warnings.warn(
         "SECRET_KEY environment variable not set. Using insecure default for testing. "
