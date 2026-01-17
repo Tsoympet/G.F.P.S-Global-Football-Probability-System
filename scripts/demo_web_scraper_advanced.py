@@ -35,7 +35,11 @@ def demo_javascript_rendering():
     
     print(f"\n✓ JavaScript rendering: {provider.use_js_rendering}")
     print(f"  Wait time: {provider.config.get('js_wait_time')}ms")
-    print(f"  Playwright available: {provider.use_js_rendering}")
+    try:
+        from playwright.sync_api import sync_playwright
+        print(f"  Playwright available: True")
+    except ImportError:
+        print(f"  Playwright available: False")
     print(f"\nNote: Install Playwright with 'pip install playwright' and")
     print(f"      'playwright install chromium' to enable this feature")
 

@@ -519,11 +519,15 @@ class WebScraperProvider(Provider):
             headers = {"User-Agent": self.user_agent}
             
             # Configure proxy if enabled
-            proxy = None
+            proxies = None
             if self.config.get("proxy", {}).get("enabled", False):
                 proxy_server = self.config["proxy"].get("server", "")
                 if proxy_server:
-                    proxy = proxy_server
+                    # httpx expects a dict mapping protocols to proxy URLs
+                    proxies = {
+                        "http://": proxy_server,
+                        "https://": proxy_server,
+                    }
             
             logger.info(f"Fetching {url}")
             response = httpx.get(
@@ -531,7 +535,7 @@ class WebScraperProvider(Provider):
                 headers=headers,
                 timeout=15,
                 follow_redirects=True,
-                proxies=proxy,
+                proxies=proxies,
             )
             response.raise_for_status()
             
