@@ -86,21 +86,40 @@ Google OAuth is currently supported. To add additional social login providers (F
 
 1. Add the provider's CLIENT_ID and CLIENT_SECRET to your `.env` file
 2. Install the appropriate OAuth library (e.g., `authlib` for general OAuth support)
-3. Create a new endpoint in `backend/google_auth.py` following the Google OAuth pattern
+3. Create a new endpoint in the auth router following the Google OAuth pattern
 4. Update the frontend to add a login button for the new provider
 
-Example for adding GitHub OAuth:
+**Recommended approach for better maintainability:**
+
+For a single additional provider, you can add it to `backend/google_auth.py`. For multiple providers, consider organizing them in a dedicated module:
+
+```
+backend/
+  auth/
+    __init__.py
+    google.py      # Google OAuth
+    github.py      # GitHub OAuth
+    facebook.py    # Facebook OAuth
+    router.py      # Main auth router
+```
+
+Example for adding GitHub OAuth in `backend/google_auth.py` or a dedicated `backend/auth/github.py`:
 
 ```python
 # In .env
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
 
-# In backend/google_auth.py
+# In backend/google_auth.py (or backend/auth/github.py)
+class GitHubLogin(BaseModel):
+    access_token: str
+
 @router.post("/github")
 def github_login(p: GitHubLogin, db: Session = Depends(get_db)):
-    # Similar implementation to google_login
-    # Verify GitHub token and create/login user
+    # Verify GitHub token
+    # Extract email, name, avatar from GitHub API
+    # Create or login user (similar to google_login)
+    # Return JWT token
     pass
 ```
 
