@@ -127,6 +127,8 @@ python -m backend.pipeline_cli build_features    # build bookmaker-style feature
    ```bash
    cd GFPS/desktop
    npm install
+   # Optional: Set encryption salt for local storage security
+   # Copy .env.example to .env and set VITE_SECRET_SALT=$(openssl rand -hex 32)
    npm run dev
    ```
 5. **Create a user and log in**

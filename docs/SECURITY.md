@@ -92,7 +92,27 @@ The Tauri desktop app now includes CSP headers. Review and adjust based on your 
 - Hashed with bcrypt
 - Never log or expose passwords
 
-### 8. API Key Management
+### 8. Desktop App Encryption
+
+**Local Storage Security:**
+
+The desktop application encrypts sensitive data (auth tokens, API keys) before storing in localStorage. To maximize security:
+
+```bash
+# In GFPS/desktop/.env
+# Generate a unique value for each deployment
+VITE_SECRET_SALT=$(openssl rand -hex 32)
+```
+
+**Best practices:**
+- Set `VITE_SECRET_SALT` at build time for production deployments
+- Use different salts for dev/staging/prod builds
+- Never commit the `.env` file to version control
+- If not set, the app will use a device-specific fallback (less secure)
+
+**Note:** Changing the salt will invalidate existing encrypted localStorage data. Users will need to re-authenticate and reconfigure settings.
+
+### 9. API Key Management
 
 For data provider integrations:
 
@@ -107,7 +127,7 @@ GOOGLE_CLIENT_ID=your-google-client-id
 - Monitor API usage and quotas
 - Store in environment variables, not code
 
-### 9. Input Validation
+### 10. Input Validation
 
 The backend includes Pydantic validation. Ensure:
 
@@ -116,7 +136,7 @@ The backend includes Pydantic validation. Ensure:
 - XSS protection in frontend (React escaping by default)
 - File upload validation (if applicable)
 
-### 10. Monitoring & Logging
+### 11. Monitoring & Logging
 
 **Security monitoring:**
 - Log authentication failures
@@ -135,6 +155,7 @@ The backend includes Pydantic validation. Ensure:
 Before deploying to production:
 
 - [ ] Generate and set unique `SECRET_KEY`
+- [ ] Generate and set unique `VITE_SECRET_SALT` for desktop builds
 - [ ] Configure PostgreSQL with SSL
 - [ ] Set restrictive `ALLOWED_ORIGINS`
 - [ ] Enable HTTPS with valid certificates

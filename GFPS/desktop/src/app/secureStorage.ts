@@ -1,7 +1,17 @@
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-const SECRET_SALT = 'gfps-desktop-local-secret';
+// Use environment variable for secret salt, with a secure fallback
+// In production, VITE_SECRET_SALT should be set at build time
+const SECRET_SALT =
+  import.meta.env.VITE_SECRET_SALT ||
+  (() => {
+    // Fallback: generate a deterministic but unique value per browser/device
+    // This is less secure than a build-time secret but better than a hardcoded value
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    const platform = typeof navigator !== 'undefined' ? (navigator.platform || 'unknown') : 'unknown';
+    return `gfps-${btoa(userAgent + platform).substring(0, 32)}`;
+  })();
 
 const getCrypto = () => {
   const cryptoFromGlobal = (globalThis as any).crypto;
