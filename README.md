@@ -2,6 +2,8 @@
 It blends Poisson/Dixon-Coles modelling, market odds normalization, EV detection, and a modern desktop client to explain match outcomes with transparent math.
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/99907e89-7991-41a5-be85-9ffe1ff5313c" />
 
+> **📋 Production Readiness:** This repository has undergone a comprehensive security audit and is production-ready. See [docs/AUDIT_REPORT.md](docs/AUDIT_REPORT.md) for details.
+
 ---
 
 ## ✨ Key Features
@@ -181,7 +183,10 @@ It probes `/health`, `/odds`, `/predictions`, and `/value` and prints a simple O
 ---
 
 ## 🌱 Key environment variables
-- `SECRET_KEY`: JWT signing key for auth helpers.
+
+> **⚠️ Security Notice:** `SECRET_KEY` is required and must be set before running the application. See [docs/SECURITY.md](docs/SECURITY.md) for production deployment guidelines.
+
+- `SECRET_KEY`: **REQUIRED** - JWT signing key for auth helpers. Generate with `openssl rand -hex 32`.
 - `DATABASE_URL`: Database connection string; defaults to SQLite for local use.
 - `APIFOOTBALL_KEY`: API key for live scores/odds. Leave blank for seeded fixtures only.
 - `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins.
@@ -194,3 +199,47 @@ It probes `/health`, `/odds`, `/predictions`, and `/value` and prints a simple O
 - `ALERT_ENGINE` / `ALERT_ENGINE_INTERVAL_SEC`: Toggle the background alert worker.
 - `SMTP_*` / `FCM_SERVER_KEY`: Email/FCM notification credentials (optional).
 - `GOOGLE_CLIENT_ID`: Enable Google sign-in flows in the auth helpers.
+
+---
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+### Getting Started
+- [README.md](README.md) - This file, overview and quick start
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Deployment instructions
+- [DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md) - Pre-deployment validation checklist
+
+### Security & Operations
+- [SECURITY.md](docs/SECURITY.md) - Security best practices and production guidelines
+- [DATABASE_MIGRATIONS.md](docs/DATABASE_MIGRATIONS.md) - Database schema migration guide with Alembic
+- [AUDIT_REPORT.md](docs/AUDIT_REPORT.md) - Comprehensive security and code quality audit
+- [AUDIT_SUMMARY.md](docs/AUDIT_SUMMARY.md) - Summary of audit findings and fixes
+
+### Architecture & Development
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - System architecture and design
+- [API_REFERENCE.md](docs/API_REFERENCE.md) - API endpoint specifications
+- [BACKEND_GUIDE.md](docs/BACKEND_GUIDE.md) - Backend development guide
+- [METRICS_GLOSSARY.md](docs/METRICS_GLOSSARY.md) - KPI and metrics definitions
+
+### CI/CD & Testing
+- [.github/workflows/backend-tests.yml](.github/workflows/backend-tests.yml) - Backend test automation
+- [.github/workflows/frontend-tests.yml](.github/workflows/frontend-tests.yml) - Frontend test automation
+- [.github/workflows/docker-build.yml](.github/workflows/docker-build.yml) - Docker build validation
+- [.pre-commit-config.yaml](.pre-commit-config.yaml) - Pre-commit hooks for code quality
+
+---
+
+## 🔒 Security
+
+This repository follows security best practices:
+- ✅ No default secrets (SECRET_KEY required)
+- ✅ Content Security Policy headers configured
+- ✅ Automated security scanning (CodeQL)
+- ✅ Input validation and SQL injection protection
+- ✅ JWT authentication with token versioning
+- ✅ Rate limiting and CORS protection
+
+See [docs/SECURITY.md](docs/SECURITY.md) for detailed security guidelines.
+
