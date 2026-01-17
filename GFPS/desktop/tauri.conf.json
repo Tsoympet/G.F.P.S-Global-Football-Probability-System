@@ -10,9 +10,11 @@
   },
   "bundle": {
     "targets": ["msi", "dmg", "appimage"],
+    "license": "EULA.txt",
     "windows": {
       "wix": {
-        "language": "en-US"
+        "language": "en-US",
+        "license": "EULA.txt"
       },
       "certificateThumbprint": "${TAURI_WINDOWS_CERT_THUMBPRINT}",
       "timestampUrl": "https://timestamp.digicert.com"
