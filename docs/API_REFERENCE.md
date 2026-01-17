@@ -10,14 +10,24 @@ http://localhost:8000
 
 ## Authentication
 
+GFPS uses a **pay-per-use model** where users are charged only for the external data API providers they consume. There are no subscription tiers or role-based access restrictions.
+
+**OAuth Providers:**
+- Google OAuth is fully supported via `POST /auth/google`
+- Additional social OAuth providers (Facebook, Twitter, GitHub, etc.) can be easily added following the same pattern
+
+**Endpoints:**
 - `POST /auth/signup` – Create a user and return a JWT.
 - `POST /auth/login` – Login with email + password (2FA supported).
-- `POST /auth/google` – Google SSO login.
+- `POST /auth/google` – Google OAuth login with ID token.
 - `POST /auth/request-reset` – Start password reset flow.
 - `POST /auth/confirm-reset` – Confirm password reset token.
 - `POST /auth/2fa/setup` – Generate TOTP secret + otpauth URI (Bearer token required).
 - `POST /auth/2fa/enable` – Enable 2FA with a TOTP code (Bearer token required).
 - `POST /auth/2fa/disable` – Disable 2FA with a TOTP code (Bearer token required).
+- `POST /auth/api-credentials` – Save user's API provider credentials (Bearer token required).
+- `GET /auth/api-credentials` – Retrieve user's API provider credentials (Bearer token required).
+- `GET /auth/api-providers` – List all available API data providers with details (no auth required).
 
 ## Core Data (Bearer token required)
 

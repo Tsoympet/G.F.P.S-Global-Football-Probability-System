@@ -108,7 +108,11 @@ python -m backend.pipeline_cli build_features    # build bookmaker-style feature
    ```
 5. **Create a user and log in**
    - The protected endpoints (`/predictions`, `/odds`, `/value`) require a Bearer token.
-   - Sign up via `POST /auth/signup` or log in from the desktop Settings screen to store the token for subsequent calls.
+   - Sign up via `POST /auth/signup` or use Google OAuth via `POST /auth/google`.
+   - Log in from the desktop Settings screen to store the token for subsequent calls.
+   - **Pay-per-use model**: Users manage their own API provider subscriptions (API-Football, Football-Data.org, Odds Matrix, etc.).
+   - Configure your API keys in the Settings screen under "Data Provider API Keys".
+   - The client uses your credentials to fetch data from providers you've subscribed to directly.
 
 The desktop client expects the backend at `http://localhost:8000` by default; adjust `FRONTEND_BASE_URL` if you proxy or deploy elsewhere.
 

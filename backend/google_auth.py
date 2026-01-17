@@ -144,7 +144,7 @@ def signup(p: Signup, db: Session = Depends(get_db)):
         if not verify_password(p.password, existing.password_hash):
             raise HTTPException(401, "Invalid credentials")
 
-        token = create_token(existing.email, existing.token_version, existing.role)
+        token = create_token(existing.email, existing.token_version)
         return {
             "ok": True,
             "token": token,
@@ -152,7 +152,6 @@ def signup(p: Signup, db: Session = Depends(get_db)):
                 "email": existing.email,
                 "display_name": existing.display_name,
                 "avatar_url": existing.avatar_url,
-                "role": existing.role,
             },
             "provider": "local",
         }
@@ -161,14 +160,13 @@ def signup(p: Signup, db: Session = Depends(get_db)):
         email=p.email,
         password_hash=hash_password(p.password),
         display_name=p.display_name or p.email.split("@")[0],
-        role="free",
         is_active=True,
     )
     db.add(u)
     db.commit()
     db.refresh(u)
 
-    token = create_token(u.email, u.token_version, u.role)
+    token = create_token(u.email, u.token_version)
     return {
         "ok": True,
         "token": token,
@@ -176,7 +174,6 @@ def signup(p: Signup, db: Session = Depends(get_db)):
             "email": u.email,
             "display_name": u.display_name,
             "avatar_url": u.avatar_url,
-            "role": u.role,
         },
         "provider": "local",
     }
@@ -196,7 +193,7 @@ def login(p: Login, db: Session = Depends(get_db)):
         if not p.code or not verify_totp(u.totp_secret, p.code):
             raise HTTPException(401, "Invalid 2FA code")
 
-    token = create_token(u.email, u.token_version, u.role)
+    token = create_token(u.email, u.token_version)
     return {
         "ok": True,
         "token": token,
@@ -204,7 +201,6 @@ def login(p: Login, db: Session = Depends(get_db)):
             "email": u.email,
             "display_name": u.display_name,
             "avatar_url": u.avatar_url,
-            "role": u.role,
         },
         "provider": "local",
     }
@@ -251,14 +247,13 @@ def google_login(p: GoogleLogin, db: Session = Depends(get_db)):
             password_hash=hash_password(rnd_pwd),
             display_name=name,
             avatar_url=picture,
-            role="free",
             is_active=True,
         )
         db.add(u)
         db.commit()
         db.refresh(u)
 
-    token = create_token(u.email, u.token_version, u.role)
+    token = create_token(u.email, u.token_version)
     return {
         "ok": True,
         "token": token,
@@ -266,7 +261,6 @@ def google_login(p: GoogleLogin, db: Session = Depends(get_db)):
             "email": u.email,
             "display_name": u.display_name,
             "avatar_url": u.avatar_url,
-            "role": u.role,
         },
         "provider": "google",
     }
@@ -376,5 +370,129 @@ def twofa_disable(p: TwoFAEnable, user: User = Depends(require_user), db: Sessio
     db.commit()
 
     return {"ok": True}
+
+
+# -------------------------------------------------------------------
+# API Provider Credentials Management
+# -------------------------------------------------------------------
+
+class ApiProviderCredentials(BaseModel):
+    credentials: dict  # {"api-football": "key", "football-data": "key", etc.}
+
+
+@router.post("/api-credentials")
+def save_api_credentials(
+    p: ApiProviderCredentials,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db)
+):
+    """Save user's API provider credentials (encrypted in DB)."""
+    user.api_provider_credentials = p.credentials
+    db.add(user)
+    db.commit()
+    return {"ok": True, "provider_count": len(p.credentials)}
+
+
+@router.get("/api-credentials")
+def get_api_credentials(
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db)
+):
+    """Retrieve user's API provider credentials."""
+    return {
+        "ok": True,
+        "credentials": user.api_provider_credentials or {},
+        "provider_count": len(user.api_provider_credentials or {})
+    }
+
+
+@router.get("/api-providers")
+def list_api_providers():
+    """List all available API data providers with their details."""
+    providers = [
+        {
+            "id": "api-football",
+            "name": "API-Football",
+            "description": "Premium odds & live data with high reliability",
+            "tier": "premium",
+            "requires_key": True,
+            "signup_url": "https://www.api-football.com/pricing",
+            "features": ["Live odds", "Match events", "Lineups", "Statistics"],
+            "free_tier": False,
+            "reliability": 0.90,
+        },
+        {
+            "id": "football-data",
+            "name": "Football-Data.org",
+            "description": "Free tier available for fixtures and results",
+            "tier": "free",
+            "requires_key": True,
+            "signup_url": "https://www.football-data.org/client/register",
+            "features": ["Fixtures", "Results", "Standings"],
+            "free_tier": True,
+            "reliability": 0.55,
+        },
+        {
+            "id": "odds-matrix",
+            "name": "Odds Matrix",
+            "description": "Comprehensive odds comparison data",
+            "tier": "premium",
+            "requires_key": True,
+            "signup_url": "https://oddsmatrix.com/",
+            "features": ["Odds comparison", "Market coverage", "Real-time updates"],
+            "free_tier": False,
+            "reliability": 0.85,
+        },
+        {
+            "id": "openligadb",
+            "name": "OpenLigaDB",
+            "description": "Free live data for select leagues (no key required)",
+            "tier": "free",
+            "requires_key": False,
+            "signup_url": None,
+            "features": ["Live scores", "Match events"],
+            "free_tier": True,
+            "reliability": 0.35,
+        },
+        {
+            "id": "openfootball",
+            "name": "OpenFootball CSV",
+            "description": "Free historical data (no key required)",
+            "tier": "free",
+            "requires_key": False,
+            "signup_url": None,
+            "features": ["Historical fixtures", "Results"],
+            "free_tier": True,
+            "reliability": 0.70,
+        },
+        {
+            "id": "bet365-api",
+            "name": "Bet365 API",
+            "description": "Live odds and betting markets",
+            "tier": "premium",
+            "requires_key": True,
+            "signup_url": "https://www.bet365.com/",
+            "features": ["Live odds", "In-play markets"],
+            "free_tier": False,
+            "reliability": 0.92,
+        },
+        {
+            "id": "the-odds-api",
+            "name": "The Odds API",
+            "description": "Sports odds from multiple bookmakers",
+            "tier": "premium",
+            "requires_key": True,
+            "signup_url": "https://the-odds-api.com/",
+            "features": ["Multi-bookmaker odds", "Historical odds"],
+            "free_tier": True,
+            "reliability": 0.88,
+        },
+    ]
+    
+    return {
+        "ok": True,
+        "providers": providers,
+        "count": len(providers)
+    }
 
 

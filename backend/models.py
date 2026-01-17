@@ -28,8 +28,14 @@ class User(Base):
     display_name: Mapped[Optional[str]] = mapped_column(String(255), default=None)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(512), default=None)
 
-    role: Mapped[str] = mapped_column(String(32), default="free")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # API usage tracking for pay-per-use model
+    api_calls_count: Mapped[int] = mapped_column(Integer, default=0)
+    api_calls_last_reset: Mapped[Optional[DateTime]] = mapped_column(DateTime, default=None)
+
+    # User's own API provider credentials (encrypted JSON)
+    api_provider_credentials: Mapped[Optional[dict]] = mapped_column(JSON, default=None)
 
     # token version – if incremented, old JWTs become invalid
     token_version: Mapped[int] = mapped_column(Integer, default=0)
