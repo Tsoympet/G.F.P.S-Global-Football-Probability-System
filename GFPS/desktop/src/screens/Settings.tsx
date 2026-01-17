@@ -98,8 +98,6 @@ export const Settings = () => {
       window.open(url, '_blank');
     }
   };
-    window.open(url, '_blank');
-  };
 
   return (
     <section
