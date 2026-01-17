@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Sidebar } from '@components/Sidebar';
 import { TopBar } from '@components/TopBar';
 import { BetSlip } from '@components/BetSlip';
+import ErrorBoundary from '@components/ErrorBoundary';
 import { useNavigationStore } from '@store/navigation';
 import { Dashboard } from '@screens/Dashboard';
 import { LiveMatchCenter } from '@screens/LiveMatchCenter';
@@ -49,21 +50,23 @@ export const App = () => {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: palette.background }}>
-      <Sidebar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <TopBar />
-        <main style={{ padding: 20, overflow: 'auto', flex: 1 }}>
-          {section === 'Dashboard' && <Dashboard />}
-          {section === 'Live Match Center' && <LiveMatchCenter />}
-          {section === 'Value Bets (EV+)' && <ValueBets />}
-          {section === 'Models & Training' && <ModelsTraining />}
-          {section === 'Performance' && <Performance />}
-          {section === 'Backtest' && <BacktestWorkbench />}
-          {section === 'Settings' && <Settings />}
-        </main>
+    <ErrorBoundary>
+      <div style={{ display: 'flex', height: '100vh', background: palette.background }}>
+        <Sidebar />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <TopBar />
+          <main style={{ padding: 20, overflow: 'auto', flex: 1 }}>
+            {section === 'Dashboard' && <Dashboard />}
+            {section === 'Live Match Center' && <LiveMatchCenter />}
+            {section === 'Value Bets (EV+)' && <ValueBets />}
+            {section === 'Models & Training' && <ModelsTraining />}
+            {section === 'Performance' && <Performance />}
+            {section === 'Backtest' && <BacktestWorkbench />}
+            {section === 'Settings' && <Settings />}
+          </main>
+        </div>
+        <BetSlip />
       </div>
-      <BetSlip />
-    </div>
+    </ErrorBoundary>
   );
 };
