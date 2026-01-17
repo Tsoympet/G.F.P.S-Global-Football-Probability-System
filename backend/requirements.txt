@@ -16,5 +16,7 @@ numpy
 pandas
 scikit-learn
 joblib
+beautifulsoup4
+lxml
 
 

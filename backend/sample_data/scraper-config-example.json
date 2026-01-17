@@ -1,0 +1,55 @@
+{
+  "_comment": "Example configuration for the WebScraperProvider",
+  "_usage": "Set SCRAPER_CONFIG_PATH to point to this file, or provide as config dict to WebScraperProvider",
+  
+  "fixtures_url": "https://example.com/fixtures",
+  "results_url": "https://example.com/results",
+  
+  "selectors": {
+    "_comment": "CSS selectors for extracting fixture data from HTML",
+    "fixture_container": ".match-container",
+    "fixture_id": ".match-id",
+    "home_team": ".home-team",
+    "away_team": ".away-team",
+    "kickoff": ".match-time",
+    "league": ".league-name",
+    "season": ".season",
+    "venue": ".venue"
+  },
+  
+  "result_selectors": {
+    "_comment": "CSS selectors for extracting result-specific data (scores)",
+    "home_score": ".home-score",
+    "away_score": ".away-score",
+    "status": ".match-status"
+  },
+  
+  "examples": {
+    "_comment": "Examples for common football data websites",
+    "example_1": {
+      "description": "Generic example - adjust selectors based on actual HTML structure",
+      "fixtures_url": "https://example-sports-site.com/upcoming-matches",
+      "selectors": {
+        "fixture_container": "div.fixture-row",
+        "fixture_id": "data-match-id",
+        "home_team": "span.team.home",
+        "away_team": "span.team.away",
+        "kickoff": "time[datetime]",
+        "league": "div.competition-name",
+        "season": "span.season-year"
+      }
+    },
+    "example_2": {
+      "description": "Table-based layout example",
+      "fixtures_url": "https://example-stats-site.com/fixtures.html",
+      "selectors": {
+        "fixture_container": "table.fixtures tbody tr",
+        "fixture_id": "td:nth-child(1)",
+        "home_team": "td.home",
+        "away_team": "td.away",
+        "kickoff": "td.datetime",
+        "league": "td.league"
+      }
+    }
+  }
+}
