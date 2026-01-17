@@ -317,3 +317,36 @@ This repository follows security best practices:
 
 See [docs/SECURITY.md](docs/SECURITY.md) for detailed security guidelines.
 
+---
+
+## 💬 Community & Discussions
+
+Join the conversation and connect with other G.F.P.S users:
+
+- **[GitHub Discussions](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/discussions)** - Ask questions, share ideas, and showcase your projects
+- **Report Issues** - Found a bug? [Open an issue](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/issues)
+- **Contribute** - Want to help? Check out our [Contributing Guide](CONTRIBUTING.md)
+
+### Discussion Categories
+
+- 💡 **Ideas** - Share feature requests and enhancement proposals
+- ❓ **Q&A** - Get help with setup, configuration, and usage
+- 📢 **Announcements** - Stay updated on releases and important news
+- 🎯 **Show and Tell** - Share how you're using G.F.P.S
+- 💬 **General** - Everything else related to the project
+
+We encourage you to participate in discussions before opening issues - it helps keep the issue tracker focused and fosters community collaboration!
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Whether you want to:
+
+- Fix bugs or add features
+- Improve documentation
+- Share ideas for enhancements
+- Help others in discussions
+
+Please read our [Contributing Guide](CONTRIBUTING.md) to get started.
+

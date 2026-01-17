@@ -1,0 +1,25 @@
+title: "[Question] "
+labels: ["question"]
+body: |
+  ## ❓ Question
+
+  <!-- Ask questions about G.F.P.S usage, configuration, or features -->
+
+  ### Question
+  <!-- What would you like to know? -->
+
+  ### Context
+  <!-- Provide context about what you're trying to achieve -->
+
+  ### What I've Tried
+  <!-- What have you already attempted? -->
+
+  ### Environment
+  <!-- 
+  - OS: [e.g., Windows 11, macOS 14, Ubuntu 22.04]
+  - G.F.P.S Version: [e.g., v1.0.0]
+  - Deployment: [e.g., Docker, Local, Production]
+  -->
+
+  ### Additional Information
+  <!-- Screenshots, logs, or any other relevant information -->
