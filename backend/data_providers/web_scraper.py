@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Optional
-from urllib.parse import urljoin
 
 import httpx
 from bs4 import BeautifulSoup
@@ -77,6 +76,12 @@ class WebScraperProvider(Provider):
 
     def _load_config(self, config_path: Optional[Path]) -> dict:
         """Load scraper configuration from file or return default."""
+        # Check for config_path from environment if not provided
+        if config_path is None:
+            env_path = os.getenv("SCRAPER_CONFIG_PATH")
+            if env_path:
+                config_path = Path(env_path)
+        
         if config_path and config_path.exists():
             with config_path.open("r", encoding="utf-8") as f:
                 return json.load(f)
@@ -111,9 +116,9 @@ class WebScraperProvider(Provider):
 
     def _get_cache_path(self, url: str) -> Path:
         """Get cache file path for a URL."""
-        # Simple hash of URL for cache filename
+        # Use SHA-256 for better security and collision resistance
         import hashlib
-        url_hash = hashlib.md5(url.encode()).hexdigest()
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
         return self.cache_dir / f"scraper_{url_hash}.html"
 
     def _fetch_html(self, url: str, use_cache: bool = True) -> Optional[str]:

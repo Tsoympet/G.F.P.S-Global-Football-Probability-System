@@ -1,4 +1,5 @@
 """Tests for the WebScraperProvider."""
+import json
 from pathlib import Path
 from datetime import datetime
 
@@ -208,3 +209,35 @@ def test_web_scraper_disabled_when_network_off():
     # Should return empty list without attempting network request
     html = provider._fetch_html("http://example.com/fixtures", use_cache=False)
     assert html is None
+
+
+def test_web_scraper_loads_config_from_env():
+    """Test that scraper loads config from SCRAPER_CONFIG_PATH env variable."""
+    import tempfile
+    import os
+    
+    # Create a temporary config file
+    config_data = {
+        "fixtures_url": "http://env-test.com/fixtures",
+        "selectors": {"fixture_container": ".env-match"}
+    }
+    
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        json.dump(config_data, f)
+        temp_path = f.name
+    
+    try:
+        # Set environment variable
+        os.environ["SCRAPER_CONFIG_PATH"] = temp_path
+        
+        # Create provider without explicit config
+        provider = WebScraperProvider(allow_network=False)
+        
+        # Should load from env variable
+        assert provider.config["fixtures_url"] == "http://env-test.com/fixtures"
+        assert provider.config["selectors"]["fixture_container"] == ".env-match"
+    finally:
+        # Clean up
+        if "SCRAPER_CONFIG_PATH" in os.environ:
+            del os.environ["SCRAPER_CONFIG_PATH"]
+        os.unlink(temp_path)
