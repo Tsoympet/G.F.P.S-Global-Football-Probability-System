@@ -325,16 +325,225 @@ Data from higher-priority providers is preferred during deduplication.
 }
 ```
 
-## Future Enhancements
+## Advanced Features
 
-Potential improvements for the web scraper:
+### JavaScript Rendering Support
 
-- [ ] JavaScript rendering support (Selenium/Playwright)
-- [ ] Multi-page pagination support
-- [ ] Automatic selector learning/discovery
-- [ ] Proxy support for geo-restricted content
-- [ ] Captcha handling hooks
-- [ ] HTML structure change detection/alerting
+The web scraper now supports JavaScript rendering using Playwright, which enables scraping of dynamic websites that load content via JavaScript.
+
+**Configuration:**
+
+```json
+{
+  "use_js_rendering": true,
+  "js_wait_time": 2000,
+  "fixtures_url": "https://example.com/fixtures",
+  "selectors": {
+    "fixture_container": ".match"
+  }
+}
+```
+
+**Requirements:**
+- Install Playwright: `pip install playwright`
+- Install browser: `playwright install chromium`
+
+### Multi-Page Pagination Support
+
+The scraper supports three types of pagination:
+
+#### 1. URL Pattern Pagination
+
+For sites with predictable URL patterns (e.g., `/fixtures?page=1`, `/fixtures?page=2`):
+
+```json
+{
+  "fixtures_url": "https://example.com/fixtures",
+  "pagination": {
+    "enabled": true,
+    "type": "url_pattern",
+    "url_pattern": "?page={page}",
+    "max_pages": 5
+  }
+}
+```
+
+#### 2. Click-Based Pagination
+
+For sites with "Next" buttons (requires JavaScript rendering):
+
+```json
+{
+  "use_js_rendering": true,
+  "fixtures_url": "https://example.com/fixtures",
+  "pagination": {
+    "enabled": true,
+    "type": "click",
+    "next_button_selector": "button.next-page",
+    "max_pages": 10
+  }
+}
+```
+
+#### 3. Infinite Scroll
+
+For sites that load content as you scroll (requires JavaScript rendering):
+
+```json
+{
+  "use_js_rendering": true,
+  "fixtures_url": "https://example.com/fixtures",
+  "pagination": {
+    "enabled": true,
+    "type": "scroll",
+    "max_pages": 10
+  }
+}
+```
+
+### Proxy Support
+
+For accessing geo-restricted content or avoiding rate limits:
+
+```json
+{
+  "proxy": {
+    "enabled": true,
+    "server": "http://proxy.example.com:8080",
+    "username": "user",
+    "password": "pass"
+  }
+}
+```
+
+**Note:** Proxy credentials are optional and only needed for authenticated proxies.
+
+### Captcha Handling
+
+The scraper can detect captchas and call custom handlers:
+
+**Configuration:**
+
+```json
+{
+  "captcha_detection": {
+    "enabled": true,
+    "indicators": ["captcha", "recaptcha", "hcaptcha", "cloudflare"]
+  }
+}
+```
+
+**Usage:**
+
+```python
+from backend.data_providers import WebScraperProvider
+
+def my_captcha_solver(url: str) -> str:
+    """Custom captcha solving logic."""
+    # Your captcha solving code here
+    # Could integrate with services like 2captcha, Anti-Captcha, etc.
+    return solved_html
+
+provider = WebScraperProvider(config=config, allow_network=True)
+provider.set_captcha_handler(my_captcha_solver)
+```
+
+### HTML Structure Change Detection
+
+Monitor for website structure changes that might break selectors:
+
+```json
+{
+  "structure_monitoring": {
+    "enabled": true,
+    "similarity_threshold": 0.8
+  }
+}
+```
+
+When the HTML structure changes significantly (similarity < threshold), a warning is logged. This helps you proactively update selectors before scraping fails completely.
+
+### Automatic Selector Learning
+
+The scraper can suggest selectors based on common patterns:
+
+```json
+{
+  "auto_selector_learning": {
+    "enabled": true
+  }
+}
+```
+
+When enabled, the scraper analyzes HTML and logs suggested selectors for common football data patterns (matches, teams, scores, etc.). Check logs for suggestions.
+
+## Complete Configuration Example
+
+```json
+{
+  "fixtures_url": "https://example.com/fixtures",
+  "results_url": "https://example.com/results",
+  
+  "use_js_rendering": true,
+  "js_wait_time": 3000,
+  
+  "pagination": {
+    "enabled": true,
+    "type": "url_pattern",
+    "url_pattern": "?page={page}",
+    "max_pages": 5
+  },
+  
+  "proxy": {
+    "enabled": false,
+    "server": "",
+    "username": "",
+    "password": ""
+  },
+  
+  "captcha_detection": {
+    "enabled": true,
+    "indicators": ["captcha", "recaptcha", "hcaptcha"]
+  },
+  
+  "structure_monitoring": {
+    "enabled": true,
+    "similarity_threshold": 0.8
+  },
+  
+  "auto_selector_learning": {
+    "enabled": false
+  },
+  
+  "selectors": {
+    "fixture_container": "div.match-card",
+    "fixture_id": "[data-match-id]",
+    "home_team": ".team.home .team-name",
+    "away_team": ".team.away .team-name",
+    "kickoff": "time[datetime]",
+    "league": ".league-name",
+    "season": "2024",
+    "venue": ".venue-name"
+  },
+  
+  "result_selectors": {
+    "home_score": ".score.home",
+    "away_score": ".score.away",
+    "status": ".match-status"
+  }
+}
+```
+
+## Implemented Features
+
+The following features are now fully implemented:
+
+- [x] JavaScript rendering support (Playwright)
+- [x] Multi-page pagination support (URL pattern, click, scroll)
+- [x] Automatic selector learning/discovery
+- [x] Proxy support for geo-restricted content
+- [x] Captcha handling hooks
+- [x] HTML structure change detection/alerting
 
 ## Support
 

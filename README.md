@@ -28,6 +28,13 @@ It blends Poisson/Dixon-Coles modelling, market odds normalization, EV detection
 - **Live Odds & Alerts**
   - Live odds ingestion with validation + market normalization
   - Alert rules by league, market, odds bands, and EV thresholds
+- **Advanced Web Scraper**
+  - JavaScript rendering support (Playwright) for dynamic sites
+  - Multi-page pagination (URL pattern, click, scroll)
+  - Automatic selector learning and discovery
+  - Proxy support for geo-restricted content
+  - Captcha handling hooks
+  - HTML structure change detection and alerting
 - **Desktop Analytics Suite**
   - Live match center, model monitoring, and EV watchlists
   - WebSocket streaming for fixtures/events/markets

@@ -1,9 +1,48 @@
 {
-  "_comment": "Example configuration for the WebScraperProvider",
+  "_comment": "Example configuration for the WebScraperProvider with advanced features",
   "_usage": "Set SCRAPER_CONFIG_PATH to point to this file, or provide as config dict to WebScraperProvider",
   
   "fixtures_url": "https://example.com/fixtures",
   "results_url": "https://example.com/results",
+  
+  "_comment_js": "Enable JavaScript rendering for dynamic websites (requires Playwright)",
+  "use_js_rendering": false,
+  "js_wait_time": 2000,
+  
+  "_comment_pagination": "Multi-page pagination support",
+  "pagination": {
+    "enabled": false,
+    "type": "url_pattern",
+    "_types": "url_pattern, click, or scroll",
+    "next_button_selector": "",
+    "url_pattern": "?page={page}",
+    "max_pages": 10
+  },
+  
+  "_comment_proxy": "Proxy support for geo-restricted content",
+  "proxy": {
+    "enabled": false,
+    "server": "http://proxy.example.com:8080",
+    "username": "",
+    "password": ""
+  },
+  
+  "_comment_captcha": "Captcha detection (use set_captcha_handler() to provide solver)",
+  "captcha_detection": {
+    "enabled": false,
+    "indicators": ["captcha", "recaptcha", "hcaptcha", "cloudflare"]
+  },
+  
+  "_comment_monitoring": "HTML structure change detection/alerting",
+  "structure_monitoring": {
+    "enabled": false,
+    "similarity_threshold": 0.8
+  },
+  
+  "_comment_learning": "Automatic selector learning/discovery",
+  "auto_selector_learning": {
+    "enabled": false
+  },
   
   "selectors": {
     "_comment": "CSS selectors for extracting fixture data from HTML",
@@ -26,8 +65,8 @@
   
   "examples": {
     "_comment": "Examples for common football data websites",
-    "example_1": {
-      "description": "Generic example - adjust selectors based on actual HTML structure",
+    "example_1_basic": {
+      "description": "Basic scraping without advanced features",
       "fixtures_url": "https://example-sports-site.com/upcoming-matches",
       "selectors": {
         "fixture_container": "div.fixture-row",
@@ -39,17 +78,37 @@
         "season": "span.season-year"
       }
     },
-    "example_2": {
-      "description": "Table-based layout example",
-      "fixtures_url": "https://example-stats-site.com/fixtures.html",
+    "example_2_javascript": {
+      "description": "JavaScript rendering for dynamic sites",
+      "use_js_rendering": true,
+      "js_wait_time": 3000,
+      "fixtures_url": "https://dynamic-site.com/matches",
       "selectors": {
-        "fixture_container": "table.fixtures tbody tr",
-        "fixture_id": "td:nth-child(1)",
-        "home_team": "td.home",
-        "away_team": "td.away",
-        "kickoff": "td.datetime",
-        "league": "td.league"
+        "fixture_container": "div.match-card",
+        "home_team": ".home .name",
+        "away_team": ".away .name"
       }
+    },
+    "example_3_pagination": {
+      "description": "URL-based pagination",
+      "fixtures_url": "https://example.com/fixtures",
+      "pagination": {
+        "enabled": true,
+        "type": "url_pattern",
+        "url_pattern": "?page={page}",
+        "max_pages": 5
+      },
+      "selectors": {
+        "fixture_container": "tr.match-row"
+      }
+    },
+    "example_4_proxy": {
+      "description": "Using proxy for geo-restricted content",
+      "proxy": {
+        "enabled": true,
+        "server": "http://proxy.example.com:8080"
+      },
+      "fixtures_url": "https://geo-restricted-site.com/fixtures"
     }
   }
 }
