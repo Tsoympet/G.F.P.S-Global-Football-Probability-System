@@ -85,3 +85,8 @@ Use dark backgrounds plus blue/green highlights for a “data / analytics / AI�
 - Export PNGs at: 16×16, 32×32, 48×48, 64×64, 180×180 (Apple touch), 192×192 (Android/manifest), 256×256, 512×512.
 - Include an SVG source for scalable uses and maskable icon for PWA.
 - Keep line weights thick enough for legibility at 16×16 and avoid gradients that blur when downscaled.
+
+Delivered assets (branding/icons):
+- `gfps-icon.svg` (primary vector)
+- `gfps-icon-maskable.svg` (maskable vector with safe padding)
+- PNG exports: `gfps-icon-16.png`, `gfps-icon-32.png`, `gfps-icon-48.png`, `gfps-icon-64.png`, `gfps-icon-180.png`, `gfps-icon-192.png`, `gfps-icon-256.png`, `gfps-icon-512.png`, plus `gfps-icon-maskable-512.png`.
