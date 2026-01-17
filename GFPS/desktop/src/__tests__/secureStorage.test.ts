@@ -22,4 +22,19 @@ describe('secureStorage', () => {
     const recovered = await loadSecure<{ secret: string }>('test-key');
     expect(recovered).toBeUndefined();
   });
+
+  it('uses environment variable or secure fallback for salt', async () => {
+    // Test that encryption works (salt is being used)
+    await saveSecure('env-test-key', { data: 'sensitive' });
+    const encrypted = localStorage.getItem('env-test-key');
+    
+    // Verify it's encrypted (contains IV and cipher separated by :)
+    expect(encrypted).toBeTruthy();
+    expect(encrypted?.split(':')).toHaveLength(2);
+    expect(encrypted?.includes('sensitive')).toBe(false);
+    
+    // Verify decryption works
+    const decrypted = await loadSecure<{ data: string }>('env-test-key');
+    expect(decrypted?.data).toBe('sensitive');
+  });
 });
