@@ -278,30 +278,18 @@ It probes `/health`, `/odds`, `/predictions`, and `/value` and prints a simple O
 
 ## 📚 Documentation
 
-Comprehensive documentation is available in the `docs/` directory:
+Comprehensive documentation is available in the `docs/` directory. See [docs/README.md](docs/README.md) for a complete documentation index.
 
-### Getting Started
+### Essential Documentation
 - [README.md](README.md) - This file, overview and quick start
+- [EULA.md](EULA.md) - End User License Agreement for desktop installers
+- [LICENSE](LICENSE) - MIT License for the software
 - [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Deployment instructions
-- [DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md) - Pre-deployment validation checklist
-
-### Security & Operations
 - [SECURITY.md](docs/SECURITY.md) - Security best practices and production guidelines
-- [DATABASE_MIGRATIONS.md](docs/DATABASE_MIGRATIONS.md) - Database schema migration guide with Alembic
-- [AUDIT_REPORT.md](docs/AUDIT_REPORT.md) - Comprehensive security and code quality audit
-- [AUDIT_SUMMARY.md](docs/AUDIT_SUMMARY.md) - Summary of audit findings and fixes
-
-### Architecture & Development
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) - System architecture and design
 - [API_REFERENCE.md](docs/API_REFERENCE.md) - API endpoint specifications
-- [BACKEND_GUIDE.md](docs/BACKEND_GUIDE.md) - Backend development guide
-- [METRICS_GLOSSARY.md](docs/METRICS_GLOSSARY.md) - KPI and metrics definitions
 
-### CI/CD & Testing
-- [.github/workflows/backend-tests.yml](.github/workflows/backend-tests.yml) - Backend test automation
-- [.github/workflows/frontend-tests.yml](.github/workflows/frontend-tests.yml) - Frontend test automation
-- [.github/workflows/docker-build.yml](.github/workflows/docker-build.yml) - Docker build validation
-- [.pre-commit-config.yaml](.pre-commit-config.yaml) - Pre-commit hooks for code quality
+For a complete list of available documentation, see the [Documentation Index](docs/README.md).
 
 ---
 

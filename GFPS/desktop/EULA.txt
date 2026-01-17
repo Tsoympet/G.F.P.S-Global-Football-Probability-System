@@ -1,0 +1,184 @@
+END USER LICENSE AGREEMENT (EULA)
+G.F.P.S - Global Football Probability System Desktop Application
+
+Version 1.0
+Effective Date: January 17, 2026
+
+================================================================================
+
+1. ACCEPTANCE OF TERMS
+
+By installing, copying, or otherwise using the G.F.P.S Desktop Application
+("Software"), you agree to be bound by the terms of this End User License
+Agreement ("Agreement"). If you do not agree to the terms of this Agreement,
+do not install or use the Software.
+
+2. LICENSE GRANT
+
+Subject to the terms of this Agreement, Tsoympet ("Licensor") grants you a
+non-exclusive, non-transferable, revocable license to use the Software for
+personal or commercial purposes in accordance with the MIT License under which
+the Software is distributed.
+
+3. OPEN SOURCE LICENSE
+
+The Software is licensed under the MIT License. The full text of the MIT
+License is available in the LICENSE file included with this Software and at:
+https://opensource.org/licenses/MIT
+
+This EULA supplements, but does not replace, the MIT License. In the event of
+any conflict between this EULA and the MIT License, the MIT License shall
+prevail.
+
+4. DISCLAIMER OF WARRANTIES
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+The Software provides probabilistic analytics and statistical modeling for
+football matches. All predictions, probabilities, and expected value
+calculations are estimates only and do not constitute:
+
+- Financial advice
+- Betting recommendations
+- Guarantees of outcomes
+- Professional consulting services
+
+Football outcomes are inherently uncertain. The accuracy of predictions depends
+on data quality, model assumptions, and factors beyond the Software's control.
+
+5. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+This includes but is not limited to:
+- Financial losses from betting or gambling activities
+- Decisions made based on Software outputs
+- Data inaccuracies or calculation errors
+- Service interruptions or unavailability
+- Third-party data provider issues
+
+6. RESPONSIBLE USE
+
+By using this Software, you acknowledge and agree that:
+
+1. No Gambling Encouragement: The Software is an analytical and educational
+   tool. It does not encourage, promote, or facilitate gambling activities.
+
+2. User Responsibility: You are solely responsible for any decisions made based
+   on the Software's outputs, including but not limited to betting or financial
+   decisions.
+
+3. Legal Compliance: You will use the Software in compliance with all
+   applicable local, state, national, and international laws and regulations,
+   including gambling laws in your jurisdiction.
+
+4. Age Restrictions: If you use the Software in connection with gambling
+   activities, you confirm that you meet the legal age requirements in your
+   jurisdiction.
+
+5. Risk Awareness: You understand that gambling involves risk of financial loss
+   and that the Software's predictions do not guarantee profits or reduce risk.
+
+7. DATA AND PRIVACY
+
+1. Data Providers: The Software may integrate with third-party data providers
+   (API-Football, Football-Data.org, etc.). You are responsible for obtaining
+   and maintaining your own API keys and subscriptions.
+
+2. API Keys: You must keep your API keys confidential. The Licensor is not
+   responsible for unauthorized use of your credentials.
+
+3. Local Storage: The Software stores configuration and cache data locally on
+   your device. This data is encrypted when possible but stored at your own
+   risk.
+
+4. No Data Collection: The desktop application does not transmit your personal
+   data, betting decisions, or analytical results to the Licensor.
+
+8. INTELLECTUAL PROPERTY
+
+1. Ownership: The Software and all intellectual property rights therein remain
+   the property of the Licensor and contributors.
+
+2. Trademarks: "G.F.P.S" and "Global Football Probability System" are
+   trademarks of the Licensor. Unauthorized use is prohibited.
+
+3. Attribution: When redistributing the Software or derivative works, you must
+   maintain all copyright notices and attributions as required by the MIT
+   License.
+
+9. THIRD-PARTY COMPONENTS
+
+The Software incorporates third-party open source components, each subject to
+its own license terms. These components are listed in the Software's
+documentation and source code. You agree to comply with all applicable
+third-party licenses.
+
+10. UPDATES AND MODIFICATIONS
+
+1. Updates: The Licensor may provide updates, patches, or new versions of the
+   Software. Such updates may modify or replace features without prior notice.
+
+2. No Obligation: The Licensor has no obligation to provide support, updates,
+   or maintenance for the Software.
+
+3. EULA Changes: This Agreement may be updated from time to time. Continued use
+   of the Software after changes constitutes acceptance of the modified
+   Agreement.
+
+11. TERMINATION
+
+1. Automatic Termination: This license automatically terminates if you fail to
+   comply with any term of this Agreement.
+
+2. Effect of Termination: Upon termination, you must cease all use of the
+   Software and destroy all copies in your possession.
+
+3. Survival: Sections 4, 5, 6, 8, and 12 survive termination of this Agreement.
+
+12. GOVERNING LAW
+
+This Agreement shall be governed by and construed in accordance with the laws
+of the jurisdiction in which the Licensor operates, without regard to conflict
+of law principles.
+
+13. SEVERABILITY
+
+If any provision of this Agreement is found to be unenforceable or invalid,
+that provision shall be limited or eliminated to the minimum extent necessary
+so that this Agreement shall otherwise remain in full force and effect.
+
+14. ENTIRE AGREEMENT
+
+This Agreement, together with the MIT License, constitutes the entire agreement
+between you and the Licensor regarding the Software and supersedes all prior
+agreements and understandings.
+
+15. ACKNOWLEDGMENT
+
+BY INSTALLING OR USING THE SOFTWARE, YOU ACKNOWLEDGE THAT YOU HAVE READ THIS
+AGREEMENT, UNDERSTAND IT, AND AGREE TO BE BOUND BY ITS TERMS AND CONDITIONS.
+
+================================================================================
+
+Contact Information:
+For questions about this EULA, please visit:
+https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System
+
+================================================================================
+
+Risk Disclaimer:
+G.F.P.S provides probabilistic analytics, not guarantees. Football outcomes
+remain uncertain, and nothing in G.F.P.S is financial advice or a promise of
+profit. Use responsibly and validate against your own risk tolerance.
+
+Never gamble more than you can afford to lose. If you or someone you know has
+a gambling problem, seek help:
+- National Council on Problem Gambling: 1-800-522-4700
+- GamCare (UK): 0808 8020 133
+- Gambling Helpline (AU): 1800 858 858
