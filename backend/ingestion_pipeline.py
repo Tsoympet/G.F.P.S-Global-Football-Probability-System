@@ -16,6 +16,7 @@ from .data_providers import (
     OpenLigaDBLiveProvider,
     Provider,
     ProviderRegistry,
+    WebScraperProvider,
     load_settings_from_env,
 )
 from .data_quality import (
@@ -42,6 +43,7 @@ def _build_registry(settings: Optional[DataSourceSettings] = None) -> ProviderRe
     registry = ProviderRegistry(settings)
     registry.register(OpenFootballCSVProvider())
     registry.register(FootballDataOrgProvider(api_key=settings.api_keys.get("football-data.org"), allow_network=settings.live_network_enabled))
+    registry.register(WebScraperProvider(allow_network=settings.live_network_enabled))
     registry.register(OpenLigaDBLiveProvider(allow_network=settings.live_network_enabled))
     registry.register(ApiFootballProvider(api_key=settings.api_keys.get("api-football-premium")))
     registry.register(KeyBasedStubProvider())

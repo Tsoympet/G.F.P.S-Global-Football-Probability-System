@@ -21,6 +21,7 @@ from .key_based_stub import KeyBasedStubProvider
 from .free_football_data_org import FootballDataOrgProvider
 from .free_live_openligadb import OpenLigaDBLiveProvider
 from .premium_api_football import ApiFootballProvider
+from .web_scraper import WebScraperProvider
 from .registry import ProviderRegistry
 from .settings import DataMode, DataSourceSettings, ProviderToggle, load_settings_from_env
 
@@ -38,6 +39,7 @@ __all__ = [
     "FootballDataOrgProvider",
     "OpenLigaDBLiveProvider",
     "ApiFootballProvider",
+    "WebScraperProvider",
     "ProviderRegistry",
     "DataMode",
     "DataSourceSettings",

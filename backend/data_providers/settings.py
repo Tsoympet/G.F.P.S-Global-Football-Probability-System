@@ -53,6 +53,11 @@ def load_settings_from_env() -> DataSourceSettings:
             priority=15,
             refresh_seconds=6 * 3600,
         ),
+        "web-scraper": ProviderToggle(
+            enabled=_env_flag("ENABLE_WEB_SCRAPER", "0"),
+            priority=20,
+            refresh_seconds=3600,
+        ),
         "openligadb-live": ProviderToggle(
             enabled=_env_flag("ENABLE_OPENLIGADB", "1"),
             priority=25,

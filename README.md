@@ -68,9 +68,30 @@ GFPS provides probabilistic analytics, not guarantees. Football outcomes remain 
 
 ## 🔌 Extensibility
 
-- Swap or add data providers (API-Football, custom feeds).
+- Swap or add data providers (API-Football, custom feeds, web scraping).
 - Extend markets (totals, handicaps, props) and EV filters.
 - Add new model components (Elo, xG, ML ensembles).
+
+### Data providers
+
+GFPS supports multiple data sources that work together:
+
+- **OpenFootball CSV**: Free, offline CSV fixtures (no API key needed)
+- **Football-Data.org**: Free API with rate limits (API key required)
+- **OpenLigaDB**: Free German league live data
+- **API-Football**: Premium API with live odds (subscription required)
+- **Web Scraper**: Scrape data from publicly available websites (configurable)
+
+Enable providers via environment variables:
+```bash
+ENABLE_FOOTBALL_DATA=1    # Football-Data.org API
+ENABLE_OPENLIGADB=1       # OpenLigaDB live data
+ENABLE_API_FOOTBALL=0     # API-Football premium
+ENABLE_WEB_SCRAPER=0      # Web scraping from HTML sources
+ENABLE_LIVE_NETWORK=0     # Allow network requests for scraping
+```
+
+See [Web Scraper Documentation](docs/web-scraper.md) for details on configuring HTML scraping.
 
 ### Data ingestion pipeline
 
