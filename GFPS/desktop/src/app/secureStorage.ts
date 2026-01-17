@@ -7,9 +7,12 @@ const SECRET_SALT =
   import.meta.env.VITE_SECRET_SALT ||
   (() => {
     // Fallback: generate a deterministic but unique value per browser/device
-    // This is less secure than a build-time secret but better than a hardcoded value
-    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-    const platform = typeof navigator !== 'undefined' ? (navigator.platform || 'unknown') : 'unknown';
+    // Must be deterministic to ensure the same key is derived across page loads
+    // for successful decryption. This is less secure than a build-time secret
+    // but better than a hardcoded value shared across all installations.
+    const hasNavigator = typeof navigator !== 'undefined';
+    const userAgent = hasNavigator ? navigator.userAgent : '';
+    const platform = hasNavigator ? (navigator.platform || 'unknown') : 'unknown';
     return `gfps-${btoa(userAgent + platform).substring(0, 32)}`;
   })();
 
