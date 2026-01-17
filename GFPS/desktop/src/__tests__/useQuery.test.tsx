@@ -20,7 +20,7 @@ describe('useQuery', () => {
     const { result } = renderHook(() => useQuery(fn, { pollMs: 0, staleMs: 10 }));
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.data?.ok).toBe(true);
+    expect((result.current.data as { ok: boolean })?.ok).toBe(true);
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 15));
@@ -35,7 +35,7 @@ describe('useQuery', () => {
     const { result } = renderHook(() => useQuery(fn, { pollMs: 0, cacheKey: 'cached-test' }));
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.data?.ok).toBe('cached');
+    expect((result.current.data as { ok: string })?.ok).toBe('cached');
     await waitFor(() => expect(result.current.stale).toBe(true));
   });
 });
