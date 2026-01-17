@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "GFPS Desktop",
+  "version": "0.1.0",
+  "identifier": "com.gfps.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "bundle": {
+    "targets": ["msi", "dmg", "appimage"],
+    "windows": {
+      "wix": {
+        "language": "en-US"
+      },
+      "certificateThumbprint": "${TAURI_WINDOWS_CERT_THUMBPRINT}",
+      "timestampUrl": "https://timestamp.digicert.com"
+    },
+    "macOS": {
+      "signingIdentity": "${TAURI_MACOS_IDENTITY}",
+      "entitlements": null
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    }
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "GFPS — Global Football Probability System",
+        "width": 1400,
+        "height": 900,
+        "resizable": true,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://localhost:8000 ws://localhost:8000"
+    }
+  }
+}
