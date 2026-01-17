@@ -18,5 +18,7 @@ scikit-learn
 joblib
 beautifulsoup4
 lxml
+playwright
+requests
 
 

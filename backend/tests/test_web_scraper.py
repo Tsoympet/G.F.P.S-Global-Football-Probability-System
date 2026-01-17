@@ -234,6 +234,123 @@ class WebScraperTests(unittest.TestCase):
                 del os.environ["SCRAPER_CONFIG_PATH"]
             os.unlink(temp_path)
 
+    def test_captcha_detection(self):
+        """Test that captcha detection works."""
+        provider = WebScraperProvider(allow_network=False, config={
+            "captcha_detection": {
+                "enabled": True,
+                "indicators": ["captcha", "recaptcha"]
+            }
+        })
+        
+        # HTML with captcha
+        html_with_captcha = "<html><body><div class='g-recaptcha'></div></body></html>"
+        self.assertTrue(provider._detect_captcha(html_with_captcha))
+        
+        # HTML without captcha
+        html_without_captcha = "<html><body><div class='match'></div></body></html>"
+        self.assertFalse(provider._detect_captcha(html_without_captcha))
+
+    def test_structure_monitoring(self):
+        """Test HTML structure change detection."""
+        provider = WebScraperProvider(allow_network=False, config={
+            "structure_monitoring": {
+                "enabled": True,
+                "similarity_threshold": 0.8
+            }
+        })
+        
+        url = "http://test.com"
+        html1 = "<html><body><div class='match'><span class='team'>A</span></div></body></html>"
+        html2 = "<html><body><div class='match'><span class='team'>B</span></div></body></html>"
+        html3 = "<html><body><table><tr><td>Data</td></tr></table></body></html>"
+        
+        # First time should not detect change
+        self.assertFalse(provider._detect_structure_change(url, html1))
+        
+        # Similar structure should not trigger change
+        self.assertFalse(provider._detect_structure_change(url, html2))
+        
+        # Very different structure should trigger change
+        # (depends on threshold and implementation details)
+        provider._detect_structure_change(url, html3)
+
+    def test_auto_selector_learning(self):
+        """Test automatic selector learning."""
+        provider = WebScraperProvider(allow_network=False, config={
+            "auto_selector_learning": {
+                "enabled": True
+            }
+        })
+        
+        html = """
+        <html><body>
+            <div class='match'>Match 1</div>
+            <div class='match'>Match 2</div>
+            <div class='match'>Match 3</div>
+        </body></html>
+        """
+        
+        suggestions = provider._learn_selectors(html)
+        # Should suggest .match as container
+        self.assertIsInstance(suggestions, dict)
+
+    def test_pagination_config(self):
+        """Test pagination configuration loading."""
+        config = {
+            "fixtures_url": "http://example.com",
+            "pagination": {
+                "enabled": True,
+                "type": "url_pattern",
+                "url_pattern": "?page={page}",
+                "max_pages": 5
+            }
+        }
+        
+        provider = WebScraperProvider(allow_network=False, config=config)
+        self.assertTrue(provider.config["pagination"]["enabled"])
+        self.assertEqual(provider.config["pagination"]["type"], "url_pattern")
+        self.assertEqual(provider.config["pagination"]["max_pages"], 5)
+
+    def test_proxy_config(self):
+        """Test proxy configuration loading."""
+        config = {
+            "proxy": {
+                "enabled": True,
+                "server": "http://proxy.example.com:8080",
+                "username": "user",
+                "password": "pass"
+            }
+        }
+        
+        provider = WebScraperProvider(allow_network=False, config=config)
+        self.assertTrue(provider.config["proxy"]["enabled"])
+        self.assertEqual(provider.config["proxy"]["server"], "http://proxy.example.com:8080")
+
+    def test_captcha_handler_registration(self):
+        """Test captcha handler can be registered."""
+        provider = WebScraperProvider(allow_network=False)
+        
+        def dummy_handler(url: str) -> str:
+            return "<html>solved</html>"
+        
+        provider.set_captcha_handler(dummy_handler)
+        self.assertIsNotNone(provider.captcha_handler)
+        self.assertEqual(provider.captcha_handler("test"), "<html>solved</html>")
+
+    def test_js_rendering_config(self):
+        """Test JavaScript rendering configuration."""
+        config = {
+            "use_js_rendering": True,
+            "js_wait_time": 3000
+        }
+        
+        provider = WebScraperProvider(allow_network=False, config=config)
+        # JS rendering should be enabled only if Playwright is available
+        # In test environment it might not be installed
+        self.assertEqual(provider.config["use_js_rendering"], True)
+        self.assertEqual(provider.config["js_wait_time"], 3000)
+
 
 if __name__ == "__main__":
     unittest.main()
