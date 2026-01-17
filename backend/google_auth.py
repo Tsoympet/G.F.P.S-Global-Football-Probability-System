@@ -406,3 +406,93 @@ def get_api_credentials(
     }
 
 
+@router.get("/api-providers")
+def list_api_providers():
+    """List all available API data providers with their details."""
+    providers = [
+        {
+            "id": "api-football",
+            "name": "API-Football",
+            "description": "Premium odds & live data with high reliability",
+            "tier": "premium",
+            "requires_key": True,
+            "signup_url": "https://www.api-football.com/pricing",
+            "features": ["Live odds", "Match events", "Lineups", "Statistics"],
+            "free_tier": False,
+            "reliability": 0.90,
+        },
+        {
+            "id": "football-data",
+            "name": "Football-Data.org",
+            "description": "Free tier available for fixtures and results",
+            "tier": "free",
+            "requires_key": True,
+            "signup_url": "https://www.football-data.org/client/register",
+            "features": ["Fixtures", "Results", "Standings"],
+            "free_tier": True,
+            "reliability": 0.55,
+        },
+        {
+            "id": "odds-matrix",
+            "name": "Odds Matrix",
+            "description": "Comprehensive odds comparison data",
+            "tier": "premium",
+            "requires_key": True,
+            "signup_url": "https://oddsmatrix.com/",
+            "features": ["Odds comparison", "Market coverage", "Real-time updates"],
+            "free_tier": False,
+            "reliability": 0.85,
+        },
+        {
+            "id": "openligadb",
+            "name": "OpenLigaDB",
+            "description": "Free live data for select leagues (no key required)",
+            "tier": "free",
+            "requires_key": False,
+            "signup_url": None,
+            "features": ["Live scores", "Match events"],
+            "free_tier": True,
+            "reliability": 0.35,
+        },
+        {
+            "id": "openfootball",
+            "name": "OpenFootball CSV",
+            "description": "Free historical data (no key required)",
+            "tier": "free",
+            "requires_key": False,
+            "signup_url": None,
+            "features": ["Historical fixtures", "Results"],
+            "free_tier": True,
+            "reliability": 0.70,
+        },
+        {
+            "id": "bet365-api",
+            "name": "Bet365 API",
+            "description": "Live odds and betting markets",
+            "tier": "premium",
+            "requires_key": True,
+            "signup_url": "https://www.bet365.com/",
+            "features": ["Live odds", "In-play markets"],
+            "free_tier": False,
+            "reliability": 0.92,
+        },
+        {
+            "id": "the-odds-api",
+            "name": "The Odds API",
+            "description": "Sports odds from multiple bookmakers",
+            "tier": "premium",
+            "requires_key": True,
+            "signup_url": "https://the-odds-api.com/",
+            "features": ["Multi-bookmaker odds", "Historical odds"],
+            "free_tier": True,
+            "reliability": 0.88,
+        },
+    ]
+    
+    return {
+        "ok": True,
+        "providers": providers,
+        "count": len(providers)
+    }
+
+

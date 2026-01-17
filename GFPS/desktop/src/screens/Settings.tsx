@@ -4,6 +4,18 @@ import { palette } from '@theme/palette';
 import { useState, useEffect } from 'react';
 import { loadSecure, saveSecure } from '@app/secureStorage';
 
+interface ApiProvider {
+  id: string;
+  name: string;
+  description: string;
+  tier: string;
+  requires_key: boolean;
+  signup_url: string | null;
+  features: string[];
+  free_tier: boolean;
+  reliability: number;
+}
+
 export const Settings = () => {
   const {
     apiUrl,
@@ -32,32 +44,60 @@ export const Settings = () => {
   const [password, setPassword] = useState('');
 
   // API Provider credentials
-  const [apiProviders, setApiProviders] = useState<Record<string, string>>({});
-  const [apiFootballKey, setApiFootballKey] = useState('');
-  const [footballDataKey, setFootballDataKey] = useState('');
-  const [oddsMatrixKey, setOddsMatrixKey] = useState('');
+  const [availableProviders, setAvailableProviders] = useState<ApiProvider[]>([]);
+  const [providerKeys, setProviderKeys] = useState<Record<string, string>>({});
+  const [loadingProviders, setLoadingProviders] = useState(false);
 
+  // Load available providers from backend
+  useEffect(() => {
+    const fetchProviders = async () => {
+      setLoadingProviders(true);
+      try {
+        const baseUrl = apiUrl.replace(/\/$/, '');
+        const res = await fetch(`${baseUrl}/auth/api-providers`);
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableProviders(data.providers || []);
+        }
+      } catch (err) {
+        console.error('Failed to load providers:', err);
+      } finally {
+        setLoadingProviders(false);
+      }
+    };
+    fetchProviders();
+  }, [apiUrl]);
+
+  // Load saved credentials
   useEffect(() => {
     loadSecure<Record<string, string>>('gfps_api_providers').then((data) => {
       if (data) {
-        setApiProviders(data);
-        setApiFootballKey(data['api-football'] || '');
-        setFootballDataKey(data['football-data'] || '');
-        setOddsMatrixKey(data['odds-matrix'] || '');
+        setProviderKeys(data);
       }
     });
   }, []);
 
   const saveApiKeys = async () => {
-    const providers: Record<string, string> = {};
-    if (apiFootballKey) providers['api-football'] = apiFootballKey;
-    if (footballDataKey) providers['football-data'] = footballDataKey;
-    if (oddsMatrixKey) providers['odds-matrix'] = oddsMatrixKey;
-    await saveSecure('gfps_api_providers', providers);
-    setApiProviders(providers);
+    await saveSecure('gfps_api_providers', providerKeys);
   };
 
-  const openProviderSignup = (url: string) => {
+  const updateProviderKey = (providerId: string, key: string) => {
+    setProviderKeys((prev) => {
+      const updated = { ...prev };
+      if (key) {
+        updated[providerId] = key;
+      } else {
+        delete updated[providerId];
+      }
+      return updated;
+    });
+  };
+
+  const openProviderSignup = (url: string | null) => {
+    if (url) {
+      window.open(url, '_blank');
+    }
+  };
     window.open(url, '_blank');
   };
 
@@ -311,116 +351,97 @@ export const Settings = () => {
           then paste your key below. Your credentials are encrypted and stored locally.
         </div>
 
-        {/* API-Football */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label style={{ color: palette.textSecondary, fontSize: 14, flex: 1 }}>
-              API-Football (Premium odds & live data)
-            </label>
-            <button
-              onClick={() => openProviderSignup('https://www.api-football.com/pricing')}
-              style={{
-                background: 'transparent',
-                border: `1px solid ${palette.border}`,
-                color: palette.textPrimary,
-                padding: '6px 12px',
-                borderRadius: 8,
-                fontSize: 12,
-                cursor: 'pointer'
-              }}
-            >
-              Get API Key →
-            </button>
-          </div>
-          <input
-            type="password"
-            value={apiFootballKey}
-            onChange={(e) => setApiFootballKey(e.target.value)}
-            placeholder="Paste your API-Football key here"
-            style={{
-              background: palette.card,
-              border: `1px solid ${palette.border}`,
-              color: palette.textPrimary,
-              padding: '10px 12px',
-              borderRadius: 8,
-              fontSize: 13
-            }}
-          />
-        </div>
+        {loadingProviders && (
+          <div style={{ color: palette.textSecondary, fontSize: 13 }}>Loading providers...</div>
+        )}
 
-        {/* Football-Data.org */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label style={{ color: palette.textSecondary, fontSize: 14, flex: 1 }}>
-              Football-Data.org (Free tier available)
-            </label>
-            <button
-              onClick={() => openProviderSignup('https://www.football-data.org/client/register')}
-              style={{
-                background: 'transparent',
-                border: `1px solid ${palette.border}`,
-                color: palette.textPrimary,
-                padding: '6px 12px',
-                borderRadius: 8,
-                fontSize: 12,
-                cursor: 'pointer'
-              }}
-            >
-              Get API Key →
-            </button>
-          </div>
-          <input
-            type="password"
-            value={footballDataKey}
-            onChange={(e) => setFootballDataKey(e.target.value)}
-            placeholder="Paste your Football-Data.org key here"
-            style={{
-              background: palette.card,
-              border: `1px solid ${palette.border}`,
-              color: palette.textPrimary,
-              padding: '10px 12px',
-              borderRadius: 8,
-              fontSize: 13
-            }}
-          />
-        </div>
+        {!loadingProviders && availableProviders.length === 0 && (
+          <div style={{ color: palette.textSecondary, fontSize: 13 }}>No providers available</div>
+        )}
 
-        {/* Odds Matrix */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label style={{ color: palette.textSecondary, fontSize: 14, flex: 1 }}>
-              Odds Matrix (Odds comparison data)
-            </label>
-            <button
-              onClick={() => openProviderSignup('https://oddsmatrix.com/')}
-              style={{
-                background: 'transparent',
-                border: `1px solid ${palette.border}`,
-                color: palette.textPrimary,
-                padding: '6px 12px',
-                borderRadius: 8,
-                fontSize: 12,
-                cursor: 'pointer'
-              }}
-            >
-              Get API Key →
-            </button>
+        {/* Dynamic provider list */}
+        {availableProviders.map((provider) => (
+          <div key={provider.id} style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 8,
+            padding: '12px',
+            background: palette.card,
+            borderRadius: 10,
+            border: `1px solid ${palette.border}`
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: palette.textPrimary, fontSize: 14, fontWeight: 600 }}>
+                  {provider.name}
+                  {provider.free_tier && (
+                    <span style={{ 
+                      marginLeft: 8, 
+                      fontSize: 11, 
+                      padding: '2px 6px', 
+                      background: '#0fd7a1', 
+                      color: '#0b0f1a', 
+                      borderRadius: 4,
+                      fontWeight: 700
+                    }}>
+                      FREE TIER
+                    </span>
+                  )}
+                </div>
+                <div style={{ color: palette.textSecondary, fontSize: 12, marginTop: 2 }}>
+                  {provider.description}
+                </div>
+                <div style={{ color: palette.textSecondary, fontSize: 11, marginTop: 4 }}>
+                  Features: {provider.features.join(', ')} • Reliability: {(provider.reliability * 100).toFixed(0)}%
+                </div>
+              </div>
+              {provider.requires_key && provider.signup_url && (
+                <button
+                  onClick={() => openProviderSignup(provider.signup_url)}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${palette.border}`,
+                    color: palette.textPrimary,
+                    padding: '6px 12px',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Get API Key →
+                </button>
+              )}
+              {!provider.requires_key && (
+                <div style={{
+                  fontSize: 11,
+                  padding: '6px 12px',
+                  color: palette.textSecondary,
+                  whiteSpace: 'nowrap'
+                }}>
+                  No key needed
+                </div>
+              )}
+            </div>
+            
+            {provider.requires_key && (
+              <input
+                type="password"
+                value={providerKeys[provider.id] || ''}
+                onChange={(e) => updateProviderKey(provider.id, e.target.value)}
+                placeholder={`Paste your ${provider.name} key here`}
+                style={{
+                  background: palette.card,
+                  border: `1px solid ${palette.border}`,
+                  color: palette.textPrimary,
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  fontSize: 13
+                }}
+              />
+            )}
           </div>
-          <input
-            type="password"
-            value={oddsMatrixKey}
-            onChange={(e) => setOddsMatrixKey(e.target.value)}
-            placeholder="Paste your Odds Matrix key here"
-            style={{
-              background: palette.card,
-              border: `1px solid ${palette.border}`,
-              color: palette.textPrimary,
-              padding: '10px 12px',
-              borderRadius: 8,
-              fontSize: 13
-            }}
-          />
-        </div>
+        ))}
 
         <button
           onClick={saveApiKeys}
@@ -432,14 +453,15 @@ export const Settings = () => {
             padding: '10px 14px',
             borderRadius: 10,
             fontWeight: 700,
-            cursor: 'pointer'
+            cursor: 'pointer',
+            marginTop: 8
           }}
         >
           Save API Keys
         </button>
-        {Object.keys(apiProviders).length > 0 && (
+        {Object.keys(providerKeys).length > 0 && (
           <div style={{ color: palette.textSecondary, fontSize: 13 }}>
-            {Object.keys(apiProviders).length} provider(s) configured
+            {Object.keys(providerKeys).length} provider(s) configured
           </div>
         )}
       </div>
