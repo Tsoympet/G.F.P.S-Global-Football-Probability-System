@@ -61,12 +61,19 @@ jobs:
       - name: Collect installers
         shell: bash
         run: |
-          mkdir -p installers/${{ matrix.os }}
-          if [ ! -d src-tauri/target/release/bundle ]; then
-            echo "Bundle output not found at src-tauri/target/release/bundle" >&2
+          ROOT="${GITHUB_WORKSPACE}/GFPS/desktop"
+          INSTALLERS_DIR="${ROOT}/installers/${{ matrix.os }}"
+          BUNDLE_DIR="${ROOT}/src-tauri/target/release/bundle"
+          mkdir -p "${INSTALLERS_DIR}"
+          if [ ! -d "${BUNDLE_DIR}" ]; then
+            echo "Bundle output not found at ${BUNDLE_DIR}" >&2
             exit 1
           fi
-          cp -R src-tauri/target/release/bundle/* installers/${{ matrix.os }}/
+          if ! find "${BUNDLE_DIR}" -mindepth 1 -maxdepth 1 | read; then
+            echo "No installer artifacts found in ${BUNDLE_DIR}" >&2
+            exit 1
+          fi
+          cp -R "${BUNDLE_DIR}"/. "${INSTALLERS_DIR}"/
       - name: Upload bundles
         if: always()
         uses: actions/upload-artifact@v4
