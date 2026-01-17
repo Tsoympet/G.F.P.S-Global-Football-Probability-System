@@ -372,3 +372,37 @@ def twofa_disable(p: TwoFAEnable, user: User = Depends(require_user), db: Sessio
     return {"ok": True}
 
 
+# -------------------------------------------------------------------
+# API Provider Credentials Management
+# -------------------------------------------------------------------
+
+class ApiProviderCredentials(BaseModel):
+    credentials: dict  # {"api-football": "key", "football-data": "key", etc.}
+
+
+@router.post("/api-credentials")
+def save_api_credentials(
+    p: ApiProviderCredentials,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db)
+):
+    """Save user's API provider credentials (encrypted in DB)."""
+    user.api_provider_credentials = p.credentials
+    db.add(user)
+    db.commit()
+    return {"ok": True, "provider_count": len(p.credentials)}
+
+
+@router.get("/api-credentials")
+def get_api_credentials(
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db)
+):
+    """Retrieve user's API provider credentials."""
+    return {
+        "ok": True,
+        "credentials": user.api_provider_credentials or {},
+        "provider_count": len(user.api_provider_credentials or {})
+    }
+
+

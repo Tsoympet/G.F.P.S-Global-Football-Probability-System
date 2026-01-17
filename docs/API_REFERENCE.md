@@ -25,6 +25,8 @@ GFPS uses a **pay-per-use model** where users are charged only for the external 
 - `POST /auth/2fa/setup` – Generate TOTP secret + otpauth URI (Bearer token required).
 - `POST /auth/2fa/enable` – Enable 2FA with a TOTP code (Bearer token required).
 - `POST /auth/2fa/disable` – Disable 2FA with a TOTP code (Bearer token required).
+- `POST /auth/api-credentials` – Save user's API provider credentials (Bearer token required).
+- `GET /auth/api-credentials` – Retrieve user's API provider credentials (Bearer token required).
 
 ## Core Data (Bearer token required)
 

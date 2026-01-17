@@ -1,19 +1,24 @@
-# Migration Guide: Subscription Model to Pay-Per-Use
+# Migration Guide: Subscription Model to User-Managed API Providers
 
 ## Overview
 
-GFPS has transitioned from a role-based subscription model to a **pay-per-use model**. Users are now charged only for the external data API providers they consume, with no subscription tiers or role-based access restrictions.
+GFPS has transitioned from a role-based subscription model to a **user-managed API provider model**. Users now subscribe directly to external data API providers (API-Football, Football-Data.org, Odds Matrix, etc.) and configure their own API keys in the GFPS client. There are no subscription tiers or role-based access restrictions within GFPS itself.
 
 ## What Changed
 
 ### Removed
 - **User roles**: The `role` field (previously defaulting to "free") has been removed from the User model
 - **Role-based access control**: No endpoints check user roles for authorization
-- **Subscription tiers**: No concept of free vs. premium user tiers
+- **Subscription tiers**: No concept of free vs. premium user tiers within GFPS
 
 ### Added
 - **API usage tracking**: New fields `api_calls_count` and `api_calls_last_reset` on the User model to track API consumption
-- **Pay-per-use billing**: Users are billed based on actual API data provider usage
+- **User API credentials storage**: New `api_provider_credentials` field to store user's own API provider keys (encrypted)
+- **API credential endpoints**: `POST /auth/api-credentials` and `GET /auth/api-credentials` for managing user API keys
+- **Provider management UI**: Settings screen now includes "Data Provider API Keys" section with:
+  - Links to provider signup pages (opens in browser)
+  - Secure input fields for API keys
+  - Local encrypted storage of credentials
 
 ### Unchanged
 - **Authentication**: JWT-based authentication remains the same
@@ -30,6 +35,31 @@ If you have an existing database, the `role` column will be automatically droppe
 2. Deploy the new code
 3. The database schema will be automatically updated on startup
 4. Existing user accounts will continue to work without any action required
+
+## How to Use the New API Provider System
+
+Users now manage their own API provider subscriptions and configure credentials directly in the GFPS client:
+
+### Step 1: Choose Your Data Provider
+Navigate to **Settings** → **Data Provider API Keys** in the desktop client. You'll see available providers:
+- **API-Football**: Premium odds and live data
+- **Football-Data.org**: Free tier available for fixtures and results
+- **Odds Matrix**: Odds comparison data
+
+### Step 2: Sign Up at the Provider
+Click the **"Get API Key →"** button next to any provider. This opens the provider's website in your browser where you can:
+1. Create an account
+2. Choose and pay for a subscription plan directly with the provider
+3. Generate your API key from their dashboard
+
+### Step 3: Configure Your Key
+Return to GFPS and paste your API key into the corresponding field. Your credentials are:
+- Encrypted locally using AES-256-GCM
+- Stored in your browser's local storage
+- Optionally synced to your GFPS account (encrypted in the database)
+
+### Step 4: Save and Use
+Click **"Save API Keys"** and GFPS will use your credentials to fetch data from the providers you've configured.
 
 ## For Developers
 
