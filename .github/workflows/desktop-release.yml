@@ -62,6 +62,10 @@ jobs:
         shell: bash
         run: |
           mkdir -p installers/${{ matrix.os }}
+          if [ ! -d src-tauri/target/release/bundle ]; then
+            echo "Bundle output not found at src-tauri/target/release/bundle" >&2
+            exit 1
+          fi
           cp -R src-tauri/target/release/bundle/* installers/${{ matrix.os }}/
       - name: Upload bundles
         if: always()
