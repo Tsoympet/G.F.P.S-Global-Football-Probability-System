@@ -58,9 +58,25 @@ jobs:
         with:
           projectPath: GFPS/desktop
           tauriScript: npm run tauri:build
+      - name: Collect installers
+        shell: bash
+        run: |
+          ROOT="${GITHUB_WORKSPACE}/GFPS/desktop"
+          INSTALLERS_DIR="${ROOT}/installers/${{ matrix.os }}"
+          BUNDLE_DIR="${ROOT}/src-tauri/target/release/bundle"
+          mkdir -p "${INSTALLERS_DIR}"
+          if [ ! -d "${BUNDLE_DIR}" ]; then
+            echo "Bundle output not found at ${BUNDLE_DIR}" >&2
+            exit 1
+          fi
+          if [ -z "$(ls -A "${BUNDLE_DIR}" 2>/dev/null)" ]; then
+            echo "No installer artifacts found in ${BUNDLE_DIR}" >&2
+            exit 1
+          fi
+          cp -R "${BUNDLE_DIR}"/. "${INSTALLERS_DIR}"/
       - name: Upload bundles
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gfps-desktop-${{ matrix.os }}-${{ steps.channel.outputs.channel }}
-          path: GFPS/desktop/**/bundle/**/*
+          path: GFPS/desktop/installers/${{ matrix.os }}/**/*
