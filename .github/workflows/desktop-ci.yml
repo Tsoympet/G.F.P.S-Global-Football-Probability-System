@@ -40,4 +40,4 @@ jobs:
       - name: Dry Tauri build
         env:
           TAURI_APP_VERSION: 0.0.0-ci
-        run: npm run tauri:build -- --bundles msi,dmg,appimage
+        run: npm run tauri:build -- --bundles deb,appimage
