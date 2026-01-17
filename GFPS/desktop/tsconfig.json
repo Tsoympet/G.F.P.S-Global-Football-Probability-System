@@ -11,6 +11,7 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
+    "types": ["vitest/globals", "@testing-library/jest-dom"],
     "baseUrl": "./src",
     "paths": {
       "@app/*": ["app/*"],

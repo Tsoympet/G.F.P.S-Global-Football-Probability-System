@@ -20,7 +20,7 @@ class IngestionFlowTests(unittest.TestCase):
         self.session.close()
 
     def test_ingest_and_feature_build(self):
-        provider = OpenFootballCSVProvider(base_path=Path("backend/sample_data"))
+        provider = OpenFootballCSVProvider(base_path=Path("sample_data"))
         stats = ingestion_pipeline.ingest_fixtures(
             session=self.session, providers=[provider], db_engine=self.engine
         )
