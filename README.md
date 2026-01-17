@@ -1,5 +1,15 @@
-**G.F.P.S – Global Football Probability System** is a production-grade football probability and analytics platform.
+# G.F.P.S – Global Football Probability System
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Backend Tests](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/frontend-tests.yml)
+[![Build](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/build.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/build.yml)
+[![Desktop CI](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-ci.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-ci.yml)
+[![Docker Build](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/docker-build.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/docker-build.yml)
+
+**G.F.P.S** is a production-grade football probability and analytics platform.
 It blends Poisson/Dixon-Coles modelling, market odds normalization, EV detection, and a modern desktop client to explain match outcomes with transparent math.
+
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/99907e89-7991-41a5-be85-9ffe1ff5313c" />
 
 > **📋 Production Readiness:** This repository has undergone a comprehensive security audit and is production-ready. See [docs/AUDIT_REPORT.md](docs/AUDIT_REPORT.md) for details.
