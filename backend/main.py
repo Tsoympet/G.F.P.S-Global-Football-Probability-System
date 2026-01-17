@@ -137,7 +137,7 @@ async def startup_event() -> None:
     # Create all DB tables if they don't exist
     Base.metadata.create_all(bind=engine)
 
-    # Note: SECRET_KEY validation is enforced in auth_utils.py at import time
+    # Note: SECRET_KEY validation is enforced in auth_utils.py (lines 8-10) at import time
     # Ensure seed snapshots are persisted for offline use
     backfill_seed_if_empty()
 
