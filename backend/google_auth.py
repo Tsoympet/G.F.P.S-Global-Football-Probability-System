@@ -144,7 +144,7 @@ def signup(p: Signup, db: Session = Depends(get_db)):
         if not verify_password(p.password, existing.password_hash):
             raise HTTPException(401, "Invalid credentials")
 
-        token = create_token(existing.email, existing.token_version, existing.role)
+        token = create_token(existing.email, existing.token_version)
         return {
             "ok": True,
             "token": token,
@@ -152,7 +152,6 @@ def signup(p: Signup, db: Session = Depends(get_db)):
                 "email": existing.email,
                 "display_name": existing.display_name,
                 "avatar_url": existing.avatar_url,
-                "role": existing.role,
             },
             "provider": "local",
         }
@@ -161,14 +160,13 @@ def signup(p: Signup, db: Session = Depends(get_db)):
         email=p.email,
         password_hash=hash_password(p.password),
         display_name=p.display_name or p.email.split("@")[0],
-        role="free",
         is_active=True,
     )
     db.add(u)
     db.commit()
     db.refresh(u)
 
-    token = create_token(u.email, u.token_version, u.role)
+    token = create_token(u.email, u.token_version)
     return {
         "ok": True,
         "token": token,
@@ -176,7 +174,6 @@ def signup(p: Signup, db: Session = Depends(get_db)):
             "email": u.email,
             "display_name": u.display_name,
             "avatar_url": u.avatar_url,
-            "role": u.role,
         },
         "provider": "local",
     }
@@ -196,7 +193,7 @@ def login(p: Login, db: Session = Depends(get_db)):
         if not p.code or not verify_totp(u.totp_secret, p.code):
             raise HTTPException(401, "Invalid 2FA code")
 
-    token = create_token(u.email, u.token_version, u.role)
+    token = create_token(u.email, u.token_version)
     return {
         "ok": True,
         "token": token,
@@ -204,7 +201,6 @@ def login(p: Login, db: Session = Depends(get_db)):
             "email": u.email,
             "display_name": u.display_name,
             "avatar_url": u.avatar_url,
-            "role": u.role,
         },
         "provider": "local",
     }
@@ -251,14 +247,13 @@ def google_login(p: GoogleLogin, db: Session = Depends(get_db)):
             password_hash=hash_password(rnd_pwd),
             display_name=name,
             avatar_url=picture,
-            role="free",
             is_active=True,
         )
         db.add(u)
         db.commit()
         db.refresh(u)
 
-    token = create_token(u.email, u.token_version, u.role)
+    token = create_token(u.email, u.token_version)
     return {
         "ok": True,
         "token": token,
@@ -266,7 +261,6 @@ def google_login(p: GoogleLogin, db: Session = Depends(get_db)):
             "email": u.email,
             "display_name": u.display_name,
             "avatar_url": u.avatar_url,
-            "role": u.role,
         },
         "provider": "google",
     }

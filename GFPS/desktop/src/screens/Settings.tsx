@@ -258,7 +258,7 @@ export const Settings = () => {
         </div>
         {profile && (
           <div style={{ color: palette.textSecondary, fontSize: 13 }}>
-            Logged in as {profile.email} ({profile.role || 'user'})
+            Logged in as {profile.email}
           </div>
         )}
         {error && <div style={{ color: '#ef4444' }}>{error}</div>}

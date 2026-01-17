@@ -20,13 +20,12 @@ def verify_password(password: str, hashed: str) -> bool:
     return pwd_context.verify(password, hashed)
 
 
-def create_token(email: str, token_version: int = 0, role: str = "free") -> str:
+def create_token(email: str, token_version: int = 0) -> str:
     now = datetime.datetime.now(datetime.timezone.utc)
     exp = now + datetime.timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
     payload = {
         "sub": email,
         "tv": token_version,
-        "role": role,
         "iat": now.timestamp(),
         "exp": exp.timestamp(),
     }
