@@ -12,7 +12,7 @@ interface Props<T> {
   data: T[];
 }
 
-export function DataTable<T extends Record<string, any>>({ columns, data }: Props<T>) {
+export function DataTable<T extends Record<string, unknown>>({ columns, data }: Props<T>) {
   return (
     <div
       style={{

@@ -8,7 +8,6 @@
 import { useBetSlipStore } from '@store/betslip';
 import { api } from '@api/client';
 import { palette } from '@theme/palette';
-import { useState } from 'react';
 
 export const BetSlip = () => {
   const {
@@ -28,8 +27,6 @@ export const BetSlip = () => {
     setIsAnalyzing,
     setAnalysisError,
   } = useBetSlipStore();
-
-  const [correlationAlpha] = useState(1.0);
 
   const handleAnalyze = async () => {
     if (selections.length === 0) {
@@ -62,14 +59,15 @@ export const BetSlip = () => {
           oddsFair: s.oddsFair,
           modelProbability: s.modelProbability,
         })),
-        correlationAlpha,
+        correlationAlpha: 1.0,
       };
 
       const response = await api.analyzeBetSlip(request);
       setAnalysisData(response);
       setShowAnalysis(true);
-    } catch (error: any) {
-      setAnalysisError(error?.message || 'Failed to analyze bet slip');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze bet slip';
+      setAnalysisError(errorMessage);
     } finally {
       setIsAnalyzing(false);
     }
@@ -425,7 +423,7 @@ export const BetSlip = () => {
                     <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
                       ⚠️ Correlation Warnings ({analysisData.report.correlationWarnings.length})
                     </div>
-                    {analysisData.report.correlationWarnings.slice(0, 3).map((w: any, i: number) => (
+                    {analysisData.report.correlationWarnings.slice(0, 3).map((w: Record<string, unknown>, i: number) => (
                       <div
                         key={i}
                         style={{
@@ -456,7 +454,7 @@ export const BetSlip = () => {
                     <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
                       Professional Notes
                     </div>
-                    {analysisData.report.professionalNotes.map((note: any, i: number) => (
+                    {analysisData.report.professionalNotes.map((note: Record<string, unknown>, i: number) => (
                       <div
                         key={i}
                         style={{

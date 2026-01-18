@@ -17,7 +17,7 @@ const SECRET_SALT =
   })();
 
 const getCrypto = () => {
-  const cryptoFromGlobal = (globalThis as any).crypto;
+  const cryptoFromGlobal = (globalThis as { crypto?: Crypto }).crypto;
   if (cryptoFromGlobal?.subtle && cryptoFromGlobal.getRandomValues) {
     return cryptoFromGlobal;
   }

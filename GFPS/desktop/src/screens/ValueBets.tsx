@@ -63,7 +63,10 @@ export const ValueBets = () => {
   useEffect(() => {
     if (!bookmakerFocusKey && sorted.length > 0) {
       const firstKey = `${sorted[0].match}__${sorted[0].market}`;
-      setBookmakerFocusKey(firstKey);
+      // Use queueMicrotask to defer state update and avoid cascading renders
+      queueMicrotask(() => {
+        setBookmakerFocusKey(firstKey);
+      });
     }
   }, [bookmakerFocusKey, sorted.length, sorted]);
 

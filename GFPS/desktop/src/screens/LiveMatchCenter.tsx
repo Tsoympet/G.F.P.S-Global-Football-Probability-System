@@ -53,30 +53,33 @@ export const LiveMatchCenter = () => {
 
   useEffect(() => {
     if (!predictionsQuery.data || !predictionsQuery.lastUpdated) return;
-    setHistory((prev) => {
-      const next = { ...prev };
-      const timestamp = new Date(predictionsQuery.lastUpdated).toLocaleTimeString();
-      predictionsQuery.data.forEach((p) => {
-        if (!p.fixtureId) return;
-        const series = next[p.fixtureId] || [];
-        if (!series.length || series[series.length - 1].label !== timestamp) {
-          series.push({
-            label: timestamp,
-            home: +(p.homeWinProbability * 100).toFixed(2),
-            draw: +(p.drawProbability * 100).toFixed(2),
-            away: +(p.awayWinProbability * 100).toFixed(2)
-          });
-        } else {
-          series[series.length - 1] = {
-            label: timestamp,
-            home: +(p.homeWinProbability * 100).toFixed(2),
-            draw: +(p.drawProbability * 100).toFixed(2),
-            away: +(p.awayWinProbability * 100).toFixed(2)
-          };
-        }
-        next[p.fixtureId] = series.slice(-30);
+    // Use queueMicrotask to defer state update and avoid cascading renders
+    queueMicrotask(() => {
+      setHistory((prev) => {
+        const next = { ...prev };
+        const timestamp = new Date(predictionsQuery.lastUpdated).toLocaleTimeString();
+        predictionsQuery.data.forEach((p) => {
+          if (!p.fixtureId) return;
+          const series = next[p.fixtureId] || [];
+          if (!series.length || series[series.length - 1].label !== timestamp) {
+            series.push({
+              label: timestamp,
+              home: +(p.homeWinProbability * 100).toFixed(2),
+              draw: +(p.drawProbability * 100).toFixed(2),
+              away: +(p.awayWinProbability * 100).toFixed(2)
+            });
+          } else {
+            series[series.length - 1] = {
+              label: timestamp,
+              home: +(p.homeWinProbability * 100).toFixed(2),
+              draw: +(p.drawProbability * 100).toFixed(2),
+              away: +(p.awayWinProbability * 100).toFixed(2)
+            };
+          }
+          next[p.fixtureId] = series.slice(-30);
+        });
+        return next;
       });
-      return next;
     });
   }, [predictionsQuery.data, predictionsQuery.lastUpdated]);
 
