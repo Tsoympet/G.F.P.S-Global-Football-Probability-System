@@ -119,3 +119,4 @@ jobs:
           else
             gh release edit "$TAG" "${EDIT_ARGS[@]}"
           fi
+
