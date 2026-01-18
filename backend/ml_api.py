@@ -15,6 +15,16 @@ router = APIRouter(prefix="/ml", tags=["ml"])
 logger = logging.getLogger("gfps.ml")
 
 
+def _sanitize_for_log(value: Optional[str]) -> Optional[str]:
+    """
+    Remove newline characters from values before logging to reduce
+    the risk of log injection when logging user-controlled data.
+    """
+    if value is None:
+        return None
+    return value.replace("\r", "").replace("\n", "")
+
+
 def _ensure_seed_model() -> None:
     with SessionLocal() as db:
         if db.query(ModelVersion).count() == 0:
@@ -78,7 +88,7 @@ def _activate_version(
         if active_total > 1:
             logger.error(
                 "Multiple active models detected during activation",
-                extra={"count": active_total, "target": version},
+                extra={"count": active_total, "target": _sanitize_for_log(version)},
             )
             raise HTTPException(409, "Multiple active models detected; activation aborted")
 
