@@ -113,7 +113,7 @@ Download the latest desktop application installers from the [GitHub Releases pag
 
 ### Building from Source
 
-If you prefer to build from source or no pre-built installers are available yet, see the [🚀 Getting started locally](#-getting-started-locally) section below.
+If you prefer to build from source or no pre-built installers are available yet, see the [🚀 Getting started locally](#getting-started-locally) section below.
 
 ---
 
