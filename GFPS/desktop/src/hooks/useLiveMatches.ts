@@ -12,6 +12,20 @@ interface LiveMatchState {
   lastMessage?: number;
 }
 
+// Sanitize fixtureId to prevent prototype pollution attacks
+const sanitizeKey = (key: string): string => `$${key}`;
+
+// Sanitize all keys in a Record object to prevent prototype pollution
+const sanitizeRecord = <T>(record: Record<string, T>): Record<string, T> => {
+  const sanitized: Record<string, T> = {};
+  for (const key in record) {
+    if (Object.prototype.hasOwnProperty.call(record, key)) {
+      sanitized[sanitizeKey(key)] = record[key];
+    }
+  }
+  return sanitized;
+};
+
 export const useLiveMatches = () => {
   const [state, setState] = useState<LiveMatchState>({
     fixtures: [],
@@ -46,8 +60,8 @@ export const useLiveMatches = () => {
         if (payload.type === 'snapshot') {
           setState({
             fixtures: (payload.fixtures as Fixture[]) || [],
-            events: (payload.events as Record<string, MatchEvent[]>) || {},
-            markets: (payload.markets as Record<string, AdditionalMarketLine[]>) || {},
+            events: sanitizeRecord((payload.events as Record<string, MatchEvent[]>) || {}),
+            markets: sanitizeRecord((payload.markets as Record<string, AdditionalMarketLine[]>) || {}),
             connection: 'open',
             lastMessage: Date.now()
           });
@@ -58,16 +72,17 @@ export const useLiveMatches = () => {
         if (payload.type === 'event') {
           const fixtureId = payload.fixtureId as string;
           const matchEvent = payload.event as MatchEvent;
+          const safeKey = sanitizeKey(fixtureId);
           setState((prev) => ({
             ...prev,
             events: {
               ...prev.events,
-              [fixtureId]: [...(prev.events[fixtureId] || []), matchEvent]
+              [safeKey]: [...(prev.events[safeKey] || []), matchEvent]
             }
           }));
         }
         if (payload.type === 'markets') {
-          setState((prev) => ({ ...prev, markets: (payload.markets as Record<string, AdditionalMarketLine[]>) || {} }));
+          setState((prev) => ({ ...prev, markets: sanitizeRecord((payload.markets as Record<string, AdditionalMarketLine[]>) || {}) }));
         }
       };
     };

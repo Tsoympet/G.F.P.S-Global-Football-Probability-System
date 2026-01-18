@@ -17,6 +17,9 @@ interface ProbabilityPoint {
   value?: number;
 }
 
+// Sanitize fixtureId to match the sanitized keys in useLiveMatches
+const sanitizeKey = (key: string): string => `$${key}`;
+
 export const LiveMatchCenter = () => {
   const { refreshIntervalMs } = useSettingsStore();
   const { fixtures: liveFixtures, events, markets: liveMarkets, connection, lastMessage } = useLiveMatches();
@@ -37,7 +40,7 @@ export const LiveMatchCenter = () => {
   const predictions = predictionsQuery.data ?? [];
 
   const selectedPrediction: Prediction | undefined = predictions.find((p) => p.fixtureId === selected?.id);
-  const selectedMarkets: AdditionalMarketLine[] = selected?.id ? marketsByFixture[selected.id] || [] : [];
+  const selectedMarkets: AdditionalMarketLine[] = selected?.id ? marketsByFixture[sanitizeKey(selected.id)] || [] : [];
   const oddsForSelection = selected?.id ? liveOdds.filter((row) => row.fixtureId === selected.id || !row.fixtureId) : liveOdds;
   // Check if the stream is stale (no updates for 3x the refresh interval)
   const [currentTime, setCurrentTime] = useState(() => Date.now());
@@ -105,7 +108,7 @@ export const LiveMatchCenter = () => {
   const momentumSeries = useMemo(() => {
     if (!selected?.id) return [];
     const series: ProbabilityPoint[] = [];
-    const feed = events[selected.id] || [];
+    const feed = events[sanitizeKey(selected.id)] || [];
     let cursor = 0;
     feed.forEach((evt) => {
       let delta = 0;
