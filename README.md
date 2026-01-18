@@ -7,6 +7,8 @@
 [![Desktop CI](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-ci.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-ci.yml)
 [![Docker Build](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/docker-build.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/docker-build.yml)
 [![Release Desktop](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/release.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/release.yml)
+[![Desktop Installers](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-release.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-release.yml)
+[![Smoke Tests](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/smoke.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/smoke.yml)
 
 **G.F.P.S** is a production-grade football probability and analytics platform.
 It blends Poisson/Dixon-Coles modelling, market odds normalization, EV detection, and a modern desktop client to explain match outcomes with transparent math.
