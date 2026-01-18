@@ -15,7 +15,7 @@ It blends Poisson/Dixon-Coles modelling, market odds normalization, EV detection
 
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/99907e89-7991-41a5-be85-9ffe1ff5313c" />
 
-> **📋 Production Readiness:** This repository has undergone a comprehensive security audit and is production-ready. See [docs/AUDIT_REPORT.md](docs/AUDIT_REPORT.md) for details.
+> **📋 Production Readiness:** This repository has undergone a comprehensive security audit and is production-ready. See [docs/AUDIT_REPORT.md](docs/AUDIT_REPORT.md) and the install readiness review in [docs/REPO_READINESS_AUDIT.md](docs/REPO_READINESS_AUDIT.md).
 
 ---
 
@@ -200,6 +200,8 @@ python -m backend.pipeline_cli build_features    # build bookmaker-style feature
 
 ## 🚀 Getting started locally
 
+For a cross-platform setup guide (Windows/macOS/Linux), see [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md).
+
 1. **Install backend dependencies**
    ```bash
    python -m venv .venv
@@ -343,4 +345,3 @@ This repository follows security best practices:
 - ✅ Rate limiting and CORS protection
 
 See [docs/SECURITY.md](docs/SECURITY.md) for detailed security guidelines.
-
