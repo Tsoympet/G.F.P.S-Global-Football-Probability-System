@@ -78,15 +78,15 @@ jobs:
           fi
 
           NOTES_FILE=$(mktemp)
-          cat > "$NOTES_FILE" <<-EOF
-          Channel: ${CHANNEL_TITLE}
-
-          Major changes:
-          ${CHANGELOG}
-
-          Risks:
-          ${RISK_LINE}
-          EOF
+          {
+            echo "Channel: ${CHANNEL_TITLE}"
+            echo ""
+            echo "Major changes:"
+            echo "${CHANGELOG}"
+            echo ""
+            echo "Risks:"
+            echo "${RISK_LINE}"
+          } > "$NOTES_FILE"
           echo "file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Build and publish
