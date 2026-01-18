@@ -440,9 +440,9 @@ export const BetSlip = () => {
                         }}
                       >
                         <div style={{ fontWeight: 600, marginBottom: 4 }}>
-                          {w.severity.toUpperCase()}: {w.description}
+                          {(w.severity as string).toUpperCase()}: {w.description as React.ReactNode}
                         </div>
-                        <div style={{ color: palette.textSecondary }}>{w.impact}</div>
+                        <div style={{ color: palette.textSecondary }}>{w.impact as React.ReactNode}</div>
                       </div>
                     ))}
                   </div>
@@ -466,9 +466,9 @@ export const BetSlip = () => {
                         }}
                       >
                         <div style={{ fontWeight: 600, marginBottom: 2, textTransform: 'uppercase', fontSize: 10 }}>
-                          {note.category.replace('_', ' ')}
+                          {(note.category as string).replace('_', ' ')}
                         </div>
-                        <div style={{ color: palette.textSecondary }}>{note.note}</div>
+                        <div style={{ color: palette.textSecondary }}>{note.note as React.ReactNode}</div>
                       </div>
                     ))}
                   </div>

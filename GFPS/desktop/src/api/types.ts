@@ -11,6 +11,7 @@ export interface Fixture {
     home: number;
     away: number;
   };
+  [key: string]: unknown;
 }
 
 export interface LiveOddsRow {
@@ -21,6 +22,7 @@ export interface LiveOddsRow {
   away: number;
   source?: string;
   startTime?: string;
+  [key: string]: unknown;
 }
 
 export interface AdditionalMarketLine {
@@ -33,6 +35,7 @@ export interface AdditionalMarketLine {
   home?: number;
   away?: number;
   source?: string;
+  [key: string]: unknown;
 }
 
 export interface LiveOddsPayload {
@@ -62,6 +65,7 @@ export interface Prediction {
   modelVersion?: string;
   confidence?: number;
   status?: Fixture['status'];
+  [key: string]: unknown;
 }
 
 export interface ValueBet {
@@ -73,6 +77,7 @@ export interface ValueBet {
   fixtureId?: string;
   league?: string;
   startTime?: string;
+  [key: string]: unknown;
 }
 
 export interface ModelInfo {
@@ -80,6 +85,7 @@ export interface ModelInfo {
   roi: number;
   logLoss: number;
   status: 'active' | 'ready' | 'training';
+  [key: string]: unknown;
 }
 
 export interface PipelineSnapshot {
@@ -130,6 +136,7 @@ export interface BetJournalEntry {
   result?: string | null;
   realized_roi?: number | null;
   closing_odds?: number | null;
+  [key: string]: unknown;
 }
 
 export interface PerformanceBreakdown {
@@ -212,6 +219,7 @@ export interface BacktestRun {
   seed: number;
   startedAt?: string | null;
   completedAt?: string | null;
+  [key: string]: unknown;
 }
 
 export interface BetSlipRequest {

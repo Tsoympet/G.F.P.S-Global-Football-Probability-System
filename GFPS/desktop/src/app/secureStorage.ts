@@ -73,7 +73,7 @@ export const encryptPayload = async (plaintext: string) => {
   const key = await deriveKey();
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoder.encode(plaintext));
-  return `${toBase64(iv)}:${toBase64(encrypted)}`;
+  return `${toBase64(iv.buffer)}:${toBase64(encrypted)}`;
 };
 
 export const decryptPayload = async (payload: string) => {
