@@ -52,6 +52,34 @@ class DatabaseUrlFallbackTests(unittest.TestCase):
         if resolved_path != original_db:
             self._files_to_cleanup.append(resolved_path)
 
+    def test_file_permissions_are_restrictive(self):
+        """Verify that copied database files have restrictive permissions (0o600)."""
+        temp_dir = Path(tempfile.mkdtemp())
+        self._dirs_to_cleanup.append(temp_dir)
+
+        original_db = temp_dir / "secure.db"
+        conn = sqlite3.connect(original_db)
+        conn.execute("create table t(id int);")
+        conn.commit()
+        conn.close()
+
+        original_db.chmod(0o444)
+        self._files_to_cleanup.append(original_db)
+
+        url = f"sqlite:///{original_db}"
+        resolved = db._ensure_writable_sqlite_url(url)
+        resolved_path = Path(make_url(resolved).database or "")
+
+        if resolved_path != original_db:
+            self._files_to_cleanup.append(resolved_path)
+            # Get the file permissions
+            file_stat = resolved_path.stat()
+            file_mode = file_stat.st_mode & 0o777
+            
+            # Verify permissions are 0o600 (owner read/write only)
+            self.assertEqual(file_mode, 0o600, 
+                f"Expected file permissions 0o600, got {oct(file_mode)}")
+
 
 if __name__ == "__main__":
     unittest.main()
