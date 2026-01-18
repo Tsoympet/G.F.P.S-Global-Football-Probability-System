@@ -26,9 +26,6 @@ updates:
       prefix-development: "chore"
       include: "scope"
     rebase-strategy: "auto"
-    # Allow separate security update PRs
-    allow:
-      - dependency-type: "all"
 
   # ============================================================================
   # Node.js Dependencies (npm) - Root Monorepo
@@ -52,10 +49,6 @@ updates:
       prefix-development: "chore"
       include: "scope"
     rebase-strategy: "auto"
-    # Ignore workspace dependencies to avoid duplicate PRs
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-patch"]
     versioning-strategy: "auto"
 
   # ============================================================================
