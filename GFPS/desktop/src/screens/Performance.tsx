@@ -10,7 +10,7 @@ import {
   Legend
 } from 'chart.js';
 import { api } from '@api/client';
-import { BetJournalEntry, PerformanceKpis } from '@api/types';
+import { BetJournalEntry, PerformanceKpis, PerformanceBreakdown } from '@api/types';
 import { useQuery } from '@hooks/useQuery';
 import { KpiCard } from '@components/KpiCard';
 import { DataTable } from '@components/DataTable';
@@ -266,7 +266,7 @@ const ChartCard = ({ title, children }: { title: string; children: React.ReactNo
   </div>
 );
 
-const Breakdown = ({ title, rows }: { title: string; rows: Array<{ label: string; value: string | number }> }) => (
+const Breakdown = ({ title, rows }: { title: string; rows: PerformanceBreakdown[] }) => (
   <div>
     <div style={{ color: palette.textPrimary, fontWeight: 700, marginBottom: 6 }}>{title}</div>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
