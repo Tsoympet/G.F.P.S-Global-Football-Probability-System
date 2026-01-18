@@ -104,6 +104,8 @@ Download the latest desktop application installers from the [GitHub Releases pag
   - Make it executable: `chmod +x GFPS*.AppImage`
   - Run it: `./GFPS*.AppImage`
 
+📖 **For detailed installation instructions, troubleshooting, and system requirements, see [docs/INSTALLERS.md](docs/INSTALLERS.md)**
+
 ### Release Channels
 
 - **Stable releases** (`v1.0.0`, `v0.1.0`): Production-ready builds for all users
@@ -321,6 +323,8 @@ Comprehensive documentation is available in the `docs/` directory. See [docs/REA
 
 ### Essential Documentation
 - [README.md](README.md) - This file, overview and quick start
+- [INSTALLERS.md](docs/INSTALLERS.md) - Desktop installer download and installation guide
+- [RELEASE_INSTRUCTIONS.md](RELEASE_INSTRUCTIONS.md) - How to create and publish releases
 - [EULA.md](EULA.md) - End User License Agreement for desktop installers
 - [LICENSE](LICENSE) - MIT License for the software
 - [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Deployment instructions
