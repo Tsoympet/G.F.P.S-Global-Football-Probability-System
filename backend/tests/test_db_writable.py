@@ -18,6 +18,7 @@ class DatabaseUrlFallbackTests(unittest.TestCase):
     def tearDown(self):
         for path in self._files_to_cleanup:
             try:
+                # Make file writable for cleanup (may have been set to read-only in tests)
                 path.chmod(0o666)
             except Exception:
                 pass
@@ -52,6 +53,12 @@ class DatabaseUrlFallbackTests(unittest.TestCase):
         if resolved_path != original_db:
             self._files_to_cleanup.append(resolved_path)
 
+    def test_fallback_file_permissions_are_restrictive(self):
+        """Test that fallback database files have restrictive permissions (0o600)."""
+        temp_dir = Path(tempfile.mkdtemp())
+        self._dirs_to_cleanup.append(temp_dir)
+
+        original_db = temp_dir / "readonly.db"
     def test_file_permissions_are_restrictive(self):
         """Verify that copied database files have restrictive permissions (0o600)."""
         temp_dir = Path(tempfile.mkdtemp())
@@ -72,6 +79,11 @@ class DatabaseUrlFallbackTests(unittest.TestCase):
 
         if resolved_path != original_db:
             self._files_to_cleanup.append(resolved_path)
+            # Check that the file permissions are 0o600 (owner read/write only)
+            file_stat = resolved_path.stat()
+            file_mode = file_stat.st_mode & 0o777
+            self.assertEqual(file_mode, 0o600,
+                           f"Expected file permissions 0o600, got {oct(file_mode)}")
             # Get the file permissions
             file_stat = resolved_path.stat()
             file_mode = file_stat.st_mode & 0o777
