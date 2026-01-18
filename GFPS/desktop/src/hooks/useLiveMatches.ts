@@ -3,6 +3,7 @@ import { websocketUrl } from '@api/client';
 import { AdditionalMarketLine, Fixture, MatchEvent } from '@api/types';
 import { useSettingsStore } from '@store/settings';
 import { isOffline } from '@app/network';
+import { sanitizeKey, sanitizeRecord } from '@utils/sanitize';
 
 interface LiveMatchState {
   fixtures: Fixture[];
@@ -46,8 +47,8 @@ export const useLiveMatches = () => {
         if (payload.type === 'snapshot') {
           setState({
             fixtures: (payload.fixtures as Fixture[]) || [],
-            events: (payload.events as Record<string, MatchEvent[]>) || {},
-            markets: (payload.markets as Record<string, AdditionalMarketLine[]>) || {},
+            events: sanitizeRecord((payload.events as Record<string, MatchEvent[]>) || {}),
+            markets: sanitizeRecord((payload.markets as Record<string, AdditionalMarketLine[]>) || {}),
             connection: 'open',
             lastMessage: Date.now()
           });
@@ -58,16 +59,17 @@ export const useLiveMatches = () => {
         if (payload.type === 'event') {
           const fixtureId = payload.fixtureId as string;
           const matchEvent = payload.event as MatchEvent;
+          const safeKey = sanitizeKey(fixtureId);
           setState((prev) => ({
             ...prev,
             events: {
               ...prev.events,
-              [fixtureId]: [...(prev.events[fixtureId] || []), matchEvent]
+              [safeKey]: [...(prev.events[safeKey] || []), matchEvent]
             }
           }));
         }
         if (payload.type === 'markets') {
-          setState((prev) => ({ ...prev, markets: (payload.markets as Record<string, AdditionalMarketLine[]>) || {} }));
+          setState((prev) => ({ ...prev, markets: sanitizeRecord((payload.markets as Record<string, AdditionalMarketLine[]>) || {}) }));
         }
       };
     };

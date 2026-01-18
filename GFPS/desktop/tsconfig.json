@@ -21,7 +21,8 @@
       "@api/*": ["api/*"],
       "@hooks/*": ["hooks/*"],
       "@store/*": ["store/*"],
-      "@theme/*": ["theme/*"]
+      "@theme/*": ["theme/*"],
+      "@utils/*": ["utils/*"]
     }
   },
   "include": ["src"],
