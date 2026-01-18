@@ -1,14 +1,12 @@
 # G.F.P.S – Global Football Probability System
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Backend Tests](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/backend-tests.yml)
-[![Frontend Tests](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/frontend-tests.yml)
-[![Build](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/build.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/build.yml)
-[![Desktop CI](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-ci.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-ci.yml)
-[![Docker Build](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/docker-build.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/docker-build.yml)
-[![Release Desktop](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/release.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/release.yml)
-[![Desktop Installers](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-release.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-release.yml)
-[![Smoke Tests](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/smoke.yml/badge.svg)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/smoke.yml)
+[![Backend Tests](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/backend-tests.yml/badge.svg?branch=main)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/frontend-tests.yml/badge.svg?branch=main)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/frontend-tests.yml)
+[![Build](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/build.yml)
+[![Docker Build](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/docker-build.yml/badge.svg?branch=main)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/docker-build.yml)
+[![Desktop Installers](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-release.yml/badge.svg?branch=main)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/desktop-release.yml)
+[![Smoke Tests](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/actions/workflows/smoke.yml)
 
 **G.F.P.S** is a production-grade football probability and analytics platform.
 It blends Poisson/Dixon-Coles modelling, market odds normalization, EV detection, and a modern desktop client to explain match outcomes with transparent math.
