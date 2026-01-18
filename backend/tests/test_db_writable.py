@@ -59,6 +59,12 @@ class DatabaseUrlFallbackTests(unittest.TestCase):
         self._dirs_to_cleanup.append(temp_dir)
 
         original_db = temp_dir / "readonly.db"
+    def test_file_permissions_are_restrictive(self):
+        """Verify that copied database files have restrictive permissions (0o600)."""
+        temp_dir = Path(tempfile.mkdtemp())
+        self._dirs_to_cleanup.append(temp_dir)
+
+        original_db = temp_dir / "secure.db"
         conn = sqlite3.connect(original_db)
         conn.execute("create table t(id int);")
         conn.commit()
@@ -78,6 +84,13 @@ class DatabaseUrlFallbackTests(unittest.TestCase):
             file_mode = file_stat.st_mode & 0o777
             self.assertEqual(file_mode, 0o600,
                            f"Expected file permissions 0o600, got {oct(file_mode)}")
+            # Get the file permissions
+            file_stat = resolved_path.stat()
+            file_mode = file_stat.st_mode & 0o777
+            
+            # Verify permissions are 0o600 (owner read/write only)
+            self.assertEqual(file_mode, 0o600, 
+                f"Expected file permissions 0o600, got {oct(file_mode)}")
 
 
 if __name__ == "__main__":
