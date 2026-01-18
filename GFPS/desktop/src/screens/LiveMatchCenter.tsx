@@ -61,7 +61,8 @@ export const LiveMatchCenter = () => {
         const timestamp = new Date(predictionsQuery.lastUpdated).toLocaleTimeString();
         predictionsQuery.data.forEach((p) => {
           if (!p.fixtureId) return;
-          const series = next[p.fixtureId] || [];
+          const safeKey = sanitizeKey(p.fixtureId);
+          const series = next[safeKey] || [];
           if (!series.length || series[series.length - 1].label !== timestamp) {
             series.push({
               label: timestamp,
@@ -77,7 +78,7 @@ export const LiveMatchCenter = () => {
               away: +(p.awayWinProbability * 100).toFixed(2)
             };
           }
-          next[p.fixtureId] = series.slice(-30);
+          next[safeKey] = series.slice(-30);
         });
         return next;
       });
@@ -86,7 +87,7 @@ export const LiveMatchCenter = () => {
 
   const probabilitySeries = useMemo(() => {
     if (!selected?.id) return { labels: [], home: [], draw: [], away: [] };
-    const series = history[selected.id] || [];
+    const series = history[sanitizeKey(selected.id)] || [];
     if (!series.length && selectedPrediction) {
       return {
         labels: ['now'],
