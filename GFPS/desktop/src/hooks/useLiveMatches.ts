@@ -3,6 +3,7 @@ import { websocketUrl } from '@api/client';
 import { AdditionalMarketLine, Fixture, MatchEvent } from '@api/types';
 import { useSettingsStore } from '@store/settings';
 import { isOffline } from '@app/network';
+import { sanitizeKey, sanitizeRecord } from '@utils/sanitize';
 
 interface LiveMatchState {
   fixtures: Fixture[];
@@ -11,20 +12,6 @@ interface LiveMatchState {
   connection: 'connecting' | 'open' | 'closed' | 'error';
   lastMessage?: number;
 }
-
-// Sanitize fixtureId to prevent prototype pollution attacks
-const sanitizeKey = (key: string): string => `$${key}`;
-
-// Sanitize all keys in a Record object to prevent prototype pollution
-const sanitizeRecord = <T>(record: Record<string, T>): Record<string, T> => {
-  const sanitized: Record<string, T> = {};
-  for (const key in record) {
-    if (Object.prototype.hasOwnProperty.call(record, key)) {
-      sanitized[sanitizeKey(key)] = record[key];
-    }
-  }
-  return sanitized;
-};
 
 export const useLiveMatches = () => {
   const [state, setState] = useState<LiveMatchState>({

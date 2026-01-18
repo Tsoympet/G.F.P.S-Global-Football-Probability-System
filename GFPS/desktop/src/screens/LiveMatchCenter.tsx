@@ -8,6 +8,7 @@ import { palette } from '@theme/palette';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { AdditionalMarketLine, Fixture, LiveOddsPayload, LiveOddsRow, Prediction } from '@api/types';
 import { useSettingsStore } from '@store/settings';
+import { sanitizeKey } from '@utils/sanitize';
 
 interface ProbabilityPoint {
   label: string;
@@ -16,9 +17,6 @@ interface ProbabilityPoint {
   away: number;
   value?: number;
 }
-
-// Sanitize fixtureId to match the sanitized keys in useLiveMatches
-const sanitizeKey = (key: string): string => `$${key}`;
 
 export const LiveMatchCenter = () => {
   const { refreshIntervalMs } = useSettingsStore();

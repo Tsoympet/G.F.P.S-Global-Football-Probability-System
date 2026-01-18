@@ -1,17 +1,5 @@
 import { describe, it, expect } from 'vitest';
-
-// Import the sanitization logic - we'll test it directly
-const sanitizeKey = (key: string): string => `$${key}`;
-
-const sanitizeRecord = <T,>(record: Record<string, T>): Record<string, T> => {
-  const sanitized: Record<string, T> = {};
-  for (const key in record) {
-    if (Object.prototype.hasOwnProperty.call(record, key)) {
-      sanitized[sanitizeKey(key)] = record[key];
-    }
-  }
-  return sanitized;
-};
+import { sanitizeKey, sanitizeRecord } from '@utils/sanitize';
 
 describe('useLiveMatches - Security', () => {
   it('should sanitize keys to prevent prototype pollution via __proto__', () => {
