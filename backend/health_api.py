@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict
 
@@ -5,6 +6,8 @@ from fastapi import APIRouter
 from sqlalchemy import text
 
 from .db import engine
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -17,8 +20,9 @@ def _check_database() -> Dict[str, Any]:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
         return {"status": "ok"}
-    except Exception as exc:  # pylint: disable=broad-except
-        return {"status": "error", "detail": str(exc)}
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("Database health check failed")
+        return {"status": "error", "detail": "Database connection failed"}
 
 
 @router.get("")
