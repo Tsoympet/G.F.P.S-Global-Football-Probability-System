@@ -31,7 +31,7 @@
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
-    "@vitejs/plugin-react": "^4.3.0",
+    "@vitejs/plugin-react": "^5.1.2",
     "@vitest/ui": "^2.1.4",
     "eslint": "^9.39.2",
     "eslint-plugin-react-hooks": "^7.0.1",
