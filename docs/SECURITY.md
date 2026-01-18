@@ -213,7 +213,7 @@ If a security incident is detected:
 
 ### Desktop App (Tauri/Rust)
 
-**glib Vulnerability (CVE in versions 0.15.0-0.19.x)**
+**glib Vulnerability in versions 0.15.0-0.19.x**
 
 **Issue:** The `glib` crate versions 0.15.0 through 0.19.x contain a vulnerability in `VariantStrIter::impl_get` function that can cause undefined behavior and NULL pointer dereferences.
 
@@ -222,7 +222,7 @@ If a security incident is detected:
 - ⚠️  GTK3 transitive dependencies still use `glib 0.18.5` (unmaintained)
 
 **Explanation:**
-The desktop app uses Tauri, which depends on GTK3-based packages (gtk, webkit2gtk, etc.) version 0.18.x. These packages are unmaintained and locked to `glib ^0.18`. The vulnerability was fixed in `glib 0.20.0`, but upgrading would require migrating to GTK4.
+The desktop app uses Tauri, which depends on GTK3-based packages (gtk, webkit2gtk, etc.) version 0.18.x. These GTK3 packages are unmaintained and locked to `glib ^0.18`, preventing automatic updates to the safe version. The vulnerability was fixed in `glib 0.20.0`, but the unmaintained GTK3 packages won't be updated to support it.
 
 **Mitigation:**
 1. Added `glib >= 0.20.0` as a direct dependency to ensure non-vulnerable version is available
