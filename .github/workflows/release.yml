@@ -8,7 +8,17 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            args: ''
+          - platform: 'ubuntu-latest'
+            args: ''
+          - platform: 'windows-latest'
+            args: ''
+    runs-on: ${{ matrix.platform }}
     permissions:
       contents: write
       id-token: write
@@ -40,13 +50,19 @@ jobs:
         working-directory: GFPS/desktop
         run: npm ci
 
-      - name: Install system dependencies
+      - name: Install system dependencies (Linux)
+        if: matrix.platform == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: GFPS/desktop/src-tauri
 
       - name: Build release notes
         id: notes
@@ -74,52 +90,54 @@ jobs:
           fi
 
           if [ "$RELEASE_CHANNEL" = "beta" ]; then
-            RISK_LINE="- Experimental build; features may change and issues may be present."
+            RISK_LINE="⚠️ Experimental build; features may change and issues may be present."
           else
-            RISK_LINE="- Fully tested release intended for all users."
+            RISK_LINE="✅ Fully tested release intended for all users."
           fi
 
-          NOTES_FILE=$(mktemp)
           {
-            echo "Channel: ${CHANNEL_TITLE}"
+            echo "## Channel: ${CHANNEL_TITLE}"
             echo ""
-            echo "Major changes:"
+            echo "### Major changes:"
             echo "${CHANGELOG}"
             echo ""
-            echo "Risks:"
+            echo "### Important:"
             echo "${RISK_LINE}"
-          } > "$NOTES_FILE"
-          echo "file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+            echo ""
+            echo "---"
+            echo ""
+            echo "Download the appropriate installer for your platform:"
+            echo "- **Windows**: Download the \`.msi\` file"
+            echo "- **macOS**: Download the \`.dmg\` file"
+            echo "- **Linux**: Download the \`.AppImage\` file"
+          } > release_notes.md
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          cat release_notes.md >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          
+          # Set release title
+          if [ "$RELEASE_CHANNEL" = "beta" ]; then
+            echo "title=GFPS Desktop ${CURRENT_TAG} (Beta)" >> "$GITHUB_OUTPUT"
+          else
+            echo "title=GFPS Desktop ${CURRENT_TAG}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build and publish
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           projectPath: GFPS/desktop
-
-      - name: Enforce release notes and channel flags
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_CHANNEL: ${{ steps.channel.outputs.channel }}
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          NOTES_FILE="${{ steps.notes.outputs.file }}"
-
-          CREATE_ARGS=(--notes-file "$NOTES_FILE")
-          EDIT_ARGS=(--notes-file "$NOTES_FILE")
-          if [ "$RELEASE_CHANNEL" = "beta" ]; then
-            CREATE_ARGS+=(--prerelease --title "$TAG (Beta)")
-            EDIT_ARGS+=(--prerelease --title "$TAG (Beta)")
-          else
-            CREATE_ARGS+=(--title "$TAG" --latest)
-            EDIT_ARGS+=(--title "$TAG" --latest)
-          fi
-
-          if ! gh release view "$TAG" > /dev/null 2>&1; then
-            gh release create "$TAG" "${CREATE_ARGS[@]}"
-          else
-            gh release edit "$TAG" "${EDIT_ARGS[@]}"
-          fi
-
+          tagName: ${{ github.ref_name }}
+          releaseName: ${{ steps.notes.outputs.title }}
+          releaseBody: ${{ steps.notes.outputs.body }}
+          releaseDraft: false
+          prerelease: ${{ steps.channel.outputs.channel == 'beta' }}
+          args: ${{ matrix.args }}
