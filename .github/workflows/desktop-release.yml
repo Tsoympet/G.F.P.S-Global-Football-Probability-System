@@ -22,7 +22,7 @@ permissions:
 jobs:
   validate:
     # Run validation on push/PR but not on tag releases
-    if: github.event_name != 'push' || !startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     defaults:
       run:
