@@ -30,7 +30,7 @@ def _ensure_writable_sqlite_url(url: str) -> str:
     if os.path.exists(db_path):
         if os.path.exists(tmp_path):
             try:
-                os.chmod(tmp_path, 0o666)
+                os.chmod(tmp_path, 0o600)
             except Exception:
                 pass
             try:
@@ -38,7 +38,7 @@ def _ensure_writable_sqlite_url(url: str) -> str:
             except Exception:
                 pass
         shutil.copy(db_path, tmp_path)
-        os.chmod(tmp_path, 0o666)
+        os.chmod(tmp_path, 0o600)
     return f"sqlite:///{tmp_path}"
 
 
