@@ -18,6 +18,7 @@ class DatabaseUrlFallbackTests(unittest.TestCase):
     def tearDown(self):
         for path in self._files_to_cleanup:
             try:
+                # Make file writable for cleanup (may have been set to read-only in tests)
                 path.chmod(0o666)
             except Exception:
                 pass
