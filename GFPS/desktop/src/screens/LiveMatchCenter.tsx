@@ -39,7 +39,17 @@ export const LiveMatchCenter = () => {
   const selectedPrediction: Prediction | undefined = predictions.find((p) => p.fixtureId === selected?.id);
   const selectedMarkets: AdditionalMarketLine[] = selected?.id ? marketsByFixture[selected.id] || [] : [];
   const oddsForSelection = selected?.id ? liveOdds.filter((row) => row.fixtureId === selected.id || !row.fixtureId) : liveOdds;
-  const streamStale = lastMessage ? Date.now() - lastMessage > refreshIntervalMs * 3 : !lastMessage;
+  // Check if the stream is stale (no updates for 3x the refresh interval)
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const streamStale = lastMessage ? currentTime - lastMessage > refreshIntervalMs * 3 : !lastMessage;
+
+  // Update current time periodically to check staleness
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, refreshIntervalMs);
+    return () => clearInterval(interval);
+  }, [refreshIntervalMs]);
 
   useEffect(() => {
     if (!predictionsQuery.data || !predictionsQuery.lastUpdated) return;

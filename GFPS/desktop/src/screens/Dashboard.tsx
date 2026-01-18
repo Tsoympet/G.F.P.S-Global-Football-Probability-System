@@ -71,11 +71,13 @@ export const Dashboard = () => {
     const home = totals.home / count;
     const draw = totals.draw / count;
     const away = totals.away / count;
+    const label = new Date(predictions.lastUpdated || Date.now()).toLocaleTimeString();
+    const format = (value: number) => +(value * 100).toFixed(PERCENTAGE_PRECISION);
+    const newPoint = { label, home: format(home), draw: format(draw), away: format(away) };
+    
     setProbabilityHistory((prev) => {
-      const label = new Date(predictions.lastUpdated || Date.now()).toLocaleTimeString();
       if (prev.length && prev[prev.length - 1].label === label) return prev;
-      const format = (value: number) => +(value * 100).toFixed(PERCENTAGE_PRECISION);
-      return [...prev.slice(-MAX_HISTORY_POINTS), { label, home: format(home), draw: format(draw), away: format(away) }];
+      return [...prev.slice(-MAX_HISTORY_POINTS), newPoint];
     });
   }, [predictions.data, predictions.lastUpdated]);
 
