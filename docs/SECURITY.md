@@ -209,8 +209,44 @@ If a security incident is detected:
 - [Tauri Security](https://tauri.app/v1/guides/security/)
 - [SQLAlchemy Security](https://docs.sqlalchemy.org/en/14/faq/security.html)
 
+## ⚠️ Known Dependency Issues
+
+### Desktop App (Tauri/Rust)
+
+**glib Vulnerability (CVE in versions 0.15.0-0.19.x)**
+
+**Issue:** The `glib` crate versions 0.15.0 through 0.19.x contain a vulnerability in `VariantStrIter::impl_get` function that can cause undefined behavior and NULL pointer dereferences.
+
+**Status:** Partially mitigated
+- ✅ Added direct dependency on `glib >= 0.20.0` (currently using 0.21.5)
+- ⚠️  GTK3 transitive dependencies still use `glib 0.18.5` (unmaintained)
+
+**Explanation:**
+The desktop app uses Tauri, which depends on GTK3-based packages (gtk, webkit2gtk, etc.) version 0.18.x. These packages are unmaintained and locked to `glib ^0.18`. The vulnerability was fixed in `glib 0.20.0`, but upgrading would require migrating to GTK4.
+
+**Mitigation:**
+1. Added `glib >= 0.20.0` as a direct dependency to ensure non-vulnerable version is available
+2. Dependabot can now track and suggest updates to the safe version
+3. Any direct usage of glib in the project will use the safe version (0.21.5)
+4. The vulnerable code path in glib 0.18.5 is only accessible through GTK3 packages
+
+**Future Resolution:**
+Fully resolving this issue requires:
+- Upgrading to Tauri with GTK4 support (when available), OR
+- Using a different UI framework, OR
+- Creating a custom fork of glib 0.18.5 with the security patch backported
+
+**References:**
+- Vulnerability affects: glib >= 0.15.0, < 0.20.0
+- Fixed in: glib >= 0.20.0
+- Issue type: Undefined behavior in VariantStrIter iterator implementation
+
 ## 📝 Version History
 
+- **v1.1** (2026-01-18): Added dependency vulnerability mitigation
+  - Documented glib vulnerability in GTK3 packages (CVE affecting versions 0.15.0-0.19.x)
+  - Added direct glib >=0.20.0 dependency to enable Dependabot updates
+  - Note: GTK3 transitive dependencies still use glib 0.18.5 (unmaintained)
 - **v1.0** (2026-01-17): Initial security documentation
   - Required SECRET_KEY enforcement
   - CSP header configuration
