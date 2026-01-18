@@ -1,0 +1,201 @@
+# Dependabot configuration for G.F.P.S (Global Football Probability System)
+# Automates dependency updates across all package ecosystems in the repository
+# See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # ============================================================================
+  # Python Dependencies (pip) - Backend API & ML Models
+  # ============================================================================
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Tsoympet"
+    labels:
+      - "dependencies"
+      - "python"
+      - "backend"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    rebase-strategy: "auto"
+
+  # ============================================================================
+  # Node.js Dependencies (npm) - Root Monorepo
+  # ============================================================================
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Tsoympet"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "monorepo"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    rebase-strategy: "auto"
+    versioning-strategy: "auto"
+
+  # ============================================================================
+  # Node.js Dependencies (npm) - Desktop App (Tauri)
+  # ============================================================================
+  - package-ecosystem: "npm"
+    directory: "/GFPS/desktop"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Tsoympet"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "desktop"
+      - "frontend"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    rebase-strategy: "auto"
+    versioning-strategy: "auto"
+    # Group related dependencies for cleaner PRs
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "vitest"
+          - "@vitest/*"
+          - "jsdom"
+      eslint:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+      vite:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+
+  # ============================================================================
+  # Cargo Dependencies (Rust) - Tauri Desktop App
+  # ============================================================================
+  - package-ecosystem: "cargo"
+    directory: "/GFPS/desktop/src-tauri"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Tsoympet"
+    labels:
+      - "dependencies"
+      - "rust"
+      - "cargo"
+      - "desktop"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    rebase-strategy: "auto"
+    # Group Tauri dependencies together
+    groups:
+      tauri:
+        patterns:
+          - "tauri*"
+
+  # ============================================================================
+  # GitHub Actions - Workflow Dependencies
+  # ============================================================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Tsoympet"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci"
+    commit-message:
+      prefix: "ci"
+      prefix-development: "ci"
+      include: "scope"
+    rebase-strategy: "auto"
+    # Group common actions together
+    groups:
+      actions-core:
+        patterns:
+          - "actions/*"
+
+  # ============================================================================
+  # Docker - Container Base Images
+  # ============================================================================
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Tsoympet"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "infrastructure"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    rebase-strategy: "auto"
+
+  # ============================================================================
+  # Docker - Infrastructure Directory
+  # ============================================================================
+  - package-ecosystem: "docker"
+    directory: "/infrastructure"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Tsoympet"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "infrastructure"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    rebase-strategy: "auto"
