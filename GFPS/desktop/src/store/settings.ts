@@ -44,8 +44,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     try {
       const savedAt = await saveSecure(SETTINGS_KEY, payload);
       set({ ...payload, lastSaved: savedAt, storageStatus: 'persisted', storageMessage: undefined, initialized: true });
-    } catch (error: any) {
-      set({ storageStatus: 'error', storageMessage: error?.message });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : undefined;
+      set({ storageStatus: 'error', storageMessage: errorMessage });
     }
   };
 

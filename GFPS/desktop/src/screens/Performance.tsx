@@ -36,7 +36,7 @@ export const Performance = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleChange = (key: string, value: any) => setForm((prev) => ({ ...prev, [key]: value }));
+  const handleChange = (key: string, value: unknown) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,8 +58,9 @@ export const Performance = () => {
       await kpis.refetch();
       setMessage('Saved to journal');
       setForm(defaultForm);
-    } catch (error: any) {
-      setMessage(error?.message || 'Failed to save');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save';
+      setMessage(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -223,8 +224,9 @@ export const Performance = () => {
                   await api.reconcileJournal();
                   await kpis.refetch();
                   setMessage('Reconciled pending entries');
-                } catch (error: any) {
-                  setMessage(error?.message || 'Reconcile failed');
+                } catch (error) {
+                  const errorMessage = error instanceof Error ? error.message : 'Reconcile failed';
+                  setMessage(errorMessage);
                 }
               }}
               style={buttonAlt}
@@ -264,7 +266,7 @@ const ChartCard = ({ title, children }: { title: string; children: React.ReactNo
   </div>
 );
 
-const Breakdown = ({ title, rows }: { title: string; rows: any[] }) => (
+const Breakdown = ({ title, rows }: { title: string; rows: Array<{ label: string; value: string | number }> }) => (
   <div>
     <div style={{ color: palette.textPrimary, fontWeight: 700, marginBottom: 6 }}>{title}</div>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

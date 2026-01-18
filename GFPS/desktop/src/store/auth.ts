@@ -52,8 +52,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       const data = await res.json();
       set({ token: data.token, profile: data.profile, status: 'idle' });
       await saveSecure(AUTH_KEY, { token: data.token, profile: data.profile });
-    } catch (err: any) {
-      set({ status: 'error', error: err.message || 'Login failed' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      set({ status: 'error', error: errorMessage });
     }
   },
   logout: () => {

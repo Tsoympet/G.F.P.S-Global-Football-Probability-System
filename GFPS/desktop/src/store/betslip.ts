@@ -38,10 +38,10 @@ export type AnalysisReport = {
     risk_profile: string;
     key_insight: string;
   };
-  selectionBreakdown: any[];
-  correlationWarnings: any[];
-  scenarioAnalysis: any[];
-  professionalNotes: any[];
+  selectionBreakdown: Array<Record<string, unknown>>;
+  correlationWarnings: Array<Record<string, unknown>>;
+  scenarioAnalysis: Array<Record<string, unknown>>;
+  professionalNotes: Array<Record<string, unknown>>;
   disclaimer: string;
 };
 
@@ -50,8 +50,8 @@ export type BetSlipAnalysisResponse = {
   slipId: string;
   mode: string;
   numSelections: number;
-  selections: any[];
-  correlations: any[];
+  selections: Array<Record<string, unknown>>;
+  correlations: Array<Record<string, unknown>>;
   totals: {
     combinedOddsDecimal: number;
     combinedProbability: {
@@ -62,7 +62,7 @@ export type BetSlipAnalysisResponse = {
       naive: number;
       correlationAdjusted: number;
     };
-    overroundStackingRisk: any;
+    overroundStackingRisk: Record<string, unknown>;
     effectiveLegs?: number;
     volatilityMetrics: {
       score: number;
@@ -71,7 +71,7 @@ export type BetSlipAnalysisResponse = {
     };
   };
   report: AnalysisReport;
-  metadata: any;
+  metadata: Record<string, unknown>;
 };
 
 type BetSlipState = {

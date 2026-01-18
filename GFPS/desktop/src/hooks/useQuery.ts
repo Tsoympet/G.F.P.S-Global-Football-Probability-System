@@ -78,7 +78,7 @@ export const useQuery = <T,>(fn: () => Promise<T>, options: QueryOptions = {}): 
         await saveCached(cacheKey, data, ttlMs);
       }
       setState({ loading: false, data, error: undefined, lastUpdated: Date.now(), stale: false });
-    } catch (error: any) {
+    } catch (error) {
       if (aborter.signal.aborted) return;
       const retries = options.retry ?? 1;
       if (retryRef.current < retries) {
@@ -86,7 +86,8 @@ export const useQuery = <T,>(fn: () => Promise<T>, options: QueryOptions = {}): 
         setTimeout(execute, 500);
         return;
       }
-      setState((prev) => ({ ...prev, loading: false, error: error?.message || 'Request failed' }));
+      const errorMessage = error instanceof Error ? error.message : 'Request failed';
+      setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
     }
   };
 

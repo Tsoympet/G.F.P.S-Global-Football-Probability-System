@@ -206,10 +206,79 @@ export interface BacktestMetrics {
 export interface BacktestRun {
   id: number;
   status: string;
-  params: any;
+  params: Record<string, unknown>;
   metrics?: BacktestMetrics;
   warnings?: string[];
   seed: number;
   startedAt?: string | null;
   completedAt?: string | null;
+}
+
+export interface BetSlipRequest {
+  schemaVersion: string;
+  slipId: string;
+  mode: string;
+  selections: Array<{
+    clientSelectionKey: string;
+    fixtureId?: string;
+    homeTeam: string;
+    awayTeam: string;
+    league: string;
+    leagueId?: string;
+    startTime?: string;
+    marketType: string;
+    marketName: string;
+    line?: number;
+    outcome: string;
+    oddsBookmaker: number;
+    oddsFair?: number;
+    modelProbability?: number;
+  }>;
+  correlationAlpha: number;
+}
+
+export interface BetSlipAnalysisResponse {
+  ok: boolean;
+  slipId: string;
+  mode: string;
+  numSelections: number;
+  selections: Array<Record<string, unknown>>;
+  correlations: Array<Record<string, unknown>>;
+  totals: {
+    combinedOddsDecimal: number;
+    combinedProbability: {
+      naiveIndependence: number;
+      correlationAdjusted: number;
+    };
+    expectedValueRoi: {
+      naive: number;
+      correlationAdjusted: number;
+    };
+    overroundStackingRisk: Record<string, unknown>;
+    effectiveLegs?: number;
+    volatilityMetrics: {
+      score: number;
+      profile: string;
+      drivers: string[];
+    };
+  };
+  report: {
+    executiveSummary: {
+      num_selections: number;
+      combined_odds: number;
+      combined_probability_naive: number;
+      combined_probability_adjusted: number;
+      expected_value_naive: number;
+      expected_value_adjusted: number;
+      risk_score: number;
+      risk_profile: string;
+      key_insight: string;
+    };
+    selectionBreakdown: Array<Record<string, unknown>>;
+    correlationWarnings: Array<Record<string, unknown>>;
+    scenarioAnalysis: Array<Record<string, unknown>>;
+    professionalNotes: Array<Record<string, unknown>>;
+    disclaimer: string;
+  };
+  metadata: Record<string, unknown>;
 }

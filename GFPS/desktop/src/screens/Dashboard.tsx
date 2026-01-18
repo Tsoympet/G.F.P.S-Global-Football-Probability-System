@@ -75,9 +75,12 @@ export const Dashboard = () => {
     const format = (value: number) => +(value * 100).toFixed(PERCENTAGE_PRECISION);
     const newPoint = { label, home: format(home), draw: format(draw), away: format(away) };
     
-    setProbabilityHistory((prev) => {
-      if (prev.length && prev[prev.length - 1].label === label) return prev;
-      return [...prev.slice(-MAX_HISTORY_POINTS), newPoint];
+    // Use queueMicrotask to defer state update and avoid cascading renders
+    queueMicrotask(() => {
+      setProbabilityHistory((prev) => {
+        if (prev.length && prev[prev.length - 1].label === label) return prev;
+        return [...prev.slice(-MAX_HISTORY_POINTS), newPoint];
+      });
     });
   }, [predictions.data, predictions.lastUpdated]);
 
@@ -196,9 +199,9 @@ export const Dashboard = () => {
         </div>
         <DataTable<Fixture>
           columns={[
-            { header: 'Match', key: 'homeTeam', render: (row: any) => `${row.homeTeam} vs ${row.awayTeam}` },
+            { header: 'Match', key: 'homeTeam', render: (row: Fixture) => `${row.homeTeam} vs ${row.awayTeam}` },
             { header: 'League', key: 'league' },
-            { header: 'Kickoff', key: 'startTime', render: (row: any) => new Date(row.startTime).toLocaleString() },
+            { header: 'Kickoff', key: 'startTime', render: (row: Fixture) => new Date(row.startTime).toLocaleString() },
             { header: 'Status', key: 'status' }
           ]}
           data={todaysFixtures}
