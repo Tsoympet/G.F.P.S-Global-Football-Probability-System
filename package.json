@@ -4,7 +4,7 @@
   "private": true,
   "description": "Global Football Probability System - Monorepo root",
   "scripts": {
-    "lint": "cd GFPS/desktop && npm run lint"
+    "lint": "npm run lint --workspace=GFPS/desktop"
   },
   "workspaces": [
     "GFPS/desktop"
