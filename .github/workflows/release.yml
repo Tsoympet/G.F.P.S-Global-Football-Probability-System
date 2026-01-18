@@ -114,6 +114,13 @@ jobs:
           echo "body<<EOF" >> "$GITHUB_OUTPUT"
           cat release_notes.md >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
+          
+          # Set release title
+          if [ "$RELEASE_CHANNEL" = "beta" ]; then
+            echo "title=GFPS Desktop ${CURRENT_TAG} (Beta)" >> "$GITHUB_OUTPUT"
+          else
+            echo "title=GFPS Desktop ${CURRENT_TAG}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build and publish
         uses: tauri-apps/tauri-action@v0
@@ -129,7 +136,7 @@ jobs:
         with:
           projectPath: GFPS/desktop
           tagName: ${{ github.ref_name }}
-          releaseName: 'GFPS Desktop ${{ github.ref_name }}${{ steps.channel.outputs.channel == ''beta'' && '' (Beta)'' || '''' }}'
+          releaseName: ${{ steps.notes.outputs.title }}
           releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: ${{ steps.channel.outputs.channel == 'beta' }}

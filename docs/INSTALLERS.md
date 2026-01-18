@@ -202,7 +202,7 @@ Simply delete the `.AppImage` file.
 
 For issues and support:
 
-1. Check the [documentation](../docs/README.md)
+1. Check the [documentation](README.md)
 2. Search [existing issues](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/issues)
 3. Create a [new issue](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/issues/new)
 

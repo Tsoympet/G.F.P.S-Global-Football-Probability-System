@@ -16,9 +16,9 @@ VERSION="$1"
 TAG="v${VERSION}"
 
 # Validate version format
-if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?$ ]]; then
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]{1,3})?$ ]]; then
   echo "❌ Invalid version format: $VERSION"
-  echo "   Expected format: X.Y.Z or X.Y.Z-beta.N"
+  echo "   Expected format: X.Y.Z or X.Y.Z-beta.N (where N is 1-999)"
   exit 1
 fi
 
