@@ -1,0 +1,12 @@
+{
+  "name": "gfps-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Global Football Probability System - Monorepo root",
+  "scripts": {
+    "lint": "npm run lint --workspace=GFPS/desktop"
+  },
+  "workspaces": [
+    "GFPS/desktop"
+  ]
+}
