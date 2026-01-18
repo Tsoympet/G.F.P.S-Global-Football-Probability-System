@@ -88,6 +88,35 @@ Configure API endpoints, data providers, themes, and authentication.
 
 ---
 
+## 📦 Download & Installation
+
+### Pre-built Installers
+
+Download the latest desktop application installers from the [GitHub Releases page](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/releases):
+
+- **Windows**: Download the `.msi` installer
+  - Run the installer and follow the setup wizard
+  - Windows may show a SmartScreen warning for unsigned apps - click "More info" → "Run anyway"
+  
+- **macOS**: Download the `.dmg` file
+  - Open the `.dmg` file and drag the app to your Applications folder
+  - Right-click the app and select "Open" on first launch to bypass Gatekeeper (for unsigned apps)
+  
+- **Linux**: Download the `.AppImage` file
+  - Make it executable: `chmod +x GFPS*.AppImage`
+  - Run it: `./GFPS*.AppImage`
+
+### Release Channels
+
+- **Stable releases** (`v1.0.0`, `v0.1.0`): Production-ready builds for all users
+- **Beta releases** (`v1.0.0-beta.1`): Experimental builds with new features (may contain bugs)
+
+### Building from Source
+
+If you prefer to build from source or no pre-built installers are available yet, see the [🚀 Getting started locally](#-getting-started-locally) section below.
+
+---
+
 ## 🧱 Repository Structure
 
 ```text
