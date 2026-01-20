@@ -57,57 +57,72 @@ export const BackendSetupBanner = ({ error }: BackendSetupBannerProps) => {
         <div style={{ color: palette.textPrimary, fontWeight: 600, marginBottom: 8 }}>
           📋 Quick Setup Steps:
         </div>
-        <ol style={{ margin: 0, paddingLeft: 20, color: palette.textSecondary }}>
-          <li>
-            <strong>Start the backend server:</strong>
-            <div
-              style={{
-                background: palette.background,
-                padding: 8,
-                borderRadius: 4,
-                marginTop: 4,
-                fontFamily: 'monospace',
-                fontSize: 12
-              }}
-            >
-              # Install Python dependencies (first time only)<br />
-              pip install -r backend/requirements.txt<br />
-              <br />
-              # Start the backend server<br />
-              uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-            </div>
-          </li>
-          <li style={{ marginTop: 8 }}>
-            <strong>Verify backend is running:</strong> Visit{' '}
-            <a
-              href={`${apiUrl}/health`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: palette.primary }}
-            >
-              {apiUrl}/health
-            </a>{' '}
-            in your browser
-          </li>
-          <li style={{ marginTop: 8 }}>
-            <strong>Configure API endpoint:</strong> Go to{' '}
-            <button
-              onClick={() => setSection('Settings')}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: palette.primary,
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                padding: 0,
-                font: 'inherit'
-              }}
-            >
-              Settings
-            </button>{' '}
-            if using a different URL
-          </li>
-        </ol>
+        <div style={{ marginBottom: 12, color: palette.textSecondary }}>
+          <strong>Option 1: Automated Scripts (Recommended)</strong>
+          <div
+            style={{
+              background: palette.background,
+              padding: 8,
+              borderRadius: 4,
+              marginTop: 4,
+              fontFamily: 'monospace',
+              fontSize: 12
+            }}
+          >
+            # Windows: Double-click start-backend.bat<br />
+            # macOS/Linux: Run ./start-backend.sh
+          </div>
+          <div style={{ marginTop: 4, fontSize: 12 }}>
+            These scripts automatically set up everything for you!
+          </div>
+        </div>
+        <div style={{ color: palette.textSecondary }}>
+          <strong>Option 2: Manual Setup</strong>
+          <ol style={{ margin: '4px 0 0 0', paddingLeft: 20 }}>
+            <li>
+              Install Python dependencies:
+              <div
+                style={{
+                  background: palette.background,
+                  padding: 8,
+                  borderRadius: 4,
+                  marginTop: 4,
+                  fontFamily: 'monospace',
+                  fontSize: 12
+                }}
+              >
+                pip install -r backend/requirements.txt
+              </div>
+            </li>
+            <li style={{ marginTop: 8 }}>
+              Start the backend server:
+              <div
+                style={{
+                  background: palette.background,
+                  padding: 8,
+                  borderRadius: 4,
+                  marginTop: 4,
+                  fontFamily: 'monospace',
+                  fontSize: 12
+                }}
+              >
+                uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+              </div>
+            </li>
+            <li style={{ marginTop: 8 }}>
+              <strong>Verify backend is running:</strong> Visit{' '}
+              <a
+                href={`${apiUrl}/health`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: palette.primary }}
+              >
+                {apiUrl}/health
+              </a>{' '}
+              in your browser
+            </li>
+          </ol>
+        </div>
       </div>
 
       <div style={{ color: palette.textSecondary, fontSize: 12, marginTop: 4 }}>
