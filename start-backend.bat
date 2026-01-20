@@ -48,10 +48,9 @@ if not exist ".env" (
     echo No .env file found. Creating from template...
     copy .env.example .env
     
-    REM Generate a SECRET_KEY using Python
+    REM Generate a SECRET_KEY using a helper script for better maintainability
     echo Generating SECRET_KEY...
-    python -c "import secrets; import re; env_content = open('.env', 'r').read(); new_content = re.sub(r'^SECRET_KEY=.*$', f'SECRET_KEY={secrets.token_hex(32)}', env_content, flags=re.MULTILINE); open('.env', 'w').write(new_content)"
-    echo SECRET_KEY generated and saved to .env
+    python scripts\update_secret_key.py
     echo.
 )
 
