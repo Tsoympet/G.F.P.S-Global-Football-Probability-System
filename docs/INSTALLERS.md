@@ -87,7 +87,8 @@ When you first launch GFPS Desktop:
 1. The application will open the Dashboard screen
 2. **Important:** You will see a "Backend API Not Available" error because the backend server is not running
 3. Follow the setup steps shown in the error banner to start the backend server
-4. Once the backend is running, the dashboard will automatically connect and display data
+4. Once the backend is running, the dashboard will automatically connect and display data (no buttons to press)
+5. (Optional) Add your API keys in **Settings → Data Provider API Keys** to enable live feeds; without keys the app shows seeded data
 
 ### Starting the Backend Server
 
@@ -159,7 +160,7 @@ If the automatic scripts don't work, you can start the backend manually:
 1. The GFPS Desktop app will automatically connect to the backend
 2. (Optional) Configure your backend API endpoint (default: `http://localhost:8000`)
 3. (Optional) Sign up for a new account or log in with existing credentials
-4. (Optional) Configure your data provider API keys in Settings
+4. (Optional) Configure your data provider API keys in Settings → Data Provider API Keys to pull live data
 5. Start using the application!
 
 ## Security Considerations

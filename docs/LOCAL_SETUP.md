@@ -108,6 +108,8 @@ FRONTEND_BASE_URL=http://localhost:1420
 
 If you don’t have API keys yet, leave those values blank; the app will use seeded fixtures.
 
+Later, you can add API keys directly in the desktop app under **Settings → Data Provider API Keys** to enable live feeds. Data gathering starts automatically when the app connects to the backend.
+
 > Optional: If you plan to use the web scraper, install the Playwright browsers with
 > `python -m playwright install` after installing backend dependencies.
 
