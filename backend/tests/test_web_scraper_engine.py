@@ -3,7 +3,7 @@ import unittest
 
 from backend.web_scraper_engine import run_web_scraper_engine
 from backend.data_providers.web_scraper import WebScraperProvider
-from backend.data_providers.base import FixtureRecord, OddsRecord
+from backend.data_providers.base import EventRecord, FixtureRecord, LineupRecord, OddsRecord
 
 
 class StubScraper(WebScraperProvider):
@@ -34,6 +34,17 @@ class StubScraper(WebScraperProvider):
             OddsRecord(fixture_id="fx1", market="1x2", outcome="away", odds=4.1),
         ]
 
+    def get_live_events(self):
+        return [
+            EventRecord(fixture_id="fx1", minute=12, team="Home", type="goal", player="Player A"),
+        ]
+
+    def get_lineups(self):
+        return [
+            LineupRecord(fixture_id="fx1", team="Home", players=["Player A", "Player B"]),
+            LineupRecord(fixture_id="fx1", team="Away", players=["Player C", "Player D"]),
+        ]
+
 
 class WebScraperEngineTests(unittest.TestCase):
     def test_run_engine_returns_predictions(self):
@@ -43,6 +54,8 @@ class WebScraperEngineTests(unittest.TestCase):
         prediction = payload[0]["predictions"]
         self.assertIn("probabilities", prediction)
         self.assertIn("home", prediction["probabilities"])
+        self.assertEqual(len(payload[0]["events"]), 1)
+        self.assertEqual(len(payload[0]["lineups"]), 2)
 
 
 if __name__ == "__main__":

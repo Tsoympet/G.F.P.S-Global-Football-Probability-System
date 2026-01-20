@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Any
 
 from backend.data_providers import WebScraperProvider, load_settings_from_env
-from backend.data_providers.base import OddsRecord
+from backend.data_providers.base import EventRecord, LineupRecord, OddsRecord, ResultRecord
 from backend.prediction_engine.engine import PredictionEngine, PredictionInput
 
 
@@ -21,6 +21,30 @@ def _odds_by_fixture(odds: Optional[Iterable[OddsRecord]]) -> Dict[str, Dict[str
         if outcome in {"home", "draw", "away"}:
             fixture_odds[outcome] = record.odds
     return odds_map
+
+
+def _events_by_fixture(events: Optional[Iterable[EventRecord]]) -> Dict[str, List[dict]]:
+    if not events:
+        return {}
+    buckets: Dict[str, List[dict]] = {}
+    for ev in events:
+        buckets.setdefault(ev.fixture_id, []).append(ev.model_dump())
+    return buckets
+
+
+def _lineups_by_fixture(lineups: Optional[Iterable[LineupRecord]]) -> Dict[str, List[dict]]:
+    if not lineups:
+        return {}
+    buckets: Dict[str, List[dict]] = {}
+    for lu in lineups:
+        buckets.setdefault(lu.fixture_id, []).append(lu.model_dump())
+    return buckets
+
+
+def _results_by_fixture(results: Optional[Iterable[ResultRecord]]) -> Dict[str, dict]:
+    if not results:
+        return {}
+    return {r.fixture_id: r.model_dump() for r in results}
 
 
 def _build_prediction_inputs(fixtures, odds_map: Dict[str, Dict[str, float]]) -> Iterable[PredictionInput]:
@@ -41,14 +65,17 @@ def run_web_scraper_engine(provider: Optional[WebScraperProvider] = None) -> Lis
         provider = WebScraperProvider(allow_network=settings.live_network_enabled)
 
     fixtures = list(provider.get_fixtures() or [])
-    results = list(provider.get_results() or [])
+    results_iter = provider.get_results() or []
+    events_iter = provider.get_live_events() if hasattr(provider, "get_live_events") else []
+    lineups_iter = provider.get_lineups() if hasattr(provider, "get_lineups") else []
     odds_iter = provider.get_odds() if hasattr(provider, "get_odds") else None
     odds_map = _odds_by_fixture(odds_iter or None)
+    results_by_fixture = _results_by_fixture(results_iter or None)
+    events_by_fixture = _events_by_fixture(events_iter or None)
+    lineups_by_fixture = _lineups_by_fixture(lineups_iter or None)
 
     engine = PredictionEngine()
     payload = []
-
-    results_by_fixture = {r.fixture_id: r for r in results}
 
     for fixture, prediction_input in zip(fixtures, _build_prediction_inputs(fixtures, odds_map)):
         prediction = engine.predict(prediction_input)
@@ -61,6 +88,8 @@ def run_web_scraper_engine(provider: Optional[WebScraperProvider] = None) -> Lis
                 "kickoff": fixture.kickoff,
                 "predictions": prediction,
                 "result": results_by_fixture.get(fixture.fixture_id),
+                "events": events_by_fixture.get(fixture.fixture_id, []),
+                "lineups": lineups_by_fixture.get(fixture.fixture_id, []),
             }
         )
 

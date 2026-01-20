@@ -115,9 +115,22 @@ Until API data is available, scrape the smallest set of HTML fields that lets th
 | Line/handicap (`line`) | Needed for totals/spreads | `.line`, `[data-line]` |
 | Bookmaker/source (`source`) | Attribution and conflict resolution | `.bookmaker`, `[data-source]` |
 | Last updated (`last_updated`) | Lets engine ignore stale prices | `time.last-updated`, `[data-updated-at]` |
+| Rosters/lineups (`lineups`) | Injury/availability context for AI models | `.lineup`, `[data-players]` |
+| Live events (`events`, goals/cards/subs) | Real-time feed for probability deltas | `.event-row`, `[data-event]` |
+| Recent form (`win_loss`) | Short-term strength signal | `.form`, `[data-form]` |
+| Injuries/suspensions (`injuries`) | Adjust strength and EV | `.injury`, `[data-injury]` |
 
 Map these selectors in your `selectors` section using custom keys (e.g., `market_selector`, `price_selector`) and read them in your downstream parsing logic. Keep `refresh_seconds` short (e.g., 30–60s) in `data_providers.settings` for a live-like cadence, and enable `ENABLE_LIVE_NETWORK=1` plus `ENABLE_WEB_SCRAPER=1`.
 
+### Scraper-powered prediction runner
+
+You can run the scraper-to-probability engine bridge (fixtures + odds + lineups/events) via:
+
+```bash
+python -m backend.web_scraper_engine run
+```
+
+The command returns JSON including predictions, events, lineups, and results (when present) for downstream AI consumption.
 ## Usage
 
 ### With Pipeline CLI
