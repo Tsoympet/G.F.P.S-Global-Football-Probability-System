@@ -104,7 +104,38 @@ Download the latest desktop application installers from the [GitHub Releases pag
   - Make it executable: `chmod +x GFPS*.AppImage`
   - Run it: `./GFPS*.AppImage`
 
+**⚠️ Important:** GFPS Desktop requires a backend API server to function. After installing the desktop app, you'll need to start the backend server. The app will show setup instructions on first launch. See the [First Launch](#first-launch) section below for details.
+
 📖 **For detailed installation instructions, troubleshooting, and system requirements, see [docs/INSTALLERS.md](docs/INSTALLERS.md)**
+
+### First Launch
+
+When you first launch GFPS Desktop after installation:
+
+1. **You will see a "Backend API Not Available" error** - this is expected!
+2. **Start the backend server** using one of these methods:
+   
+   **Option 1: Quick Start Scripts (Easiest)**
+   - Download or clone this repository
+   - **Windows:** Double-click `start-backend.bat`
+   - **macOS/Linux:** Run `./start-backend.sh` in Terminal
+   
+   **Option 2: Manual Setup**
+   ```bash
+   # Install Python 3.8+ from python.org
+   # Then run:
+   python -m venv .venv
+   source .venv/bin/activate  # Windows: .venv\Scripts\activate
+   pip install -r backend/requirements.txt
+   cp .env.example .env
+   # Edit .env and set SECRET_KEY (generate with: openssl rand -hex 32)
+   uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+3. **Verify backend is running:** Open http://localhost:8000/health in your browser
+4. **The desktop app will automatically connect** and start displaying data
+
+📖 **For complete setup instructions, see [docs/INSTALLERS.md](docs/INSTALLERS.md#first-launch)**
 
 ### Release Channels
 
