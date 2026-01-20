@@ -55,8 +55,16 @@ if [ ! -f ".env" ]; then
     if ! grep -q "^SECRET_KEY=.\+" .env; then
         echo "🔐 Generating SECRET_KEY..."
         SECRET_KEY=$(openssl rand -hex 32 2>/dev/null || python -c "import secrets; print(secrets.token_hex(32))")
-        sed -i.bak "s/^SECRET_KEY=.*/SECRET_KEY=$SECRET_KEY/" .env && rm .env.bak 2>/dev/null || sed -i '' "s/^SECRET_KEY=.*/SECRET_KEY=$SECRET_KEY/" .env
-        echo "✅ SECRET_KEY generated"
+        # Update the SECRET_KEY line in .env file
+        # This sed command works on both GNU sed (Linux) and BSD sed (macOS)
+        if sed --version 2>&1 | grep -q GNU; then
+            # GNU sed (Linux)
+            sed -i "s/^SECRET_KEY=.*/SECRET_KEY=$SECRET_KEY/" .env
+        else
+            # BSD sed (macOS) requires -i with empty string for in-place editing
+            sed -i '' "s/^SECRET_KEY=.*/SECRET_KEY=$SECRET_KEY/" .env
+        fi
+        echo "✅ SECRET_KEY generated and saved to .env"
     fi
     echo ""
 fi
@@ -64,7 +72,9 @@ fi
 # Initialize database if needed
 if [ ! -f "gfps.db" ]; then
     echo "🗄️  Initializing database..."
-    python -m backend.db_init 2>/dev/null || echo "⚠️  Database initialization skipped (optional)"
+    # Suppress stderr as database initialization is optional and may fail gracefully
+    # The backend will create tables automatically on first run if init fails
+    python -m backend.db_init 2>/dev/null || echo "⚠️  Database initialization skipped (backend will auto-create on first run)"
     echo ""
 fi
 

@@ -48,17 +48,18 @@ if not exist ".env" (
     echo No .env file found. Creating from template...
     copy .env.example .env
     
-    REM Generate a SECRET_KEY
+    REM Generate a SECRET_KEY using Python
     echo Generating SECRET_KEY...
-    python -c "import secrets; key = secrets.token_hex(32); content = open('.env').read(); open('.env', 'w').write(content.replace('SECRET_KEY=', f'SECRET_KEY={key}'))"
-    echo SECRET_KEY generated
+    python -c "import secrets; import re; env_content = open('.env', 'r').read(); new_content = re.sub(r'^SECRET_KEY=.*$', f'SECRET_KEY={secrets.token_hex(32)}', env_content, flags=re.MULTILINE); open('.env', 'w').write(new_content)"
+    echo SECRET_KEY generated and saved to .env
     echo.
 )
 
 REM Initialize database if needed
 if not exist "gfps.db" (
     echo Initializing database...
-    python -m backend.db_init 2>nul || echo Database initialization skipped (optional)
+    REM Database initialization is optional - backend will auto-create tables if init fails
+    python -m backend.db_init 2>nul || echo Database initialization skipped (backend will auto-create on first run)
     echo.
 )
 
