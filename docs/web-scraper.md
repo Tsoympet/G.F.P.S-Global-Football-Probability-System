@@ -101,6 +101,36 @@ For scraping completed match results:
 | `away_score` | Away team score | `.score.away`, `td.away-score` |
 | `status` | Match status (FT, HT, etc.) | `.status`, `[data-status]` |
 
+## Defining targets for a live-style feed (bookmakers/tipsters)
+
+Until API data is available, scrape the smallest set of HTML fields that lets the probability engine behave like a live feed. Capture:
+
+| Data point | Why it matters | Typical selector examples |
+|------------|----------------|---------------------------|
+| Fixture identity (`fixture_id`, `home_team`, `away_team`, `kickoff`) | Links odds to the correct match | `[data-match-id]`, `.team.home`, `.team.away`, `time[datetime]` |
+| Match status (`status`, `clock`, `period`) | Enables live probability updates and bet settlement logic | `.match-status`, `.clock`, `[data-period]` |
+| Market name (`market`, e.g. `1x2`, `over_under_2_5`, `btts`) | Groups prices under the right market for bookers/tipsters | `.market-name`, `[data-market]` |
+| Selection labels (`home`, `draw`, `away`, `over`, `under`, `yes`, `no`) | Ties each price to the correct outcome | `.selection-name`, `[data-outcome]` |
+| Odds/price (`decimal_odds`) | Core input to implied probability | `.price`, `[data-odds]`, `.odds-decimal` |
+| Line/handicap (`line`) | Needed for totals/spreads | `.line`, `[data-line]` |
+| Bookmaker/source (`source`) | Attribution and conflict resolution | `.bookmaker`, `[data-source]` |
+| Last updated (`last_updated`) | Lets engine ignore stale prices | `time.last-updated`, `[data-updated-at]` |
+| Rosters/lineups (`lineups`) | Injury/availability context for AI models | `.lineup`, `[data-players]` |
+| Live events (`events`, goals/cards/subs) | Real-time feed for probability deltas | `.event-row`, `[data-event]` |
+| Recent form (`win_loss`) | Short-term strength signal | `.form`, `[data-form]` |
+| Injuries/suspensions (`injuries`) | Adjust strength and EV | `.injury`, `[data-injury]` |
+
+Map these selectors in your `selectors` section using custom keys (e.g., `market_selector`, `price_selector`) and read them in your downstream parsing logic. Keep `refresh_seconds` short (e.g., 30–60s) in `data_providers.settings` for a live-like cadence, and enable `ENABLE_LIVE_NETWORK=1` plus `ENABLE_WEB_SCRAPER=1`.
+
+### Scraper-powered prediction runner
+
+You can run the scraper-to-probability engine bridge (fixtures + odds + lineups/events) via:
+
+```bash
+python -m backend.web_scraper_engine run
+```
+
+The command returns JSON including predictions, events, lineups, and results (when present) for downstream AI consumption.
 ## Usage
 
 ### With Pipeline CLI
@@ -112,6 +142,9 @@ The web scraper is automatically included when you run the ingestion pipeline:
 python -m backend.pipeline_cli ingest_fixtures
 
 # The scraper will be used if ENABLE_WEB_SCRAPER=1
+
+# Quick prediction run using scraper + probability engine
+python -m backend.pipeline_cli scrape_predict
 ```
 
 ### Programmatic Usage
@@ -126,6 +159,11 @@ provider = WebScraperProvider(
     config_path=config_path,
     allow_network=True
 )
+
+# Run the lightweight scraper prediction engine
+from backend.web_scraper_engine import run_web_scraper_engine
+payload = run_web_scraper_engine(provider)
+print(payload)
 
 # Option 2: Provide config directly
 config = {
