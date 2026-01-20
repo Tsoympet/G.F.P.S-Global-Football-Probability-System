@@ -129,6 +129,9 @@ The web scraper is automatically included when you run the ingestion pipeline:
 python -m backend.pipeline_cli ingest_fixtures
 
 # The scraper will be used if ENABLE_WEB_SCRAPER=1
+
+# Quick prediction run using scraper + probability engine
+python -m backend.pipeline_cli scrape_predict
 ```
 
 ### Programmatic Usage
@@ -143,6 +146,11 @@ provider = WebScraperProvider(
     config_path=config_path,
     allow_network=True
 )
+
+# Run the lightweight scraper prediction engine
+from backend.web_scraper_engine import run_web_scraper_engine
+payload = run_web_scraper_engine(provider)
+print(payload)
 
 # Option 2: Provide config directly
 config = {

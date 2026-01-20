@@ -12,6 +12,7 @@ def main():
     sub.add_parser("ingest_fixtures")
     sub.add_parser("ingest_live")
     sub.add_parser("build_features")
+    sub.add_parser("scrape_predict")
     args = parser.parse_args()
 
     if args.command == "ingest_fixtures":
@@ -20,6 +21,10 @@ def main():
         result = ingest_live()
     elif args.command == "build_features":
         result = build_features()
+    elif args.command == "scrape_predict":
+        from backend.web_scraper_engine import run_web_scraper_engine
+
+        result = run_web_scraper_engine()
     else:
         raise SystemExit(1)
     print(json.dumps(result, default=str, indent=2))
