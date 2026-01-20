@@ -9,7 +9,7 @@
     "frontendDist": "../dist"
   },
   "bundle": {
-    "targets": ["msi", "dmg", "appimage"],
+    "targets": ["msi", "nsis", "dmg", "appimage"],
     "license": "EULA.txt",
     "icon": [
       "icons/32x32.png",
