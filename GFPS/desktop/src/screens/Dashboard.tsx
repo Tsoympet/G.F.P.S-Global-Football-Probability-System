@@ -2,6 +2,7 @@ import { api } from '@api/client';
 import { useQuery } from '@hooks/useQuery';
 import { KpiCard } from '@components/KpiCard';
 import { DataTable } from '@components/DataTable';
+import { BackendSetupBanner } from '@components/BackendSetupBanner';
 import { palette } from '@theme/palette';
 import { Fixture, PipelineStatus, Prediction, ValueBet } from '@api/types';
 import { useSettingsStore } from '@store/settings';
@@ -118,9 +119,7 @@ export const Dashboard = () => {
         <div style={{ color: palette.textSecondary, fontSize: 13 }}>Syncing live data...</div>
       )}
       {(fixtures.error || pipeline.error || health.error) && (
-        <div style={{ color: palette.danger }}>
-          {fixtures.error || pipeline.error || health.error} — automatic retries enabled.
-        </div>
+        <BackendSetupBanner error={fixtures.error || pipeline.error || health.error || ''} />
       )}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
         <KpiCard label="Live Matches" value={activeMatches.toString()} subLabel="Currently trading" />

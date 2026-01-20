@@ -84,10 +84,82 @@ Each release includes installers for:
 
 When you first launch GFPS Desktop:
 
-1. The application will open the Settings screen
-2. Configure your backend API endpoint (default: `http://localhost:8000`)
+1. The application will open the Dashboard screen
+2. **Important:** You will see a "Backend API Not Available" error because the backend server is not running
+3. Follow the setup steps shown in the error banner to start the backend server
+4. Once the backend is running, the dashboard will automatically connect and display data
+
+### Starting the Backend Server
+
+GFPS Desktop requires a local backend API server to function. Here's how to start it:
+
+#### Quick Start (Recommended)
+
+**Windows:**
+1. Open the repository folder where you downloaded/cloned GFPS
+2. Double-click `start-backend.bat`
+3. Wait for the message "Uvicorn running on http://0.0.0.0:8000"
+
+**macOS/Linux:**
+1. Open Terminal
+2. Navigate to the GFPS repository folder:
+   ```bash
+   cd path/to/G.F.P.S-Global-Football-Probability-System
+   ```
+3. Run the startup script:
+   ```bash
+   ./start-backend.sh
+   ```
+4. Wait for the message "Uvicorn running on http://0.0.0.0:8000"
+
+#### Manual Setup
+
+If the automatic scripts don't work, you can start the backend manually:
+
+1. **Install Python 3.8 or later** from [python.org](https://www.python.org/downloads/)
+
+2. **Install backend dependencies:**
+   ```bash
+   # Create virtual environment (first time only)
+   python -m venv .venv
+   
+   # Activate virtual environment
+   # Windows:
+   .venv\Scripts\activate
+   # macOS/Linux:
+   source .venv/bin/activate
+   
+   # Install dependencies
+   pip install -r backend/requirements.txt
+   ```
+
+3. **Configure environment:**
+   ```bash
+   # Copy the example configuration
+   cp .env.example .env
+   
+   # Generate a secure SECRET_KEY
+   # On macOS/Linux:
+   openssl rand -hex 32
+   # On Windows (PowerShell):
+   python -c "import secrets; print(secrets.token_hex(32))"
+   
+   # Edit .env and set SECRET_KEY=<generated-key>
+   ```
+
+4. **Start the backend:**
+   ```bash
+   uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+5. **Verify it's running:** Open http://localhost:8000/health in your browser
+
+### After Backend is Running
+
+1. The GFPS Desktop app will automatically connect to the backend
+2. (Optional) Configure your backend API endpoint (default: `http://localhost:8000`)
 3. (Optional) Sign up for a new account or log in with existing credentials
-4. (Optional) Configure your data provider API keys
+4. (Optional) Configure your data provider API keys in Settings
 5. Start using the application!
 
 ## Security Considerations
@@ -168,10 +240,51 @@ Simply delete the `.AppImage` file.
 
 ### Can't connect to backend
 
-1. Verify the backend is running on the configured endpoint
-2. Check Settings → API Endpoint
-3. Try the default: `http://localhost:8000`
-4. Check firewall settings
+If you see "Backend API Not Available" or "Failed to fetch" errors:
+
+1. **Verify the backend is running:**
+   - Check if you started the backend server (see [Starting the Backend Server](#starting-the-backend-server))
+   - The backend should show: `Uvicorn running on http://0.0.0.0:8000`
+   - Visit http://localhost:8000/health in your browser - you should see `{"ok": true, ...}`
+
+2. **Check the API endpoint configuration:**
+   - Open the GFPS Desktop app
+   - Go to Settings
+   - Verify "API Endpoint" is set to `http://localhost:8000`
+   - If you're running the backend on a different port or host, update this URL
+
+3. **Check for port conflicts:**
+   - Make sure port 8000 is not already in use
+   - On Windows: `netstat -ano | findstr :8000`
+   - On macOS/Linux: `lsof -i :8000` or `netstat -tuln | grep 8000`
+   - If port 8000 is taken, start the backend on a different port:
+     ```bash
+     uvicorn backend.main:app --reload --host 0.0.0.0 --port 8001
+     ```
+   - Then update the API endpoint in Settings to `http://localhost:8001`
+
+4. **Check firewall settings:**
+   - Make sure your firewall allows connections to localhost:8000
+   - On Windows, you may need to allow Python/uvicorn through Windows Defender Firewall
+
+5. **Try restarting both the backend and desktop app:**
+   - Stop the backend (Ctrl+C in the terminal)
+   - Close the desktop app
+   - Start the backend first, wait for "Uvicorn running..."
+   - Then start the desktop app
+
+6. **Check backend logs for errors:**
+   - Look at the terminal where the backend is running
+   - Common issues:
+     - Missing SECRET_KEY in .env file
+     - Database connection errors
+     - Missing Python dependencies
+
+If none of these steps work, please [open an issue](https://github.com/Tsoympet/G.F.P.S-Global-Football-Probability-System/issues) with:
+- Your operating system
+- The error message you're seeing
+- Backend logs from the terminal
+- Desktop app version
 
 ### Settings won't save
 
