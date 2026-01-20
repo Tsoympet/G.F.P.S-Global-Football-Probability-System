@@ -140,5 +140,5 @@ jobs:
           releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: ${{ steps.channel.outputs.channel == 'beta' }}
-          tauriScript: npm run tauri
+          tauriScript: npm run tauri:build
           args: ${{ matrix.args }}
