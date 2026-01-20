@@ -161,7 +161,11 @@ If the automatic scripts don't work, you can start the backend manually:
 2. (Optional) Configure your backend API endpoint (default: `http://localhost:8000`)
 3. (Optional) Sign up for a new account or log in with existing credentials
 4. (Optional) Configure your data provider API keys in Settings → Data Provider API Keys to pull live data
-5. Start using the application!
+5. (Optional, recommended) Install Playwright browsers to enable the built-in web scraper for automatic internet data fetch:
+   ```bash
+   python -m playwright install
+   ```
+6. Start using the application!
 
 ## Security Considerations
 
