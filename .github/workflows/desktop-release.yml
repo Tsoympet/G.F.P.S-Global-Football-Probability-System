@@ -99,7 +99,7 @@ jobs:
       - name: Install frontend deps
         run: npm ci
       - name: Build installers
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v0.4.0
         env:
           TAURI_WINDOWS_CERT_THUMBPRINT: ${{ secrets.TAURI_WINDOWS_CERT_THUMBPRINT }}
           TAURI_MACOS_IDENTITY: ${{ secrets.TAURI_MACOS_IDENTITY }}
