@@ -85,6 +85,7 @@ Go to Settings to:
 - Create an account or log in
 - Adjust refresh intervals and EV thresholds
 - Switch themes
+- Data fetching starts automatically once connected; no manual refresh needed
 
 ## What if the Backend Won't Start?
 

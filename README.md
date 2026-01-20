@@ -133,7 +133,8 @@ When you first launch GFPS Desktop after installation:
    ```
 
 3. **Verify backend is running:** Open http://localhost:8000/health in your browser
-4. **The desktop app will automatically connect** and start displaying data
+4. **The desktop app will automatically connect** and start displaying data—no buttons to press
+5. (Optional) **Add your API keys** in **Settings → Data Provider API Keys** to pull live feeds (otherwise seeded data is shown)
 
 📖 **For complete setup instructions, see [docs/INSTALLERS.md](docs/INSTALLERS.md#first-launch)**
 
