@@ -140,4 +140,5 @@ jobs:
           releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: ${{ steps.channel.outputs.channel == 'beta' }}
+          tauriScript: npm run tauri
           args: ${{ matrix.args }}

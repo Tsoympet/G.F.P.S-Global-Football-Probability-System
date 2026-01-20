@@ -107,7 +107,7 @@ jobs:
           TAURI_MACOS_IDENTITY: ${{ secrets.TAURI_MACOS_IDENTITY }}
         with:
           projectPath: GFPS/desktop
-          tauriScript: tauri:build
+          tauriScript: npm run tauri
       - name: Collect installers
         shell: bash
         run: |
