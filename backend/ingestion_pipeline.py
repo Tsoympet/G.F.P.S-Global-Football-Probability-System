@@ -180,6 +180,77 @@ def ingest_live(
     local_session.commit()
 
 
+def ingest_historical_odds(
+    session: Optional[Session] = None,
+    providers: Optional[list[Provider]] = None,
+    db_engine=engine,
+    settings: Optional[DataSourceSettings] = None,
+) -> dict:
+    """
+    Pull historical fixtures with associated bookmaker odds to expand training data.
+    The provider registry supplies sources that expose historical pricing.
+    """
+    ensure_schema(db_engine)
+    local_session = session or _session_factory_for_engine(db_engine)()
+    registry = _build_registry(settings)
+    active_providers = providers or list(registry.active(data_types={"historical_odds", "fixtures"}))
+    stats = {"fixtures": 0, "results": 0, "odds": 0}
+    for provider in active_providers:
+        if not hasattr(provider, "get_historical_odds"):
+            continue
+        try:
+            fixtures = [normalize_fixture(validate_fixture_schema(fx)) for fx in provider.get_fixtures()]
+            for fx in fixtures:
+                upsert_fixture(
+                    local_session,
+                    FixtureEntity(
+                        fixture_id=fx.fixture_id,
+                        provider=provider.meta.name,
+                        league=fx.league,
+                        season=fx.season,
+                        home_team=fx.home_team,
+                        away_team=fx.away_team,
+                        kickoff_utc=fx.kickoff,
+                        venue=fx.venue,
+                    ),
+                )
+                stats["fixtures"] += 1
+            results = [validate_result_schema(res) for res in provider.get_results()]
+            for res in results:
+                upsert_result(
+                    local_session,
+                    ResultEntity(
+                        fixture_id=res.fixture_id,
+                        provider=provider.meta.name,
+                        home_score=res.home_score,
+                        away_score=res.away_score,
+                        status=res.status,
+                    ),
+                )
+                stats["results"] += 1
+            for odds_row in provider.get_historical_odds():
+                # Store historical odds keyed by match/market/selection for training backfills
+                upsert_events(
+                    local_session,
+                    [
+                        EventEntity(
+                            fixture_id=odds_row.match_id,
+                            minute=0,
+                            team=odds_row.team or "",
+                            type="historical_odds",
+                            player=None,
+                        )
+                    ],
+                )
+                stats["odds"] += 1
+            record_ingestion_run(local_session, provider.meta.name, stats=stats)
+            local_session.commit()
+        except (SQLAlchemyError, ValueError):
+            local_session.rollback()
+            continue
+    return stats
+
+
 def build_features(
     session: Optional[Session] = None,
     fixture_ids: Optional[list[str]] = None,

@@ -144,6 +144,8 @@ def _build_training_rows(
             last_played[away_team] = ts
 
             implied = normalize_probabilities(decimal_to_implied(odds))
+            weather = fixture.get("weather") or {}
+            venue = fixture.get("venue") or {}
             features.append(
                 MatchFeatures(
                     fixture_id=fixture_id,
@@ -157,6 +159,12 @@ def _build_training_rows(
                     implied_home=float(implied.get("home", 0.0)),
                     implied_draw=float(implied.get("draw", 0.0)),
                     implied_away=float(implied.get("away", 0.0)),
+                    player_rating_diff=float(fixture.get("playerRatingDiff") or 0.0),
+                    injury_diff=float(fixture.get("injuryDiff") or 0.0),
+                    weather_temp_c=float(weather.get("tempC") or 0.0),
+                    weather_wind_mps=float(weather.get("windMps") or 0.0),
+                    venue_altitude_m=float(venue.get("altitudeM") or 0.0),
+                    live_xg_diff=float(fixture.get("liveXgDiff") or 0.0),
                 )
             )
             labels.append(outcome)

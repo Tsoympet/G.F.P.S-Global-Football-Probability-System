@@ -31,6 +31,12 @@ class PredictionEngineTests(unittest.TestCase):
             form_home=0.7,
             form_away=0.4,
             dixon_coles_rho=-0.08,
+            player_rating_diff=0.2,
+            injury_diff=-0.1,
+            weather_temp_c=12.0,
+            weather_wind_mps=3.5,
+            venue_altitude_m=520.0,
+            live_xg_diff=0.15,
         )
 
     def test_probabilities_sum_to_one(self):
@@ -41,6 +47,13 @@ class PredictionEngineTests(unittest.TestCase):
         for value in probs.values():
             self.assertGreaterEqual(value, 0.0)
             self.assertLessEqual(value, 1.0)
+
+    def test_additional_features_pass_through(self):
+        engine = PredictionEngine()
+        output = engine.predict(self.base_input)
+        self.assertIn("model_version", output)
+        # ensure new feature inputs don't break prediction path
+        self.assertIsInstance(output["probabilities"], dict)
 
     def test_form_shift_boosts_home(self):
         engine = PredictionEngine()
