@@ -35,7 +35,7 @@ jobs:
         env:
           SECRET_KEY: test-secret-key-for-ci-only
           DATABASE_URL: sqlite:///./test.db
-        run: pytest -v --tb=short
+        run: python -m pytest -v --tb=short
 
   frontend:
     runs-on: ubuntu-latest
