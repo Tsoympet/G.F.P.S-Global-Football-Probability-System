@@ -8,11 +8,12 @@ import time
 from pathlib import Path
 from typing import Iterable, Optional, Callable, Dict, List, Any
 from collections import Counter
+from datetime import datetime
 
 import httpx
 from bs4 import BeautifulSoup
 
-from .base import FixtureRecord, Provider, ProviderMetadata, ProviderTier, ResultRecord
+from .base import FixtureRecord, OddsRecord, Provider, ProviderMetadata, ProviderTier, ResultRecord
 from .utils import parse_utc_datetime
 
 logger = logging.getLogger(__name__)
@@ -40,10 +41,11 @@ class WebScraperProvider(Provider):
     meta = ProviderMetadata(
         name="web-scraper",
         description="Generic web scraper for football data from HTML sources",
-        data_types={"fixtures", "results"},
+        data_types={"fixtures", "results", "odds"},
         requires_api_key=False,
         rate_limit_per_minute=30,
         supports_live=False,
+        supports_odds=True,
         tier=ProviderTier.FREE,
         reliability=0.6,
         refresh_seconds=3600,
@@ -88,12 +90,15 @@ class WebScraperProvider(Provider):
         self.use_js_rendering = self.config.get("use_js_rendering", False) and PLAYWRIGHT_AVAILABLE
         self._playwright = None
         self._browser = None
+        self._login_session_cached = False
         
         # HTML structure tracking for change detection
         self._html_structure_cache = {}
         
         # Captcha handler hook
         self.captcha_handler: Optional[Callable[[str], str]] = None
+        self._login_session_cached = False
+        self._login_session_cached = False
 
     def _load_config(self, config_path: Optional[Path]) -> dict:
         """Load scraper configuration from file or return default."""
@@ -119,6 +124,16 @@ class WebScraperProvider(Provider):
                 "next_button_selector": "",
                 "url_pattern": "",  # e.g., "?page={page}"
                 "max_pages": 10,
+            },
+            "login": {
+                "enabled": False,
+                "url": "",
+                "username_selector": "",
+                "password_selector": "",
+                "submit_selector": "",
+                "success_selector": "",
+                "username_env": "SCRAPER_LOGIN_USERNAME",
+                "password_env": "SCRAPER_LOGIN_PASSWORD",
             },
             "proxy": {
                 "enabled": False,
@@ -146,6 +161,15 @@ class WebScraperProvider(Provider):
                 "league": "",
                 "season": "",
                 "venue": "",
+            },
+            "odds_selectors": {
+                "fixture_container": "",
+                "fixture_id": "",
+                "market_container": "",
+                "market": "",
+                "price": "",
+                "outcome": "",
+                "provider": "",
             },
             "result_selectors": {
                 "home_score": "",
@@ -411,6 +435,9 @@ class WebScraperProvider(Provider):
             page = context.new_page()
             
             try:
+                # Perform login if configured
+                if not self._login_if_needed(page):
+                    return None
                 # Navigate to URL
                 logger.info(f"Fetching {url} with JavaScript rendering")
                 page.goto(url, wait_until="networkidle", timeout=30000)
@@ -928,3 +955,42 @@ class WebScraperProvider(Provider):
         """
         self.captcha_handler = handler
         logger.info("Captcha handler registered")
+    def _login_if_needed(self, page: "Page") -> bool:
+        """Perform login flow if configured.
+        
+        Returns:
+            True if login succeeded or not required, False otherwise.
+        """
+        login_cfg = self.config.get("login", {})
+        if not login_cfg.get("enabled", False):
+            return True
+        
+        if self._login_session_cached:
+            return True
+        
+        username = os.getenv(login_cfg.get("username_env", "SCRAPER_LOGIN_USERNAME"), "")
+        password = os.getenv(login_cfg.get("password_env", "SCRAPER_LOGIN_PASSWORD"), "")
+        if not username or not password:
+            logger.error("Login required but credentials not provided in environment")
+            return False
+        
+        try:
+            login_url = login_cfg.get("url", "")
+            if not login_url:
+                logger.error("Login enabled but no login URL configured")
+                return False
+            
+            page.goto(login_url, wait_until="networkidle", timeout=30000)
+            page.fill(login_cfg.get("username_selector", ""), username)
+            page.fill(login_cfg.get("password_selector", ""), password)
+            page.click(login_cfg.get("submit_selector", ""))
+            
+            success_selector = login_cfg.get("success_selector", "")
+            if success_selector:
+                page.wait_for_selector(success_selector, timeout=15000)
+            
+            self._login_session_cached = True
+            return True
+        except Exception as e:
+            logger.error(f"Login failed: {e}")
+            return False
