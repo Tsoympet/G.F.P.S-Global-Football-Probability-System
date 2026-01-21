@@ -1,6 +1,5 @@
 import { palette } from '@theme/palette';
 import { useSettingsStore } from '@store/settings';
-import { useNavigationStore } from '@store/navigation';
 
 interface BackendSetupBannerProps {
   error: string;
@@ -8,7 +7,6 @@ interface BackendSetupBannerProps {
 
 export const BackendSetupBanner = ({ error }: BackendSetupBannerProps) => {
   const { apiUrl } = useSettingsStore();
-  const { setSection } = useNavigationStore();
 
   const isConnectionError = error.includes('failed') || error.includes('Failed');
 
