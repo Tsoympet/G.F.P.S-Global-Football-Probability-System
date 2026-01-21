@@ -33,14 +33,6 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         queries: security-extended
-        config: |
-          packs:
-            javascript-typescript:
-              - codeql/javascript-queries
-              - codeql/javascript-security-extended
-            python:
-              - codeql/python-queries
-              - codeql/python-security-extended
 
     - name: Autobuild
       uses: github/codeql-action/autobuild@v4
