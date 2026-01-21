@@ -110,7 +110,6 @@ jobs:
         with:
           projectPath: GFPS/desktop
           tauriScript: npm run tauri:build
-          artifactPaths: GFPS/desktop/src-tauri/target/release/bundle/**
       - name: Collect installers
         shell: bash
         run: |
