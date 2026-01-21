@@ -47,13 +47,30 @@ Set environment variables using:
 
 ## 4. Production Checklist
 
+### Required Configuration
 - Use a proper database (PostgreSQL) instead of SQLite.
-- Configure:
-  - `SECRET_KEY`
-  - `APIFOOTBALL_KEY`
-  - `GOOGLE_CLIENT_ID`
-  - `SMTP_*` if email alerts are needed
-  - `FCM_SERVER_KEY` if push notifications are used
+- **REQUIRED**: Set `SECRET_KEY` (generate with `openssl rand -hex 32`)
+
+### Optional Configuration (Based on Your Needs)
+
+**For 100% FREE operation (RECOMMENDED):**
+- ✅ Leave `APIFOOTBALL_KEY` empty (uses free data sources)
+- ✅ Set `ENABLE_FOOTBALL_DATA=1` (free provider)
+- ✅ Set `ENABLE_OPENLIGADB=1` (free provider)
+- ⚠️ Set `ENABLE_API_FOOTBALL=0` (avoid expensive subscription)
+- See [docs/FREE_OPERATION_GUIDE.md](FREE_OPERATION_GUIDE.md) for details
+
+**For premium features (EXPENSIVE - $50-300/month):**
+- ⚠️ `APIFOOTBALL_KEY` - Only if you have an API-Football subscription
+
+**For authentication:**
+- `GOOGLE_CLIENT_ID` - If using Google OAuth
+
+**For notifications:**
+- `SMTP_*` - If email alerts are needed
+- `FCM_SERVER_KEY` - If push notifications are used
+
+### Security & Performance
 - Enable HTTPS on nginx.
 - Restrict FastAPI debug mode (no `--reload` in production).
 - Use a process supervisor or run via uvicorn/gunicorn in production mode.

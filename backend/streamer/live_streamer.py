@@ -1,3 +1,17 @@
+"""
+Live Streamer Module
+
+⚠️ WARNING: This module uses API-Football, an EXPENSIVE premium API ($50-300/month)
+⚠️ Live streaming works with FREE alternatives too (OpenLigaDB for German leagues)
+⚠️ Consider disabling this unless you have an API-Football subscription
+
+For FREE operation (RECOMMENDED):
+- Set STREAMER_ENABLED=false in your .env file (default)
+- Leave APIFOOTBALL_KEY empty
+- Use ENABLE_OPENLIGADB=1 for free live scores
+- See docs/FREE_OPERATION_GUIDE.md for details
+"""
+
 import asyncio
 import os
 from typing import List
@@ -16,9 +30,15 @@ APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
 
 
 async def _fetch_live_fixtures() -> List[dict]:
-    """Poll API Football for live fixtures and normalize to the client shape."""
+    """
+    Poll API Football for live fixtures and normalize to the client shape.
+    
+    ⚠️ NOTE: This uses the EXPENSIVE API-Football service.
+    Returns empty list when APIFOOTBALL_KEY is not set (RECOMMENDED for cost savings).
+    """
 
     if not APIFOOTBALL_KEY:
+        # No premium API key - return empty list (RECOMMENDED for cost savings)
         return []
 
     headers = {"x-apisports-key": APIFOOTBALL_KEY}
