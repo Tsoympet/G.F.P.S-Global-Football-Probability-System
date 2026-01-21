@@ -7,6 +7,8 @@ export type Section =
   | 'Models & Training'
   | 'Performance'
   | 'Backtest'
+  | 'AI Monitor'
+  | 'Instructions'
   | 'Settings';
 
 interface NavigationState {
