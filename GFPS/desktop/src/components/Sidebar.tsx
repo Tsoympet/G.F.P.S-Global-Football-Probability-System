@@ -7,8 +7,10 @@ const items: { label: Section; icon: string }[] = [
   { label: 'Live Match Center', icon: '📡' },
   { label: 'Value Bets (EV+)', icon: '💹' },
   { label: 'Models & Training', icon: '🧠' },
-   { label: 'Performance', icon: '📈' },
-   { label: 'Backtest', icon: '⏪' },
+  { label: 'Performance', icon: '📈' },
+  { label: 'Backtest', icon: '⏪' },
+  { label: 'AI Monitor', icon: '🤖' },
+  { label: 'Instructions', icon: '📘' },
   { label: 'Settings', icon: '⚙️' }
 ];
 

@@ -11,6 +11,8 @@ import { ModelsTraining } from '@screens/ModelsTraining';
 import { Performance } from '@screens/Performance';
 import { BacktestWorkbench } from '@screens/BacktestWorkbench';
 import { Settings } from '@screens/Settings';
+import { Instructions } from '@screens/Instructions';
+import { AiMonitor } from '@screens/AiMonitor';
 import { palette } from '@theme/palette';
 import { useSettingsStore } from '@store/settings';
 import { useAuthStore } from '@store/auth';
@@ -62,6 +64,8 @@ export const App = () => {
             {section === 'Models & Training' && <ModelsTraining />}
             {section === 'Performance' && <Performance />}
             {section === 'Backtest' && <BacktestWorkbench />}
+            {section === 'AI Monitor' && <AiMonitor />}
+            {section === 'Instructions' && <Instructions />}
             {section === 'Settings' && <Settings />}
           </main>
         </div>
