@@ -1,3 +1,16 @@
+"""
+Alert Engine Module
+
+⚠️ WARNING: This module CAN use API-Football for live alerts (EXPENSIVE: $50-300/month)
+⚠️ Alerts work perfectly fine with FREE data sources too
+⚠️ FREE alternatives: OpenLigaDB for live scores, Football-Data.org for fixtures
+
+For FREE operation (RECOMMENDED):
+- Leave APIFOOTBALL_KEY empty in your .env file
+- Use ENABLE_OPENLIGADB=1 for live score alerts
+- See docs/FREE_OPERATION_GUIDE.md for details
+"""
+
 import asyncio
 import os
 from typing import Optional, List, Dict
@@ -26,9 +39,13 @@ APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
 async def fetch_live_candidates() -> List[dict]:
     """
     Fetch live fixtures + odds from API-Football.
-    This is a simplified version: it pulls all live fixtures, then odds for each.
+    
+    ⚠️ NOTE: This uses the EXPENSIVE API-Football service.
+    Returns empty list when APIFOOTBALL_KEY is not set (RECOMMENDED for cost savings).
+    Use FREE alternatives like OpenLigaDB for live scores instead.
     """
     if not APIFOOTBALL_KEY:
+        # No premium API key - return empty list (RECOMMENDED for cost savings)
         return []
 
     headers = {"x-apisports-key": APIFOOTBALL_KEY}

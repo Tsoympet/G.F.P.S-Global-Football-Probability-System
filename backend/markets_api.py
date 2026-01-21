@@ -1,3 +1,16 @@
+"""
+Markets API Module
+
+⚠️ WARNING: This module uses API-Football, an EXPENSIVE premium API ($50-300/month)
+⚠️ GFPS works perfectly fine WITHOUT market data - predictions use model-derived odds
+⚠️ You can also use the web scraper to get market data from public sources for FREE
+
+For FREE operation (RECOMMENDED):
+- Leave APIFOOTBALL_KEY empty in your .env file
+- Use model-derived fair odds instead
+- See docs/FREE_OPERATION_GUIDE.md for details
+"""
+
 import os
 import httpx
 from fastapi import APIRouter, Depends, HTTPException

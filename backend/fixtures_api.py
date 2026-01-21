@@ -1,3 +1,16 @@
+"""
+Fixtures API Module
+
+⚠️ WARNING: This module CAN use API-Football, an EXPENSIVE premium API ($50-300/month)
+⚠️ GFPS works perfectly fine WITHOUT this API using FREE alternatives
+⚠️ FREE data sources (OpenFootball CSV, Football-Data.org, OpenLigaDB) are enabled by default
+
+For FREE operation (RECOMMENDED):
+- Leave APIFOOTBALL_KEY empty in your .env file
+- Use ENABLE_FOOTBALL_DATA=1 and ENABLE_OPENLIGADB=1
+- See docs/FREE_OPERATION_GUIDE.md for details
+"""
+
 from __future__ import annotations
 
 import os

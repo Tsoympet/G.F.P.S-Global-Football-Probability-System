@@ -1,3 +1,17 @@
+"""
+Live Odds API Module
+
+⚠️ WARNING: This module uses API-Football, an EXPENSIVE premium API ($50-300/month)
+⚠️ GFPS works perfectly fine WITHOUT this API using FREE alternatives
+⚠️ Only use this if you already have an API-Football subscription
+
+For FREE operation:
+- Leave APIFOOTBALL_KEY empty in your .env file
+- Use model-derived fair odds instead of market odds
+- Use the web scraper for publicly available odds
+- See docs/FREE_OPERATION_GUIDE.md for details
+"""
+
 import os
 from typing import Dict, List
 
@@ -14,9 +28,16 @@ router = APIRouter(prefix="/live-odds", tags=["live-odds"])
 
 
 async def _fetch_api_football(endpoint: str, params: Dict) -> Dict:
-    """Lightweight wrapper around the API Football client."""
+    """
+    Lightweight wrapper around the API Football client.
+    
+    ⚠️ WARNING: API-Football is an EXPENSIVE premium service ($50-300/month)
+    This function returns empty results when APIFOOTBALL_KEY is not set.
+    GFPS works perfectly fine without this - use FREE data providers instead.
+    """
 
     if not APIFOOTBALL_KEY:
+        # No premium API key - return empty results (RECOMMENDED for cost savings)
         return {"response": []}
 
     headers = {"x-apisports-key": APIFOOTBALL_KEY}
