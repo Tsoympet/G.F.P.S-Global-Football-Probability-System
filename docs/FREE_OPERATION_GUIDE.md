@@ -128,7 +128,7 @@ You should see fixtures from the free providers.
 
 If you need bookmaker odds without paying for API-Football, use the built-in web scraper:
 
-1. Configure a scraper config file (see `docs/web-scraper.md`)
+1. Configure a scraper config file (see [docs/web-scraper.md](web-scraper.md))
 2. Enable the scraper: `ENABLE_WEB_SCRAPER=1`
 3. Point to your config: `SCRAPER_CONFIG_PATH=/path/to/config.yaml`
 4. The scraper will pull odds from publicly available websites
