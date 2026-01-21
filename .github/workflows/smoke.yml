@@ -53,7 +53,7 @@ jobs:
 
       - name: Seed auth user
         run: |
-          sudo apt-get update && sudo apt-get install -y jq
+          sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y jq
           echo "=== Attempting signup ==="
           SIGNUP=$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"ci@gfps.app","password":"password"}' http://127.0.0.1:8000/auth/signup)
           echo "Signup response: $SIGNUP"
