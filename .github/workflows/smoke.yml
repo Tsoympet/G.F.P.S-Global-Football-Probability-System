@@ -13,9 +13,13 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements-dev.txt
 
       - name: Install backend deps
-        run: pip install -r backend/requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements-dev.txt
 
       - name: Initialize database
         run: python -m scripts.init_db
