@@ -157,6 +157,12 @@ def _build_training_rows(
                     implied_home=float(implied.get("home", 0.0)),
                     implied_draw=float(implied.get("draw", 0.0)),
                     implied_away=float(implied.get("away", 0.0)),
+                    player_rating_diff=float(fixture.get("playerRatingDiff") or 0.0),
+                    injury_diff=float(fixture.get("injuryDiff") or 0.0),
+                    weather_temp_c=float(fixture.get("weather", {}).get("tempC") if fixture.get("weather") else 0.0),
+                    weather_wind_mps=float(fixture.get("weather", {}).get("windMps") if fixture.get("weather") else 0.0),
+                    venue_altitude_m=float(fixture.get("venue", {}).get("altitudeM") if fixture.get("venue") else 0.0),
+                    live_xg_diff=float(fixture.get("liveXgDiff") or 0.0),
                 )
             )
             labels.append(outcome)

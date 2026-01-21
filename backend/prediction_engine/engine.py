@@ -49,6 +49,12 @@ class PredictionInput:
     dixon_coles_rho: float = -0.08
     bookmaker_lines: Optional[Iterable[BookmakerLine]] = None
     exposure: Optional[Dict[str, float]] = None
+    player_rating_diff: float = 0.0
+    injury_diff: float = 0.0
+    weather_temp_c: float = 0.0
+    weather_wind_mps: float = 0.0
+    venue_altitude_m: float = 0.0
+    live_xg_diff: float = 0.0
 
 
 class PredictionEngine:
@@ -121,6 +127,12 @@ class PredictionEngine:
             implied_home=market_probs.get("home", 0.0),
             implied_draw=market_probs.get("draw", 0.0),
             implied_away=market_probs.get("away", 0.0),
+            player_rating_diff=inp.player_rating_diff,
+            injury_diff=inp.injury_diff,
+            weather_temp_c=inp.weather_temp_c,
+            weather_wind_mps=inp.weather_wind_mps,
+            venue_altitude_m=inp.venue_altitude_m,
+            live_xg_diff=inp.live_xg_diff,
         )
         vector = np.array([list(features.to_vector().values())])
         probs = self.ml_model.predict_proba(vector)[0]

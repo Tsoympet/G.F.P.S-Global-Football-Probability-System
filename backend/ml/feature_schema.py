@@ -18,6 +18,12 @@ class MatchFeatures:
     implied_home: float
     implied_draw: float
     implied_away: float
+    player_rating_diff: float = 0.0
+    injury_diff: float = 0.0
+    weather_temp_c: float = 0.0
+    weather_wind_mps: float = 0.0
+    venue_altitude_m: float = 0.0
+    live_xg_diff: float = 0.0
 
     def to_vector(self) -> Dict[str, float]:
         return {
@@ -28,6 +34,11 @@ class MatchFeatures:
             "implied_home": self.implied_home,
             "implied_draw": self.implied_draw,
             "implied_away": self.implied_away,
+            "player_rating_diff": self.player_rating_diff,
+            "injury_diff": self.injury_diff,
+            "weather_temp_c": self.weather_temp_c,
+            "weather_wind_mps": self.weather_wind_mps,
+            "venue_altitude_m": self.venue_altitude_m,
+            "live_xg_diff": self.live_xg_diff,
         }
-
 
