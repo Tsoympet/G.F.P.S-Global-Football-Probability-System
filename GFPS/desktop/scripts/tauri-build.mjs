@@ -7,5 +7,5 @@ if (args[0] === 'build') {
   args.shift();
 }
 
-const result = spawnSync('tauri', ['build', ...args], { stdio: 'inherit' });
+const result = spawnSync('npx', ['tauri', 'build', ...args], { stdio: 'inherit' });
 process.exit(result.status ?? 0);
