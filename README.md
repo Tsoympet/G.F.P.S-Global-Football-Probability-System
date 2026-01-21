@@ -184,6 +184,8 @@ GFPS runs a live analytics pipeline that streams fixtures/odds, computes probabi
 - **Probability calibration**: temperature scaling to keep distributions coherent and well-calibrated.
 - **Expected value**: `EV = (prob × odds) − 1`, filtered via `EV_MIN_THRESHOLD`.
 
+**📈 Model Performance**: For detailed information about prediction accuracy, performance metrics, and realistic expectations, see [docs/MODEL_ACCURACY.md](docs/MODEL_ACCURACY.md).
+
 ---
 
 ## ⚠️ Risk Disclaimer
@@ -373,6 +375,7 @@ Comprehensive documentation is available in the `docs/` directory. See [docs/REA
 
 ### Essential Documentation
 - [README.md](README.md) - This file, overview and quick start
+- [MODEL_ACCURACY.md](docs/MODEL_ACCURACY.md) - **Model accuracy and performance metrics**
 - [INSTALLERS.md](docs/INSTALLERS.md) - Desktop installer download and installation guide
 - [RELEASE_INSTRUCTIONS.md](RELEASE_INSTRUCTIONS.md) - How to create and publish releases
 - [EULA.md](EULA.md) - End User License Agreement for desktop installers
