@@ -10,11 +10,28 @@ This checklist ensures all critical configurations and validations are completed
 - [ ] Set `ALLOWED_ORIGINS` to production domains only
 - [ ] Configure `FRONTEND_BASE_URL` to production URL
 - [ ] Set appropriate `RATE_LIMIT_PER_MINUTE` for production traffic
-- [ ] Review and configure all API keys:
-  - [ ] `APIFOOTBALL_KEY` (if using live data)
-  - [ ] `GOOGLE_CLIENT_ID` (if using OAuth)
-  - [ ] `FCM_SERVER_KEY` (if using push notifications)
-  - [ ] `SMTP_*` credentials (if using email)
+
+#### Data Provider Configuration (Choose Your Cost Model)
+
+**Option A: 100% FREE Operation (RECOMMENDED)** 💰
+- [ ] Leave `APIFOOTBALL_KEY` empty or unset
+- [ ] Set `ENABLE_API_FOOTBALL=0` (disabled by default)
+- [ ] Set `ENABLE_FOOTBALL_DATA=1` (free provider)
+- [ ] Set `ENABLE_OPENLIGADB=1` (free provider)
+- [ ] Optional: Get free API key from https://www.football-data.org/client/register
+- [ ] See [docs/FREE_OPERATION_GUIDE.md](FREE_OPERATION_GUIDE.md) for details
+- [ ] **Monthly Cost: $0**
+
+**Option B: Premium Operation (EXPENSIVE - Only if Required)** ⚠️
+- [ ] Set `APIFOOTBALL_KEY` (requires paid subscription)
+- [ ] Set `ENABLE_API_FOOTBALL=1`
+- [ ] **Monthly Cost: $50-300** depending on plan
+- [ ] Only use this if you absolutely need live bookmaker odds
+
+#### Other API Keys (All Optional)
+- [ ] `GOOGLE_CLIENT_ID` (if using OAuth)
+- [ ] `FCM_SERVER_KEY` (if using push notifications)
+- [ ] `SMTP_*` credentials (if using email)
 
 ### Security Hardening
 - [ ] Remove all default/example credentials
