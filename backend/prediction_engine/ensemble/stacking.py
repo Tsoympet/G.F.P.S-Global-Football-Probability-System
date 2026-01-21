@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Optional
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
@@ -24,4 +24,3 @@ from sklearn.linear_model import LogisticRegression
         X = np.hstack(list(base_outputs))
         probs = self.meta.predict_proba(X)
         return probs / probs.sum(axis=1, keepdims=True)
-

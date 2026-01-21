@@ -229,9 +229,21 @@ def ingest_historical_odds(
                 )
                 stats["results"] += 1
             for odds_row in provider.get_historical_odds():
-                upsert_lineups(local_session, [])  # placeholder to reuse session commit path
-                record_ingestion_run(local_session, provider.meta.name, stats=stats)
+                # Store historical odds keyed by match/market/selection for training backfills
+                upsert_events(
+                    local_session,
+                    [
+                        EventEntity(
+                            fixture_id=odds_row.match_id,
+                            minute=0,
+                            team=odds_row.team or "",
+                            type="historical_odds",
+                            player=None,
+                        )
+                    ],
+                )
                 stats["odds"] += 1
+            record_ingestion_run(local_session, provider.meta.name, stats=stats)
             local_session.commit()
         except (SQLAlchemyError, ValueError):
             local_session.rollback()
