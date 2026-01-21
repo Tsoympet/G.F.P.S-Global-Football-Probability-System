@@ -54,7 +54,7 @@ def load_settings_from_env() -> DataSourceSettings:
             refresh_seconds=6 * 3600,
         ),
         "web-scraper": ProviderToggle(
-            enabled=_env_flag("ENABLE_WEB_SCRAPER", "0"),
+            enabled=_env_flag("ENABLE_WEB_SCRAPER", "1"),
             priority=20,
             refresh_seconds=3600,
         ),
