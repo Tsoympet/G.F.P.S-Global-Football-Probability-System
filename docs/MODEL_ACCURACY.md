@@ -64,7 +64,7 @@ GFPS prioritizes **probability calibration** over raw accuracy. A well-calibrate
 ### Expected Value (EV) Focus
 Rather than just predicting outcomes, GFPS focuses on **Expected Value (EV)**:
 ```
-EV = (model_probability × odds) - 1
+EV = (model_probability * odds) - 1
 ```
 Positive EV indicates potential value opportunities where the model believes the probability is higher than the odds suggest.
 
