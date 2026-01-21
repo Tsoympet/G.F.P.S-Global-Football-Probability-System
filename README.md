@@ -176,6 +176,8 @@ scripts/          # Helper scripts (DB init, seeding, etc.)
 branding/         # Logo prompts, brand guidelines
 ```
 
+> **Note on languages:** The backend is implemented in Python (FastAPI) with a React/Tauri desktop client. The system is not available in C++, and migrating the project to C++ is out of scope for this repository.
+
 ---
 
 ## 🧠 Architecture Overview
