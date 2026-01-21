@@ -39,4 +39,4 @@ jobs:
         DATABASE_URL: sqlite:///./test.db
       run: |
         cd backend
-        pytest -v --tb=short
+        python -m pytest -v --tb=short
