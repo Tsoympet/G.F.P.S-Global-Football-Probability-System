@@ -7,5 +7,18 @@ if (args[0] === 'build') {
   args.shift();
 }
 
+const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const result = spawnSync(npx, ['tauri', 'build', ...args], { stdio: 'inherit' });
+
+if (result.error) {
+  console.error(result.error);
+  process.exit(1);
+}
+
+if (result.status !== 0) {
+  process.exit(result.status ?? 1);
+}
+
+process.exit(0);
 const result = spawnSync('npx', ['tauri', 'build', ...args], { stdio: 'inherit' });
 process.exit(result.status ?? 0);
