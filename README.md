@@ -51,6 +51,8 @@ It blends Poisson/Dixon-Coles modelling, market odds normalization, EV detection
 
 Explore the desktop application interface with these screenshots showcasing the main features:
 
+> These captures reflect the current GFPS desktop build (Jan 2026).
+
 ### Dashboard
 The main dashboard provides an overview of live matches, upcoming fixtures, active models, and EV+ signals.
 
@@ -61,30 +63,42 @@ Monitor live matches with real-time updates and analytics.
 
 ![Live Match Center](screenshots/02-live-match-center.png)
 
+> **Updated feed view:** reflects the latest live-tracking layout and odds strip.
+
 ### Value Bets (EV+)
 Discover value betting opportunities with configurable EV thresholds and advanced filtering options.
 
 ![Value Bets](screenshots/03-value-bets.png)
+
+> **New filters:** includes EV band chips and source toggles shown in current build.
 
 ### Models & Training
 Manage and train prediction models with performance metrics.
 
 ![Models & Training](screenshots/04-models-training.png)
 
+> **Model monitor:** current training queue and metrics deck.
+
 ### Performance Tracking
 Track your betting performance with detailed ROI, hit rate, and drawdown analytics.
 
 ![Performance](screenshots/05-performance.png)
+
+> **Performance tiles:** refreshed KPI cards and chart themes.
 
 ### Backtest Workbench
 Run historical backtests to validate strategies and analyze performance.
 
 ![Backtest](screenshots/06-backtest.png)
 
+> **Workbench:** shows the present rules panel and results grid.
+
 ### Settings
 Configure API endpoints, data providers, themes, and authentication.
 
 ![Settings](screenshots/07-settings.png)
+
+> **Settings:** includes provider keys and theme controls from the current build.
 
 ---
 
