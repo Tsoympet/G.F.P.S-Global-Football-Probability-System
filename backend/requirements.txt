@@ -20,5 +20,6 @@ joblib
 beautifulsoup4
 lxml
 playwright
+pytest
 
 
