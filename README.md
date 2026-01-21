@@ -11,6 +11,8 @@
 **G.F.P.S** is a production-grade football probability and analytics platform.
 It blends Poisson/Dixon-Coles modelling, market odds normalization, EV detection, and a modern desktop client to explain match outcomes with transparent math.
 
+> **💰 100% Free Operation:** GFPS runs completely free without any expensive API subscriptions. See the [Free Operation Guide](docs/FREE_OPERATION_GUIDE.md) to get started at **$0/month**.
+
 ![GFPS Dashboard](screenshots/01-dashboard.png)
 
 > **📋 Production Readiness:** This repository has undergone a comprehensive security audit and is production-ready. See [docs/AUDIT_REPORT.md](docs/AUDIT_REPORT.md) and the install readiness review in [docs/REPO_READINESS_AUDIT.md](docs/REPO_READINESS_AUDIT.md).
@@ -198,20 +200,29 @@ GFPS provides probabilistic analytics, not guarantees. Football outcomes remain 
 
 ### Data providers
 
-GFPS supports multiple data sources that work together:
+### 💰 100% Free Data Sources (Recommended)
 
-- **OpenFootball CSV**: Free, offline CSV fixtures (no API key needed)
-- **Football-Data.org**: Free API with rate limits (API key required)
-- **OpenLigaDB**: Free German league live data
-- **API-Football**: Premium API with live odds (subscription required)
-- **Web Scraper**: Scrape data from publicly available websites (configurable)
+**GFPS is designed to work completely free of charge!** No expensive APIs required.
 
-Enable providers via environment variables:
+The system includes multiple FREE data providers that work seamlessly together:
+
+- **OpenFootball CSV**: ✅ FREE, offline fixtures & results (bundled, no setup needed)
+- **Football-Data.org**: ✅ FREE API with generous rate limits (optional free API key)
+- **OpenLigaDB**: ✅ FREE German league live scores (no API key needed)
+- **Web Scraper**: ✅ FREE scraping from public websites (configurable)
+
+### ⚠️ Premium API (NOT Recommended - Expensive!)
+
+- **API-Football**: ❌ EXPENSIVE subscription (~$50-300/month) - **DISABLED BY DEFAULT**
+  - Only needed if you absolutely require live odds data in real-time
+  - All core features work perfectly with the free providers above
+
+Enable FREE providers via environment variables:
 ```bash
-ENABLE_FOOTBALL_DATA=1    # Football-Data.org API
-ENABLE_OPENLIGADB=1       # OpenLigaDB live data
-ENABLE_API_FOOTBALL=0     # API-Football premium
-ENABLE_WEB_SCRAPER=0      # Web scraping from HTML sources
+ENABLE_FOOTBALL_DATA=1    # Football-Data.org API (FREE)
+ENABLE_OPENLIGADB=1       # OpenLigaDB live data (FREE)
+ENABLE_API_FOOTBALL=0     # Keep DISABLED - expensive premium API
+ENABLE_WEB_SCRAPER=0      # Web scraping from HTML sources (FREE)
 ENABLE_LIVE_NETWORK=0     # Allow network requests for scraping
 ```
 
@@ -241,8 +252,11 @@ For a cross-platform setup guide (Windows/macOS/Linux), see [docs/LOCAL_SETUP.md
    pip install -r backend/requirements.txt
    ```
 2. **Configure environment**
-   - Copy `.env.example` to `.env` and fill in the values you have (API Football key, SMTP, Google client ID).
-   - If `APIFOOTBALL_KEY` is empty, GFPS serves seeded fixtures only (no live odds).
+   - Copy `.env.example` to `.env`
+   - For **100% FREE operation** (recommended): Leave `APIFOOTBALL_KEY` empty
+   - The system will automatically use FREE data sources (OpenFootball CSV, Football-Data.org, OpenLigaDB)
+   - Optional: Add a free Football-Data.org API key from https://www.football-data.org/client/register
+   - Optional: Configure SMTP for email alerts, Google OAuth for authentication
 3. **Run the FastAPI backend**
    ```bash
    uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
@@ -335,7 +349,11 @@ It probes `/health`, `/odds`, `/predictions`, and `/value` and prints a simple O
 
 - `SECRET_KEY`: **REQUIRED** - JWT signing key for auth helpers. Generate with `openssl rand -hex 32`.
 - `DATABASE_URL`: Database connection string; defaults to SQLite for local use.
-- `APIFOOTBALL_KEY`: API key for live scores/odds. Leave blank for seeded fixtures only.
+- `APIFOOTBALL_KEY`: ⚠️ **NOT RECOMMENDED** - Expensive premium API (~$50-300/month). Leave blank to use FREE data sources.
+- `FOOTBALL_DATA_API_KEY`: Optional FREE API key from football-data.org (register at https://www.football-data.org/client/register)
+- `ENABLE_FOOTBALL_DATA`: Set to `1` to enable FREE Football-Data.org provider (recommended)
+- `ENABLE_OPENLIGADB`: Set to `1` to enable FREE OpenLigaDB provider for German leagues (recommended)
+- `ENABLE_API_FOOTBALL`: Keep at `0` - only set to `1` if you have an expensive API-Football subscription
 - `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins.
 - `RATE_LIMIT_PER_MINUTE`: Request rate limit per client (default 120).
 - `MODEL_VERSION`: Label stored with prediction and EV snapshots.
