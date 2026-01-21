@@ -20,3 +20,5 @@ if (result.status !== 0) {
 }
 
 process.exit(0);
+const result = spawnSync('npx', ['tauri', 'build', ...args], { stdio: 'inherit' });
+process.exit(result.status ?? 0);
