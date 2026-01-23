@@ -1,0 +1,45 @@
+#include "Database.h"
+
+#include <filesystem>
+
+namespace storage {
+
+Database& Database::instance() {
+    static Database inst;
+    return inst;
+}
+
+void Database::connect(const std::string& path) {
+    std::scoped_lock lock(mutex_);
+    std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+    db_ = std::make_unique<sqlite::database>(path);
+    db_->execute(R"SQL(
+        CREATE TABLE IF NOT EXISTS teams(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            attack_strength REAL,
+            defense_strength REAL
+        );
+        CREATE TABLE IF NOT EXISTS leagues(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            country TEXT
+        );
+        CREATE TABLE IF NOT EXISTS matches(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            home_team_id INTEGER,
+            away_team_id INTEGER,
+            kickoff TEXT,
+            home_expected_goals REAL,
+            away_expected_goals REAL,
+            FOREIGN KEY(home_team_id) REFERENCES teams(id),
+            FOREIGN KEY(away_team_id) REFERENCES teams(id)
+        );
+    )SQL");
+}
+
+sqlite::database& Database::db() {
+    return *db_;
+}
+
+}  // namespace storage

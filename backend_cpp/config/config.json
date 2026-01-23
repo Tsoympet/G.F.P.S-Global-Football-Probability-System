@@ -1,0 +1,16 @@
+{
+  "address": "127.0.0.1",
+  "port": 8000,
+  "threads_num": 1,
+  "document_root": "./public",
+  "run_as_daemon": false,
+  "log_path": "./logs",
+  "ssl_cert": "",
+  "ssl_key": "",
+  "database_path": "./data/gfps.db",
+  "jwt_secret": "super_secret_key",
+  "jwt_expiry_minutes": 60,
+  "plugins": [
+  ],
+  "routes_file": "config/routes.json"
+}

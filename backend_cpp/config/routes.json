@@ -1,0 +1,7 @@
+[
+  {"path": "/health", "method": "GET"},
+  {"path": "/auth/login", "method": "POST"},
+  {"path": "/fixtures", "method": "GET"},
+  {"path": "/predict", "method": "POST"},
+  {"path": "/value", "method": "POST"}
+]
