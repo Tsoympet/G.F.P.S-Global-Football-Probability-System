@@ -129,7 +129,7 @@ jobs:
           cp -R "${BUNDLE_DIR}"/* "${INSTALLERS_DIR}"/
       - name: Upload bundles
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: gfps-desktop-${{ matrix.os }}-${{ steps.channel.outputs.channel }}
           path: GFPS/desktop/installers/${{ matrix.os }}/**/*
