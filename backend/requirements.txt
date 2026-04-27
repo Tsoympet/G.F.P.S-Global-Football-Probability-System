@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-sqlalchemy>=2.0
+sqlalchemy>=2.0.49
 pydantic[email]
 python-dotenv
 passlib[bcrypt]
